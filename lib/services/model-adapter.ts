@@ -1,13 +1,8 @@
 import type { ModelProvider, APIResponse, ChatMessage } from "@/types";
-import QwenOAuthService from "./qwen-oauth";
 import OllamaCloudService from "./ollama-cloud";
 import ZaiPlanService from "./zai-plan";
 
 export interface ModelAdapterConfig {
-  qwen?: {
-    apiKey?: string;
-    endpoint?: string;
-  };
   ollama?: {
     apiKey?: string;
     endpoint?: string;
@@ -20,13 +15,11 @@ export interface ModelAdapterConfig {
 }
 
 export class ModelAdapter {
-  private qwenService: QwenOAuthService;
   private ollamaService: OllamaCloudService;
   private zaiService: ZaiPlanService;
   private preferredProvider: ModelProvider;
 
-  constructor(config: ModelAdapterConfig = {}, preferredProvider: ModelProvider = "qwen") {
-    this.qwenService = new QwenOAuthService(config.qwen);
+  constructor(config: ModelAdapterConfig = {}, preferredProvider: ModelProvider = "ollama") {
     this.ollamaService = new OllamaCloudService(config.ollama);
     this.zaiService = new ZaiPlanService(config.zai);
     this.preferredProvider = preferredProvider;
@@ -34,18 +27,6 @@ export class ModelAdapter {
 
   setPreferredProvider(provider: ModelProvider): void {
     this.preferredProvider = provider;
-  }
-
-  updateQwenApiKey(apiKey: string): void {
-    this.qwenService = new QwenOAuthService({ apiKey });
-  }
-
-  setQwenOAuthTokens(accessToken: string, refreshToken?: string, expiresIn?: number): void {
-    this.qwenService.setOAuthTokens(accessToken, refreshToken, expiresIn);
-  }
-
-  getQwenAuthUrl(): string {
-    return this.qwenService.getAuthorizationUrl();
   }
 
   updateOllamaApiKey(apiKey: string): void {
@@ -65,9 +46,6 @@ export class ModelAdapter {
         let service: any;
 
         switch (provider) {
-          case "qwen":
-            service = this.qwenService;
-            break;
           case "ollama":
             service = this.ollamaService;
             break;
@@ -106,6 +84,11 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateActionPlan(prd, model), providers);
   }
 
+  async generateUXDesignerPrompt(appDescription: string, provider?: ModelProvider, model?: string): Promise<APIResponse<string>> {
+    const providers: ModelProvider[] = provider ? [provider] : [this.preferredProvider, "ollama", "zai"];
+    return this.callWithFallback((service) => service.generateUXDesignerPrompt(appDescription, model), providers);
+  }
+
   async chatCompletion(
     messages: ChatMessage[],
     model: string,
@@ -115,9 +98,6 @@ export class ModelAdapter {
       let service: any;
 
       switch (provider) {
-        case "qwen":
-          service = this.qwenService;
-          break;
         case "ollama":
           service = this.ollamaService;
           break;
@@ -137,7 +117,6 @@ export class ModelAdapter {
 
   async listModels(provider?: ModelProvider): Promise<APIResponse<Record<ModelProvider, string[]>>> {
     const fallbackModels: Record<ModelProvider, string[]> = {
-      qwen: ["qwen-coder-plus", "qwen-coder-turbo", "qwen-coder-lite"],
       ollama: ["gpt-oss:120b", "llama3.1", "gemma3", "deepseek-r1", "qwen3"],
       zai: ["glm-4.7", "glm-4.5", "glm-4.5-air", "glm-4-flash", "glm-4-flashx"],
     };
@@ -163,24 +142,12 @@ export class ModelAdapter {
         console.error("[ModelAdapter] Failed to load Z.AI models, using fallback:", error);
       }
     }
-    if (provider === "qwen" || !provider) {
-      try {
-        const qwenModels = await this.qwenService.listModels();
-        if (qwenModels.success && qwenModels.data && qwenModels.data.length > 0) {
-          models.qwen = qwenModels.data;
-        }
-      } catch (error) {
-        console.error("[ModelAdapter] Failed to load Qwen models, using fallback:", error);
-      }
-    }
 
     return { success: true, data: models };
   }
 
   getAvailableModels(provider: ModelProvider): string[] {
     switch (provider) {
-      case "qwen":
-        return this.qwenService.getAvailableModels();
       case "ollama":
         return this.ollamaService.getAvailableModels();
       case "zai":

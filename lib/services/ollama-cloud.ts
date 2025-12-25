@@ -119,9 +119,44 @@ export class OllamaCloudService {
   }
 
   getAvailableModels(): string[] {
-    return this.availableModels.length > 0 
-      ? this.availableModels 
-      : ["gpt-oss:120b", "llama3.1", "gemma3", "deepseek-r1", "qwen3"];
+    if (this.availableModels.length > 0) {
+      return this.availableModels;
+    }
+    
+    return [
+      "gpt-oss:120b",
+      "llama3.1:latest",
+      "llama3.1:70b",
+      "llama3.1:8b",
+      "llama3.1:instruct",
+      "gemma3:12b",
+      "gemma3:27b",
+      "gemma3:4b",
+      "gemma3:7b",
+      "deepseek-r1:70b",
+      "deepseek-r1:32b",
+      "deepseek-r1:14b",
+      "deepseek-r1:8b",
+      "deepseek-r1:1.5b",
+      "qwen3:72b",
+      "qwen3:32b",
+      "qwen3:14b",
+      "qwen3:7b",
+      "qwen3:4b",
+      "mistral:7b",
+      "mistral:instruct",
+      "codellama:34b",
+      "codellama:13b",
+      "codellama:7b",
+      "codellama:instruct",
+      "phi3:14b",
+      "phi3:3.8b",
+      "phi3:mini",
+      "gemma2:27b",
+      "gemma2:9b",
+      "yi:34b",
+      "yi:9b",
+    ];
   }
 
   async enhancePrompt(prompt: string, model?: string): Promise<APIResponse<string>> {
@@ -194,6 +229,71 @@ Include specific recommendations for:
     const userMessage: ChatMessage = {
       role: "user",
       content: `Generate an action plan based on this PRD:\n\n${prd}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
+
+  async generateUXDesignerPrompt(appDescription: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a world-class UX/UI designer with deep expertise in human-centered design principles, user research, interaction design, visual design systems, and modern design tools (Figma, Sketch, Adobe XD).
+
+Your task is to create an exceptional, detailed prompt for generating the best possible UX design for a given app description.
+
+Generate a comprehensive UX design prompt that includes:
+
+1. USER RESEARCH & PERSONAS
+   - Primary target users and their motivations
+   - User pain points and needs
+   - User journey maps
+   - Persona archetypes with demographics and goals
+
+2. INFORMATION ARCHITECTURE
+   - Content hierarchy and organization
+   - Navigation structure and patterns
+   - User flows and key pathways
+   - Site map or app structure
+
+3. VISUAL DESIGN SYSTEM
+   - Color palette recommendations (primary, secondary, accent, neutral)
+   - Typography hierarchy and font pairings
+   - Component library approach
+   - Spacing, sizing, and layout grids
+   - Iconography style and set
+
+4. INTERACTION DESIGN
+   - Micro-interactions and animations
+   - Gesture patterns for touch interfaces
+   - Loading states and empty states
+   - Error handling and feedback mechanisms
+   - Accessibility considerations (WCAG compliance)
+
+5. KEY SCREENS & COMPONENTS
+   - Core screens that need detailed design
+   - Critical components (buttons, forms, cards, navigation)
+   - Data visualization needs
+   - Responsive design requirements (mobile, tablet, desktop)
+
+6. DESIGN DELIVERABLES
+   - Wireframes vs. high-fidelity mockups
+   - Design system documentation needs
+   - Prototyping requirements
+   - Handoff specifications for developers
+
+7. COMPETITIVE INSIGHTS
+   - Design patterns from successful apps in this category
+   - Opportunities to differentiate
+   - Modern design trends to consider
+
+The output should be a detailed, actionable prompt that a designer or AI image generator can use to create world-class UX designs.
+
+Make the prompt specific, inspiring, and comprehensive. Use professional UX terminology.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create the BEST EVER UX design prompt for this app:\n\n${appDescription}`,
     };
 
     return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");

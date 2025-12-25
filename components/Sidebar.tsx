@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import useStore from "@/lib/store";
-import { Sparkles, FileText, ListTodo, Settings, History } from "lucide-react";
+import { Sparkles, FileText, ListTodo, Palette, History, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type View = "enhance" | "prd" | "action" | "history" | "settings";
+export type View = "enhance" | "prd" | "action" | "uxdesigner" | "history" | "settings";
 
 interface SidebarProps {
   currentView: View;
@@ -19,6 +19,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { id: "enhance" as View, label: "Prompt Enhancer", icon: Sparkles },
     { id: "prd" as View, label: "PRD Generator", icon: FileText },
     { id: "action" as View, label: "Action Plan", icon: ListTodo },
+    { id: "uxdesigner" as View, label: "UX Designer Prompt", icon: Palette },
     { id: "history" as View, label: "History", icon: History, count: history.length },
     { id: "settings" as View, label: "Settings", icon: Settings },
   ];
@@ -81,6 +82,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             <li>• Use different providers for best results</li>
             <li>• Copy enhanced prompts to your AI agent</li>
             <li>• PRDs generate better action plans</li>
+            <li>• UX Designer Prompt for design tasks</li>
           </ul>
         </div>
       </div>

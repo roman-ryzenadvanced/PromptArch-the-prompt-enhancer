@@ -182,6 +182,71 @@ Include specific recommendations for:
   getAvailableModels(): string[] {
     return ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air", "glm-4-flash", "glm-4-flashx"];
   }
+
+  async generateUXDesignerPrompt(appDescription: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a world-class UX/UI designer with deep expertise in human-centered design principles, user research, interaction design, visual design systems, and modern design tools (Figma, Sketch, Adobe XD).
+
+Your task is to create an exceptional, detailed prompt for generating the best possible UX design for a given app description.
+
+Generate a comprehensive UX design prompt that includes:
+
+1. USER RESEARCH & PERSONAS
+   - Primary target users and their motivations
+   - User pain points and needs
+   - User journey maps
+   - Persona archetypes with demographics and goals
+
+2. INFORMATION ARCHITECTURE
+   - Content hierarchy and organization
+   - Navigation structure and patterns
+   - User flows and key pathways
+   - Site map or app structure
+
+3. VISUAL DESIGN SYSTEM
+   - Color palette recommendations (primary, secondary, accent, neutral)
+   - Typography hierarchy and font pairings
+   - Component library approach
+   - Spacing, sizing, and layout grids
+   - Iconography style and set
+
+4. INTERACTION DESIGN
+   - Micro-interactions and animations
+   - Gesture patterns for touch interfaces
+   - Loading states and empty states
+   - Error handling and feedback mechanisms
+   - Accessibility considerations (WCAG compliance)
+
+5. KEY SCREENS & COMPONENTS
+   - Core screens that need detailed design
+   - Critical components (buttons, forms, cards, navigation)
+   - Data visualization needs
+   - Responsive design requirements (mobile, tablet, desktop)
+
+6. DESIGN DELIVERABLES
+   - Wireframes vs. high-fidelity mockups
+   - Design system documentation needs
+   - Prototyping requirements
+   - Handoff specifications for developers
+
+7. COMPETITIVE INSIGHTS
+   - Design patterns from successful apps in this category
+   - Opportunities to differentiate
+   - Modern design trends to consider
+
+The output should be a detailed, actionable prompt that a designer or AI image generator can use to create world-class UX designs.
+
+Make the prompt specific, inspiring, and comprehensive. Use professional UX terminology.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create the BEST EVER UX design prompt for this app:\n\n${appDescription}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
+  }
 }
 
 export default ZaiPlanService;
