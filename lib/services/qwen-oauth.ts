@@ -1,85 +1,371 @@
 import type { ChatMessage, APIResponse } from "@/types";
 
+const DEFAULT_QWEN_ENDPOINT = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
+const DEFAULT_OAUTH_BASE = "/api/qwen";
+const TOKEN_STORAGE_KEY = "promptarch-qwen-tokens";
+
 export interface QwenOAuthConfig {
   apiKey?: string;
+  endpoint?: string;
+  oauthBaseUrl?: string;
   accessToken?: string;
   refreshToken?: string;
   expiresAt?: number;
-  endpoint?: string;
-  clientId?: string;
-  redirectUri?: string;
+  resourceUrl?: string;
+}
+
+export interface QwenOAuthToken {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  resourceUrl?: string;
+}
+
+export interface QwenDeviceAuthorization {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  verification_uri_complete: string;
+  expires_in: number;
+  interval?: number;
 }
 
 export class QwenOAuthService {
-  private config: QwenOAuthConfig;
+  private endpoint: string;
+  private oauthBaseUrl: string;
+  private apiKey?: string;
+  private token: QwenOAuthToken | null = null;
+  private storageHydrated = false;
 
   constructor(config: QwenOAuthConfig = {}) {
-    this.config = {
-      endpoint: config.endpoint || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-      apiKey: config.apiKey || process.env.QWEN_API_KEY,
-      accessToken: config.accessToken,
-      refreshToken: config.refreshToken,
-      expiresAt: config.expiresAt,
-      clientId: config.clientId || process.env.NEXT_PUBLIC_QWEN_CLIENT_ID,
-      redirectUri: config.redirectUri || (typeof window !== "undefined" ? window.location.origin : ""),
-    };
-  }
+    this.endpoint = config.endpoint || DEFAULT_QWEN_ENDPOINT;
+    this.oauthBaseUrl = config.oauthBaseUrl || DEFAULT_OAUTH_BASE;
+    this.apiKey = config.apiKey || process.env.QWEN_API_KEY || undefined;
 
-  private getHeaders(): Record<string, string> {
-    const authHeader = this.config.accessToken 
-      ? `Bearer ${this.config.accessToken}` 
-      : `Bearer ${this.config.apiKey}`;
-
-    return {
-      "Content-Type": "application/json",
-      "Authorization": authHeader,
-    };
-  }
-
-  isAuthenticated(): boolean {
-    return !!(this.config.apiKey || (this.config.accessToken && (!this.config.expiresAt || this.config.expiresAt > Date.now())));
-  }
-
-  getAccessToken(): string | null {
-    return this.config.accessToken || this.config.apiKey || null;
-  }
-
-  async authenticate(apiKey: string): Promise<APIResponse<string>> {
-    try {
-      this.config.apiKey = apiKey;
-      this.config.accessToken = undefined; // Clear OAuth token if API key is provided
-      return { success: true, data: "Authenticated successfully" };
-    } catch (error) {
-      console.error("Qwen authentication error:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Authentication failed",
-      };
+    if (config.accessToken) {
+      this.setOAuthTokens({
+        accessToken: config.accessToken,
+        refreshToken: config.refreshToken,
+        expiresAt: config.expiresAt,
+        resourceUrl: config.resourceUrl,
+      });
     }
   }
 
-  setOAuthTokens(accessToken: string, refreshToken?: string, expiresIn?: number): void {
-    this.config.accessToken = accessToken;
-    if (refreshToken) this.config.refreshToken = refreshToken;
-    if (expiresIn) this.config.expiresAt = Date.now() + expiresIn * 1000;
+  /**
+   * Update the API key used for non-OAuth calls.
+   */
+  setApiKey(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
-  getAuthorizationUrl(): string {
-    const baseUrl = "https://dashscope.console.aliyun.com/oauth/authorize"; // Placeholder URL
-    const params = new URLSearchParams({
-      client_id: this.config.clientId || "",
-      redirect_uri: this.config.redirectUri || "",
-      response_type: "code",
-      scope: "dashscope:chat",
+  /**
+   * Build default headers for Qwen completions (includes OAuth token refresh).
+   */
+  private async getRequestHeaders(): Promise<Record<string, string>> {
+    const token = await this.getValidToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (token?.accessToken) {
+      headers["Authorization"] = `Bearer ${token.accessToken}`;
+      return headers;
+    }
+
+    if (this.apiKey) {
+      headers["Authorization"] = `Bearer ${this.apiKey}`;
+      return headers;
+    }
+
+    throw new Error("Please configure a Qwen API key or authenticate via OAuth.");
+  }
+
+  /**
+   * Determine the effective API endpoint (uses token-specific resource_url if available).
+   */
+  private getEffectiveEndpoint(): string {
+    const resourceUrl = this.token?.resourceUrl;
+    if (resourceUrl) {
+      return this.normalizeResourceUrl(resourceUrl);
+    }
+    return this.endpoint;
+  }
+
+  private normalizeResourceUrl(raw: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return this.endpoint;
+    }
+
+    const withProtocol = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+    const cleaned = withProtocol.replace(/\/$/, "");
+    return cleaned.endsWith("/v1") ? cleaned : `${cleaned}/v1`;
+  }
+
+  private hydrateTokens() {
+    if (this.storageHydrated || typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const stored = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+      if (stored) {
+        this.token = JSON.parse(stored);
+      }
+    } catch {
+      this.token = null;
+    } finally {
+      this.storageHydrated = true;
+    }
+  }
+
+  private getStoredToken(): QwenOAuthToken | null {
+    this.hydrateTokens();
+    return this.token;
+  }
+
+  private persistToken(token: QwenOAuthToken | null) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (token) {
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
+    } else {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  }
+
+  private isTokenExpired(token: QwenOAuthToken): boolean {
+    if (!token.expiresAt) {
+      return false;
+    }
+    return Date.now() >= token.expiresAt - 60_000;
+  }
+
+  /**
+   * Refreshes the OAuth token using the stored refresh token.
+   */
+  private async refreshToken(refreshToken: string): Promise<QwenOAuthToken> {
+    const response = await fetch(`${this.oauthBaseUrl}/oauth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
     });
-    return `${baseUrl}?${params.toString()}`;
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to refresh Qwen token");
+    }
+
+    const data = await response.json();
+    return this.parseTokenResponse(data);
   }
 
-  async logout(): Promise<void> {
-    this.config.apiKey = undefined;
-    this.config.accessToken = undefined;
-    this.config.refreshToken = undefined;
-    this.config.expiresAt = undefined;
+  /**
+   * Returns a valid token, refreshing if necessary.
+   */
+  private async getValidToken(): Promise<QwenOAuthToken | null> {
+    const token = this.getStoredToken();
+    if (!token) {
+      return null;
+    }
+
+    if (this.isTokenExpired(token)) {
+      if (token.refreshToken) {
+        try {
+          const refreshed = await this.refreshToken(token.refreshToken);
+          this.setOAuthTokens(refreshed);
+          return refreshed;
+        } catch (error) {
+          console.error("Qwen token refresh failed", error);
+          this.clearTokens();
+          return null;
+        }
+      }
+      this.clearTokens();
+      return null;
+    }
+
+    return token;
+  }
+
+  /**
+   * Sign out the OAuth session.
+   */
+  signOut(): void {
+    this.clearTokens();
+  }
+
+  /**
+   * Stores OAuth tokens locally.
+   */
+  setOAuthTokens(tokens?: QwenOAuthToken) {
+    if (!tokens) {
+      this.token = null;
+      this.persistToken(null);
+      this.storageHydrated = true;
+      return;
+    }
+    this.token = tokens;
+    this.persistToken(tokens);
+    this.storageHydrated = true;
+  }
+
+  getTokenInfo(): QwenOAuthToken | null {
+    return this.getStoredToken();
+  }
+
+  /**
+   * Perform the OAuth device flow to obtain tokens.
+   */
+  async signIn(): Promise<QwenOAuthToken> {
+    if (typeof window === "undefined") {
+      throw new Error("Qwen OAuth is only supported in the browser");
+    }
+
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+    const deviceAuth = await this.requestDeviceAuthorization(codeChallenge);
+
+    const popup = window.open(
+      deviceAuth.verification_uri_complete,
+      "qwen-oauth",
+      "width=500,height=600,scrollbars=yes,resizable=yes"
+    );
+
+    if (!popup) {
+      window.alert(
+        `Open this URL to authenticate:\n${deviceAuth.verification_uri_complete}\n\nUser code: ${deviceAuth.user_code}`
+      );
+    }
+
+    const expiresAt = Date.now() + deviceAuth.expires_in * 1000;
+    let pollInterval = 2000;
+
+    while (Date.now() < expiresAt) {
+      const tokenData = await this.pollDeviceToken(deviceAuth.device_code, codeVerifier);
+
+      if (tokenData?.access_token) {
+        const token = this.parseTokenResponse(tokenData);
+        this.setOAuthTokens(token);
+        popup?.close();
+        return token;
+      }
+
+      if (tokenData?.error === "authorization_pending") {
+        await this.delay(pollInterval);
+        continue;
+      }
+
+      if (tokenData?.error === "slow_down") {
+        pollInterval = Math.min(Math.ceil(pollInterval * 1.5), 10000);
+        await this.delay(pollInterval);
+        continue;
+      }
+
+      throw new Error(tokenData?.error_description || tokenData?.error || "OAuth failed");
+    }
+
+    throw new Error("Qwen OAuth timed out");
+  }
+
+  async fetchUserInfo(): Promise<unknown> {
+    const token = await this.getValidToken();
+    if (!token?.accessToken) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch(`${this.oauthBaseUrl}/user`, {
+      headers: {
+        Authorization: `Bearer ${token.accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Failed to fetch user info");
+    }
+
+    return await response.json();
+  }
+
+  private async requestDeviceAuthorization(codeChallenge: string): Promise<QwenDeviceAuthorization> {
+    const response = await fetch(`${this.oauthBaseUrl}/oauth/device`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Device authorization failed");
+    }
+
+    return await response.json();
+  }
+
+  private async pollDeviceToken(deviceCode: string, codeVerifier: string): Promise<any> {
+    const response = await fetch(`${this.oauthBaseUrl}/oauth/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        device_code: deviceCode,
+        code_verifier: codeVerifier,
+      }),
+    });
+
+    return await response.json();
+  }
+
+  private delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private parseTokenResponse(data: any): QwenOAuthToken {
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      resourceUrl: data.resource_url,
+      expiresAt: data.expires_in ? Date.now() + data.expires_in * 1000 : undefined,
+    };
+  }
+
+  /**
+   * Generate a PKCE code verifier.
+   */
+  private generateCodeVerifier(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return this.toBase64Url(array);
+  }
+
+  /**
+   * Generate a PKCE code challenge.
+   */
+  private async generateCodeChallenge(verifier: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return this.toBase64Url(new Uint8Array(digest));
+  }
+
+  private toBase64Url(bytes: Uint8Array): string {
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
 
   async chatCompletion(
@@ -88,15 +374,12 @@ export class QwenOAuthService {
     stream: boolean = false
   ): Promise<APIResponse<string>> {
     try {
-      if (!this.config.apiKey) {
-        throw new Error("API key is required. Please configure your Qwen API key in settings.");
-      }
+      const headers = await this.getRequestHeaders();
+      const url = `${this.getEffectiveEndpoint()}/chat/completions`;
 
-      console.log("[Qwen] API call:", { endpoint: this.config.endpoint, model, messages });
-
-      const response = await fetch(`${this.config.endpoint}/chat/completions`, {
+      const response = await fetch(url, {
         method: "POST",
-        headers: this.getHeaders(),
+        headers,
         body: JSON.stringify({
           model,
           messages,
@@ -104,22 +387,17 @@ export class QwenOAuthService {
         }),
       });
 
-      console.log("[Qwen] Response status:", response.status, response.statusText);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("[Qwen] Error response:", errorText);
         throw new Error(`Chat completion failed (${response.status}): ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("[Qwen] Response data:", data);
-      
-      if (data.choices && data.choices[0] && data.choices[0].message) {
+      if (data.choices?.[0]?.message) {
         return { success: true, data: data.choices[0].message.content };
-      } else {
-        return { success: false, error: "Unexpected response format" };
       }
+
+      return { success: false, error: "Unexpected response format" };
     } catch (error) {
       console.error("[Qwen] Chat completion error:", error);
       return {
@@ -204,14 +482,95 @@ Include specific recommendations for:
     return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
   }
 
+  async generateUXDesignerPrompt(appDescription: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a world-class UX/UI designer with deep expertise in human-centered design principles, user research, interaction design, visual design systems, and modern design tools (Figma, Sketch, Adobe XD).
+
+Your task is to create an exceptional, detailed prompt for generating best possible UX design for a given app description.
+
+Generate a comprehensive UX design prompt that includes:
+
+1. USER RESEARCH & PERSONAS
+   - Primary target users and their motivations
+   - User pain points and needs
+   - User journey maps
+   - Persona archetypes with demographics and goals
+
+2. INFORMATION ARCHITECTURE
+   - Content hierarchy and organization
+   - Navigation structure and patterns
+   - User flows and key pathways
+   - Site map or app structure
+
+3. VISUAL DESIGN SYSTEM
+   - Color palette recommendations (primary, secondary, accent, neutral)
+   - Typography hierarchy and font pairings
+   - Component library approach
+   - Spacing, sizing, and layout grids
+   - Iconography style and set
+
+4. INTERACTION DESIGN
+   - Micro-interactions and animations
+   - Gesture patterns for touch interfaces
+   - Loading states and empty states
+   - Error handling and feedback mechanisms
+   - Accessibility considerations (WCAG compliance)
+
+5. KEY SCREENS & COMPONENTS
+   - Core screens that need detailed design
+   - Critical components (buttons, forms, cards, navigation)
+   - Data visualization needs
+   - Responsive design requirements (mobile, tablet, desktop)
+
+6. DESIGN DELIVERABLES
+   - Wireframes vs. high-fidelity mockups
+   - Design system documentation needs
+   - Prototyping requirements
+   - Handoff specifications for developers
+
+7. COMPETITIVE INSIGHTS
+   - Design patterns from successful apps in this category
+   - Opportunities to differentiate
+   - Modern design trends to consider
+
+The output should be a detailed, actionable prompt that a designer or AI image generator can use to create world-class UX designs.
+
+Make's prompt specific, inspiring, and comprehensive. Use professional UX terminology.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create a BEST EVER UX design prompt for this app:\n\n${appDescription}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
+  }
+
   async listModels(): Promise<APIResponse<string[]>> {
-    const models = ["qwen-coder-plus", "qwen-coder-turbo", "qwen-coder-lite", "qwen-plus", "qwen-turbo", "qwen-max"];
+    const models = [
+      "qwen-coder-plus",
+      "qwen-coder-turbo",
+      "qwen-coder-lite",
+      "qwen-plus",
+      "qwen-turbo",
+      "qwen-max",
+    ];
     return { success: true, data: models };
   }
 
   getAvailableModels(): string[] {
-    return ["qwen-coder-plus", "qwen-coder-turbo", "qwen-coder-lite", "qwen-plus", "qwen-turbo", "qwen-max"];
+    return [
+      "qwen-coder-plus",
+      "qwen-coder-turbo",
+      "qwen-coder-lite",
+      "qwen-plus",
+      "qwen-turbo",
+      "qwen-max",
+    ];
   }
 }
 
-export default QwenOAuthService;
+const qwenOAuthService = new QwenOAuthService();
+export default qwenOAuthService;
+export { qwenOAuthService };

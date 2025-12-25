@@ -100,10 +100,18 @@ export class OllamaCloudService {
 
         const data = await response.json();
         console.log("[Ollama] Models data:", data);
-        const models = data.models?.map((m: OllamaModel) => m.name) || [];
-        
+
+        let models: string[] = [];
+        if (Array.isArray(data.models)) {
+          models = data.models.map((m: OllamaModel) => m.name);
+        } else if (Array.isArray(data)) {
+          models = data.map((m: OllamaModel) => m.name);
+        } else if (data.model) {
+          models = [data.model.name];
+        }
+
         this.availableModels = models;
-        
+
         return { success: true, data: models };
       } else {
         console.log("[Ollama] No API key, using fallback models");

@@ -14,7 +14,7 @@ interface AppState {
     accessToken: string;
     refreshToken?: string;
     expiresAt?: number;
-  };
+  } | null;
   isProcessing: boolean;
   error: string | null;
   history: {
@@ -31,7 +31,7 @@ interface AppState {
   setSelectedModel: (provider: ModelProvider, model: string) => void;
   setAvailableModels: (provider: ModelProvider, models: string[]) => void;
   setApiKey: (provider: ModelProvider, key: string) => void;
-  setQwenTokens: (tokens: { accessToken: string; refreshToken?: string; expiresAt?: number }) => void;
+  setQwenTokens: (tokens?: { accessToken: string; refreshToken?: string; expiresAt?: number } | null) => void;
   setProcessing: (processing: boolean) => void;
   setError: (error: string | null) => void;
   addToHistory: (prompt: string) => void;

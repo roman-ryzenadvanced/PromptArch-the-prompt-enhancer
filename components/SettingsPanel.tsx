@@ -3,16 +3,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import useStore from "@/lib/store";
 import modelAdapter from "@/lib/services/adapter-instance";
 import { Save, Key, Server, Eye, EyeOff } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function SettingsPanel() {
   const { apiKeys, setApiKey, selectedProvider, setSelectedProvider, qwenTokens, setQwenTokens } = useStore();
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   const handleSave = () => {
     if (typeof window !== "undefined") {
@@ -43,6 +42,10 @@ export default function SettingsPanel() {
           console.error("Failed to load API keys:", e);
         }
       }
+      const storedTokens = modelAdapter.getQwenTokenInfo();
+      if (storedTokens) {
+        setQwenTokens(storedTokens);
+      }
     }
   };
 
@@ -59,6 +62,28 @@ export default function SettingsPanel() {
       case "zai":
         modelAdapter.updateZaiApiKey(value);
         break;
+    }
+  };
+
+  const handleQwenAuth = async () => {
+    if (qwenTokens) {
+      setQwenTokens(null);
+      modelAdapter.updateQwenTokens();
+      modelAdapter.updateQwenApiKey(apiKeys.qwen || "");
+      return;
+    }
+
+    setIsAuthLoading(true);
+    try {
+      const token = await modelAdapter.startQwenOAuth();
+      setQwenTokens(token);
+    } catch (error) {
+      console.error("Qwen OAuth failed", error);
+      window.alert(
+        error instanceof Error ? error.message : "Qwen authentication failed"
+      );
+    } finally {
+      setIsAuthLoading(false);
     }
   };
 
@@ -122,17 +147,14 @@ export default function SettingsPanel() {
                 variant={qwenTokens ? "secondary" : "outline"}
                 size="sm"
                 className="h-8"
-                onClick={() => {
-                  if (qwenTokens) {
-                    setQwenTokens(undefined as any);
-                    localStorage.removeItem("promptarch-qwen-tokens");
-                    modelAdapter.updateQwenApiKey(apiKeys.qwen || "");
-                  } else {
-                    window.location.href = modelAdapter.getQwenAuthUrl();
-                  }
-                }}
+                onClick={handleQwenAuth}
+                disabled={isAuthLoading}
               >
-                {qwenTokens ? "Logout from Qwen" : "Login with Qwen (OAuth)"}
+                {isAuthLoading
+                  ? "Signing in..."
+                  : qwenTokens
+                  ? "Logout from Qwen"
+                  : "Login with Qwen (OAuth)"}
               </Button>
             </div>
             {qwenTokens && (
