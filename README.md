@@ -1,5 +1,10 @@
 # PromptArch: The Prompt Enhancer 🚀
 
+> **Development Note**: This entire platform was developed exclusively using the [TRAE.AI IDE](https://trae.ai) powered by the elite [GLM 4.7 model](https://z.ai/subscribe?ic=R0K78RJKNW). 
+> **Learn more about this architecture [here](https://z.ai/subscribe?ic=R0K78RJKNW).**
+
+---
+
 > **Note**: This project is a specialized fork of [ClavixDev/Clavix](https://github.com/ClavixDev/Clavix), reimagined as a modern web-based platform for visual prompt engineering and product planning.
 
 Transform vague ideas into production-ready prompts and PRDs. PromptArch is an elite AI orchestration platform designed for software architects and Vibe Coders.
