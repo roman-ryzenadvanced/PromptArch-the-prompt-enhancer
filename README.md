@@ -1,103 +1,72 @@
-# PromptArch
+# PromptArch: The Prompt Enhancer 🚀
 
-Transform vague ideas into production-ready prompts and PRDs. An AI-powered platform for prompt engineering, PRD generation, and action planning with support for multiple AI providers.
+> **Note**: This project is a specialized fork of [ClavixDev/Clavix](https://github.com/ClavixDev/Clavix), reimagined as a modern web-based platform for visual prompt engineering and product planning.
 
-## Features
+Transform vague ideas into production-ready prompts and PRDs. PromptArch is an elite AI orchestration platform designed for software architects and Vibe Coders.
 
-- **Multi-Provider Support**: Qwen Code OAuth, Ollama Cloud, and Z.AI Plan API
-- **Prompt Enhancement**: Improve prompts with 20+ patterns and 11 intents
-- **PRD Generation**: Comprehensive product requirements documents
-- **Action Planning**: Task breakdown with priorities, dependencies, and framework recommendations
-- **Modern UI**: Clean, responsive interface with sidebar navigation
-- **History Tracking**: Save and restore previous prompts
-- **Provider Fallback**: Automatic fallback if a provider fails
+## 🌟 Visual Overview
 
-## Quick Start
+### 1. Prompt Enhancer
+![Prompt Enhancer](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/enhancer.png)
+*Refine vague prompts into surgical instructions for AI agents.*
 
-1. **Install dependencies**:
+### 2. PRD Generator
+![PRD Generator](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/prd.png)
+*Convert ideas into structured Product Requirements Documents.*
+
+### 3. Action Plan
+![Action Plan](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/plan.png)
+*Decompose PRDs into actionable development steps and framework recommendations.*
+
+## ✨ Features
+
+- **Multi-Provider Ecosystem**: Native support for Qwen Code (OAuth), Ollama Cloud, and Z.AI Plan API.
+- **Visual Prompt Engineering**: Patterns-based enhancement with 11+ intent types.
+- **Architectural Decomposition**: Automatic generation of PRDs and structured Action Plans.
+- **Resilient Fallbacks**: Multi-tier provider system that ensures uptime even if primary APIs fail.
+- **Modern UI/UX**: Built with Next.js 15, Tailwind CSS, and shadcn/ui for a seamless developer experience.
+- **OAuth Integration**: Secure Qwen authentication with 2,000 free daily requests.
+
+## 🚀 Quick Start
+
+1. **Clone & Install**:
    ```bash
+   git clone https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer.git
+   cd PromptArch
    npm install
    ```
 
-2. **Set up environment variables**:
+2. **Configuration**:
    Copy `.env.example` to `.env` and add your API keys:
    ```bash
    cp .env.example .env
    ```
 
-3. **Run the development server**:
+3. **Launch**:
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) to begin.
 
-## AI Providers
+## 🛠 Tech Stack
 
-### Qwen Code OAuth
-- **2000 free requests/day** via OAuth
-- OpenAI-compatible API
-- Get credentials at [qwen.ai](https://qwen.ai)
+- **Framework**: [Next.js 15.5](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
-### Ollama Cloud
-- High-performance cloud models
-- No GPU required
-- Get API key at [ollama.com/cloud](https://ollama.com/cloud)
+## 🤝 Attribution
 
-### Z.AI Plan API
-- Specialized coding models (glm-4.7, glm-4.5)
-- Dedicated coding endpoint
-- Get API key at [docs.z.ai](https://docs.z.ai)
+This project is a visual and architectural evolution of the [Clavix](https://github.com/ClavixDev/Clavix) framework. While Clavix focuses on agentic-first Markdown templates, PromptArch provides a centralized web interface to execute these workflows with advanced model orchestration.
 
-## Usage
+Developed by **Roman | RyzenAdvanced**
+- GitHub: [roman-ryzenadvanced](https://github.com/roman-ryzenadvanced)
+- Telegram: [@VibeCodePrompterSystem](https://t.me/VibeCodePrompterSystem)
 
-### Prompt Enhancer
-1. Enter your prompt in the input panel
-2. Select an AI provider
-3. Click "Enhance Prompt"
-4. Copy the enhanced prompt for use with AI coding agents
-
-### PRD Generator
-1. Enter your idea or concept
-2. Select an AI provider
-3. Generate comprehensive PRD
-4. Export or copy the structured requirements
-
-### Action Plan Generator
-1. Paste your PRD or requirements
-2. Generate action plan with tasks
-3. Review framework recommendations
-4. Get architecture guidelines
-
-## Project Structure
-
-```
-promptarch/
-├── app/              # Next.js app directory
-├── components/        # React components
-│   ├── ui/           # shadcn/ui components
-│   ├── PromptEnhancer.tsx
-│   ├── PRDGenerator.tsx
-│   ├── ActionPlanGenerator.tsx
-│   ├── Sidebar.tsx
-│   ├── HistoryPanel.tsx
-│   └── SettingsPanel.tsx
-├── lib/              # Utilities and services
-│   ├── services/      # API integrations
-│   │   ├── qwen-oauth.ts
-│   │   ├── ollama-cloud.ts
-│   │   ├── zai-plan.ts
-│   │   └── model-adapter.ts
-│   ├── store.ts      # Zustand state management
-│   └── utils.ts      # Utility functions
-├── types/            # TypeScript types
-└── public/           # Static assets
-```
-
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
+---
+*100% Developed using GLM 4.7 model on TRAE.AI IDE.*
 - **Styling**: TailwindCSS
 - **UI Components**: shadcn/ui + Radix UI
 - **State Management**: Zustand
