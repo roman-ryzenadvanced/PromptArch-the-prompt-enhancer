@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import useStore from "@/lib/store";
-import { Sparkles, FileText, ListTodo, Palette, History, Settings } from "lucide-react";
+import { Sparkles, FileText, ListTodo, Palette, History, Settings, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type View = "enhance" | "prd" | "action" | "uxdesigner" | "history" | "settings";
@@ -35,8 +35,9 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             PromptArch
           </h1>
         </a>
-        <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="mt-2 block text-xs text-primary hover:underline">
-          github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer
+        <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs text-primary hover:bg-primary/10 transition-colors">
+          <Github className="h-3.5 w-3.5" />
+          <span>View on GitHub</span>
         </a>
         <p className="mt-2 text-xs text-muted-foreground">
           Forked from <a href="https://github.com/ClavixDev/Clavix" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Clavix</a>
