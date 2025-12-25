@@ -12,15 +12,15 @@ Transform vague ideas into production-ready prompts and PRDs. PromptArch is an e
 ## 🌟 Visual Overview
 
 ### 1. Prompt Enhancer
-![Prompt Enhancer](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/enhancer.png)
+![Prompt Enhancer](./screenshots/enhancer.png)
 *Refine vague prompts into surgical instructions for AI agents.*
 
 ### 2. PRD Generator
-![PRD Generator](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/prd.png)
+![PRD Generator](./screenshots/prd.png)
 *Convert ideas into structured Product Requirements Documents.*
 
 ### 3. Action Plan
-![Action Plan](https://raw.githubusercontent.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/main/screenshots/plan.png)
+![Action Plan](./screenshots/plan.png)
 *Decompose PRDs into actionable development steps and framework recommendations.*
 
 ## ✨ Features
