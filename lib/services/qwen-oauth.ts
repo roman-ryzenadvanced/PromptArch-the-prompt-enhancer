@@ -182,11 +182,11 @@ export class QwenOAuthService {
           return refreshed;
         } catch (error) {
           console.error("Qwen token refresh failed", error);
-          this.clearTokens();
+          this.setOAuthTokens(undefined);
           return null;
         }
       }
-      this.clearTokens();
+      this.setOAuthTokens(undefined);
       return null;
     }
 
@@ -197,13 +197,13 @@ export class QwenOAuthService {
    * Sign out the OAuth session.
    */
   signOut(): void {
-    this.clearTokens();
+    this.setOAuthTokens(undefined);
   }
 
   /**
    * Stores OAuth tokens locally.
    */
-  setOAuthTokens(tokens?: QwenOAuthToken) {
+  setOAuthTokens(tokens?: QwenOAuthToken | null) {
     if (!tokens) {
       this.token = null;
       this.persistToken(null);

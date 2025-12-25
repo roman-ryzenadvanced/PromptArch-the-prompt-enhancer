@@ -5,11 +5,41 @@ export interface OllamaCloudConfig {
   endpoint?: string;
 }
 
-export interface OllamaModel {
-  name: string;
-  size?: number;
-  digest?: string;
-}
+const DEFAULT_OLLAMA_ENDPOINT = "https://ollama.com";
+const DEFAULT_MODELS = [
+  "gpt-oss:120b",
+  "llama3.1:latest",
+  "llama3.1:70b",
+  "llama3.1:8b",
+  "llama3.1:instruct",
+  "gemma3:12b",
+  "gemma3:27b",
+  "gemma3:4b",
+  "gemma3:7b",
+  "deepseek-r1:70b",
+  "deepseek-r1:32b",
+  "deepseek-r1:14b",
+  "deepseek-r1:8b",
+  "deepseek-r1:1.5b",
+  "qwen3:72b",
+  "qwen3:32b",
+  "qwen3:14b",
+  "qwen3:7b",
+  "qwen3:4b",
+  "mistral:7b",
+  "mistral:instruct",
+  "codellama:34b",
+  "codellama:13b",
+  "codellama:7b",
+  "codellama:instruct",
+  "phi3:14b",
+  "phi3:3.8b",
+  "phi3:mini",
+  "gemma2:27b",
+  "gemma2:9b",
+  "yi:34b",
+  "yi:9b",
+];
 
 export class OllamaCloudService {
   private config: OllamaCloudConfig;
@@ -17,14 +47,28 @@ export class OllamaCloudService {
 
   constructor(config: OllamaCloudConfig = {}) {
     this.config = {
-      endpoint: config.endpoint || "https://ollama.com/api",
+      endpoint: config.endpoint || DEFAULT_OLLAMA_ENDPOINT,
       apiKey: config.apiKey || process.env.OLLAMA_API_KEY,
     };
   }
 
-  private getHeaders(): Record<string, string> {
+  private getBaseUrl(): string {
+    const endpoint = this.config.endpoint || DEFAULT_OLLAMA_ENDPOINT;
+    return endpoint.replace(/\/$/, "");
+  }
+
+  private ensureApiPath(path: string): string {
+    if (path.startsWith("/api")) {
+      return path;
+    }
+    const normalized = path.startsWith("/") ? path : `/${path}`;
+    return `/api${normalized}`;
+  }
+
+  private getHeaders(extra: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      ...extra,
     };
 
     if (this.config.apiKey) {
@@ -34,46 +78,100 @@ export class OllamaCloudService {
     return headers;
   }
 
+  private async makeRequest(
+    path: string,
+    options: RequestInit = {},
+    useApiPrefix: boolean = true,
+    timeoutMs: number = 120_000
+  ): Promise<Response> {
+    const url =
+      this.getBaseUrl() +
+      (useApiPrefix ? this.ensureApiPath(path) : (path.startsWith("/") ? path : `/${path}`));
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    const headers = {
+      ...this.getHeaders(),
+      ...(options.headers || {}),
+    };
+
+    try {
+      return await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private parseModelNamesFromArray(models: any[]): string[] {
+    return models
+      .map((entry) => entry?.name || entry?.model || entry?.id)
+      .filter((name): name is string => typeof name === "string" && name.length > 0);
+  }
+
+  private async fetchModelsFromV1(): Promise<string[]> {
+    const response = await this.makeRequest("/v1/models", { method: "GET" }, false);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Failed to parse response");
+      throw new Error(`Ollama /v1/models request failed: ${response.statusText} - ${errorText}`);
+    }
+
+    const json = await response.json().catch(() => null);
+    const entries = Array.isArray(json?.data) ? json.data : [];
+    const names = this.parseModelNamesFromArray(entries);
+    return names;
+  }
+
+  private async fetchModelsFromTags(): Promise<string[]> {
+    const response = await this.makeRequest("/tags", { method: "GET" }, true);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Failed to parse response");
+      throw new Error(`Ollama /tags request failed: ${response.statusText} - ${errorText}`);
+    }
+
+    const json = await response.json().catch(() => null);
+    const entries = Array.isArray(json?.models) ? json.models : Array.isArray(json) ? json : [];
+    const names = this.parseModelNamesFromArray(entries);
+    return names;
+  }
+
   async chatCompletion(
     messages: ChatMessage[],
     model: string = "gpt-oss:120b",
     stream: boolean = false
   ): Promise<APIResponse<string>> {
     try {
-      if (!this.config.apiKey) {
-        throw new Error("API key is required. Please configure your Ollama API key in settings.");
-      }
-
-      console.log("[Ollama] API call:", { endpoint: this.config.endpoint, model, messages });
-
-      const response = await fetch(`${this.config.endpoint}/chat`, {
-        method: "POST",
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          model,
-          messages,
-          stream,
-        }),
-      });
-
-      console.log("[Ollama] Response status:", response.status, response.statusText);
+      const response = await this.makeRequest(
+        "/chat",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            model,
+            messages,
+            stream,
+          }),
+        },
+        true
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("[Ollama] Error response:", errorText);
         throw new Error(`Chat completion failed (${response.status}): ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("[Ollama] Response data:", data);
-      
+
       if (data.message && data.message.content) {
         return { success: true, data: data.message.content };
-      } else if (data.choices && data.choices[0]) {
+      } else if (data.choices && data.choices[0]?.message?.content) {
         return { success: true, data: data.choices[0].message.content };
-      } else {
-        return { success: false, error: "Unexpected response format" };
       }
+
+      return { success: false, error: "Unexpected response format" };
     } catch (error) {
       console.error("[Ollama] Chat completion error:", error);
       return {
@@ -85,40 +183,28 @@ export class OllamaCloudService {
 
   async listModels(): Promise<APIResponse<string[]>> {
     try {
-      if (this.config.apiKey) {
-        console.log("[Ollama] Listing models from:", `${this.config.endpoint}/tags`);
-
-        const response = await fetch(`${this.config.endpoint}/tags`, {
-          headers: this.getHeaders(),
-        });
-
-        console.log("[Ollama] List models response status:", response.status, response.statusText);
-
-        if (!response.ok) {
-          throw new Error(`Failed to list models: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("[Ollama] Models data:", data);
-
-        let models: string[] = [];
-        if (Array.isArray(data.models)) {
-          models = data.models.map((m: OllamaModel) => m.name);
-        } else if (Array.isArray(data)) {
-          models = data.map((m: OllamaModel) => m.name);
-        } else if (data.model) {
-          models = [data.model.name];
-        }
-
-        this.availableModels = models;
-
-        return { success: true, data: models };
-      } else {
-        console.log("[Ollama] No API key, using fallback models");
-        return { success: true, data: ["gpt-oss:120b", "llama3.1", "gemma3", "deepseek-r1", "qwen3"] };
+      const primary = await this.fetchModelsFromV1();
+      if (primary.length > 0) {
+        this.availableModels = primary;
+        return { success: true, data: primary };
       }
+
+      const fallback = await this.fetchModelsFromTags();
+      if (fallback.length > 0) {
+        this.availableModels = fallback;
+        return { success: true, data: fallback };
+      }
+
+      this.availableModels = DEFAULT_MODELS;
+      return { success: true, data: DEFAULT_MODELS };
     } catch (error) {
       console.error("[Ollama] listModels error:", error);
+
+      if (DEFAULT_MODELS.length > 0) {
+        this.availableModels = DEFAULT_MODELS;
+        return { success: true, data: DEFAULT_MODELS };
+      }
+
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to list models",
@@ -127,44 +213,7 @@ export class OllamaCloudService {
   }
 
   getAvailableModels(): string[] {
-    if (this.availableModels.length > 0) {
-      return this.availableModels;
-    }
-    
-    return [
-      "gpt-oss:120b",
-      "llama3.1:latest",
-      "llama3.1:70b",
-      "llama3.1:8b",
-      "llama3.1:instruct",
-      "gemma3:12b",
-      "gemma3:27b",
-      "gemma3:4b",
-      "gemma3:7b",
-      "deepseek-r1:70b",
-      "deepseek-r1:32b",
-      "deepseek-r1:14b",
-      "deepseek-r1:8b",
-      "deepseek-r1:1.5b",
-      "qwen3:72b",
-      "qwen3:32b",
-      "qwen3:14b",
-      "qwen3:7b",
-      "qwen3:4b",
-      "mistral:7b",
-      "mistral:instruct",
-      "codellama:34b",
-      "codellama:13b",
-      "codellama:7b",
-      "codellama:instruct",
-      "phi3:14b",
-      "phi3:3.8b",
-      "phi3:mini",
-      "gemma2:27b",
-      "gemma2:9b",
-      "yi:34b",
-      "yi:9b",
-    ];
+    return this.availableModels.length > 0 ? this.availableModels : DEFAULT_MODELS;
   }
 
   async enhancePrompt(prompt: string, model?: string): Promise<APIResponse<string>> {
