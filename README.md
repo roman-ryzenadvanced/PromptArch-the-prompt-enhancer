@@ -1,13 +1,18 @@
 # PromptArch: The Prompt Enhancer 🚀
 
-> **Development Note**: This entire platform was developed exclusively using the [TRAE.AI IDE](https://trae.ai) powered by the elite [GLM 4.7 model](https://z.ai/subscribe?ic=R0K78RJKNW). 
+> **Development Note**: This entire platform was developed exclusively using [TRAE.AI IDE](https://trae.ai) powered by elite [GLM 4.7 model](https://z.ai/subscribe?ic=R0K78RJKNW).
 > **Learn more about this architecture [here](https://z.ai/subscribe?ic=R0K78RJKNW).**
 
 ---
 
-> **Note**: This project is a specialized fork of [ClavixDev/Clavix](https://github.com/ClavixDev/Clavix), reimagined as a modern web-based platform for visual prompt engineering and product planning.
+> **Fork Note**: This project is a specialized fork of [ClavixDev/Clavix](https://github.com/ClavixDev/Clavix), reimagined as a modern web-based platform for visual prompt engineering and product planning.
 
 Transform vague ideas into production-ready prompts and PRDs. PromptArch is an elite AI orchestration platform designed for software architects and Vibe Coders.
+
+**Developed by [Roman | RyzenAdvanced](https://github.com/roman-ryzenadvanced)**
+
+- 📦 **GitHub Repository**: [roman-ryzenadvanced/PromptArch-the-prompt-enhancer](https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer)
+- 📮 **Telegram**: [@VibeCodePrompterSystem](https://t.me/VibeCodePrompterSystem)
 
 ## 🌟 Visual Overview
 
@@ -56,21 +61,20 @@ Transform vague ideas into production-ready prompts and PRDs. PromptArch is an e
 - **Components**: [shadcn/ui](https://ui.shadcn.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 
-## 🤝 Attribution
+## 🤝 Attribution & Credits
 
-This project is a visual and architectural evolution of the [Clavix](https://github.com/ClavixDev/Clavix) framework. While Clavix focuses on agentic-first Markdown templates, PromptArch provides a centralized web interface to execute these workflows with advanced model orchestration.
+**Author**: [Roman | RyzenAdvanced](https://github.com/roman-ryzenadvanced)
+- 📦 **GitHub**: [roman-ryzenadvanced/PromptArch-the-prompt-enhancer](https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer)
+- 📮 **Telegram**: [@VibeCodePrompterSystem](https://t.me/VibeCodePrompterSystem)
 
-Developed by **Roman | RyzenAdvanced**
-- GitHub: [roman-ryzenadvanced](https://github.com/roman-ryzenadvanced)
-- Telegram: [@VibeCodePrompterSystem](https://t.me/VibeCodePrompterSystem)
+**Forked from**: [ClavixDev/Clavix](https://github.com/ClavixDev/Clavix)
+- This project is a visual and architectural evolution of the Clavix framework
+- Clavix focuses on agentic-first Markdown templates
+- PromptArch provides a centralized web interface with advanced model orchestration
 
----
-*100% Developed using GLM 4.7 model on TRAE.AI IDE.*
-- **Styling**: TailwindCSS
-- **UI Components**: shadcn/ui + Radix UI
-- **State Management**: Zustand
-- **Forms**: React Hook Form + Zod
-- **Icons**: Lucide React
+**Development Platform**: [TRAE.AI IDE](https://trae.ai) powered by elite [GLM 4.7 model](https://z.ai/subscribe?ic=R0K78RJKNW)
+- 100% AI-assisted development using TRAE.AI's advanced coding capabilities
+- Learn more about the architecture [here](https://z.ai/subscribe?ic=R0K78RJKNW)
 
 ## Development
 

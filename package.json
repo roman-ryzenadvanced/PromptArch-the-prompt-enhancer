@@ -37,7 +37,23 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "ai",
+    "prompt-engineering",
+    "prd-generator",
+    "nextjs",
+    "qwen",
+    "ollama",
+    "zai"
+  ],
+  "author": "Roman | RyzenAdvanced <https://github.com/roman-ryzenadvanced>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer/issues"
+  },
+  "homepage": "https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer#readme"
 }
