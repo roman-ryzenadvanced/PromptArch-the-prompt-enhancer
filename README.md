@@ -11,8 +11,6 @@ Transform vague ideas into production-ready prompts and PRDs. PromptArch is an e
 
 ## 🌟 Visual Overview
 
-<img src="./screenshots/preview.png" width="100%" alt="PromptArch Preview" />
-
 ### 🛠 Core Capabilities
 
 - **Prompt Enhancer**: Refine vague prompts into surgical instructions for AI agents.
