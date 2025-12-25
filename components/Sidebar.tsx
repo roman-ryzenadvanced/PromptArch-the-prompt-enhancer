@@ -27,12 +27,17 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="border-b p-6">
-        <h1 className="flex items-center gap-2 text-xl font-bold">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            PA
-          </div>
-          PromptArch
-        </h1>
+        <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="block">
+          <h1 className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              PA
+            </div>
+            PromptArch
+          </h1>
+        </a>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Forked from <a href="https://github.com/ClavixDev/Clavix" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Clavix</a>
+        </p>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
@@ -60,7 +65,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
           <p className="font-semibold text-foreground mb-1">Developed by Roman | RyzenAdvanced</p>
           <div className="space-y-1">
             <p>
-              GitHub: <a href="https://github.com/roman-ryzenadvanced/Custom-Engineered-Agents-and-Tools-for-Vibe-Coders" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">roman-ryzenadvanced</a>
+              GitHub: <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">roman-ryzenadvanced</a>
             </p>
             <p>
               Telegram: <a href="https://t.me/VibeCodePrompterSystem" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@VibeCodePrompterSystem</a>
