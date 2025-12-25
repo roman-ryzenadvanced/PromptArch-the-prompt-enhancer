@@ -47,7 +47,6 @@ export default function PRDGenerator() {
       if (saved) {
         try {
           const keys = JSON.parse(saved);
-          if (keys.qwen) modelAdapter.updateQwenApiKey(keys.qwen);
           if (keys.ollama) modelAdapter.updateOllamaApiKey(keys.ollama);
           if (keys.zai) modelAdapter.updateZaiApiKey(keys.zai);
         } catch (e) {
@@ -147,7 +146,7 @@ export default function PRDGenerator() {
           <div className="space-y-2">
             <label className="text-sm font-medium">AI Provider</label>
             <div className="flex gap-2">
-              {(["qwen", "ollama", "zai"] as const).map((provider) => (
+              {(["ollama", "zai"] as const).map((provider) => (
                 <Button
                   key={provider}
                   variant={selectedProvider === provider ? "default" : "outline"}
@@ -155,7 +154,7 @@ export default function PRDGenerator() {
                   onClick={() => setSelectedProvider(provider)}
                   className="capitalize"
                 >
-                  {provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI"}
+                  {provider === "ollama" ? "Ollama" : "Z.AI"}
                 </Button>
               ))}
             </div>

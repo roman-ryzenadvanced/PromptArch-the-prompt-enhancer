@@ -40,7 +40,6 @@ export default function PromptEnhancer() {
       if (saved) {
         try {
           const keys = JSON.parse(saved);
-          if (keys.qwen) modelAdapter.updateQwenApiKey(keys.qwen);
           if (keys.ollama) modelAdapter.updateOllamaApiKey(keys.ollama);
           if (keys.zai) modelAdapter.updateZaiApiKey(keys.zai);
         } catch (e) {
@@ -124,7 +123,7 @@ export default function PromptEnhancer() {
           <div className="space-y-2">
             <label className="text-sm font-medium">AI Provider</label>
             <div className="flex flex-wrap gap-2">
-              {(["qwen", "ollama", "zai"] as const).map((provider) => (
+              {(["ollama", "zai"] as const).map((provider) => (
                 <Button
                   key={provider}
                   variant={selectedProvider === provider ? "default" : "outline"}
@@ -135,7 +134,7 @@ export default function PromptEnhancer() {
                     selectedProvider === provider && "bg-primary text-primary-foreground"
                   )}
                 >
-                  {provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI"}
+                  {provider === "ollama" ? "Ollama" : "Z.AI"}
                 </Button>
               ))}
             </div>

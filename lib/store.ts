@@ -10,11 +10,6 @@ interface AppState {
   selectedModels: Record<ModelProvider, string>;
   availableModels: Record<ModelProvider, string[]>;
   apiKeys: Record<ModelProvider, string>;
-  qwenTokens?: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: number;
-  };
   isProcessing: boolean;
   error: string | null;
   history: {
@@ -31,7 +26,6 @@ interface AppState {
   setSelectedModel: (provider: ModelProvider, model: string) => void;
   setAvailableModels: (provider: ModelProvider, models: string[]) => void;
   setApiKey: (provider: ModelProvider, key: string) => void;
-  setQwenTokens: (tokens: { accessToken: string; refreshToken?: string; expiresAt?: number }) => void;
   setProcessing: (processing: boolean) => void;
   setError: (error: string | null) => void;
   addToHistory: (prompt: string) => void;
@@ -44,26 +38,22 @@ const useStore = create<AppState>((set) => ({
   enhancedPrompt: null,
   prd: null,
   actionPlan: null,
-  selectedProvider: "qwen",
+  selectedProvider: "ollama",
   selectedModels: {
-    qwen: "qwen-coder-plus",
     ollama: "gpt-oss:120b",
     zai: "glm-4.7",
   },
   availableModels: {
-    qwen: ["qwen-coder-plus", "qwen-coder-turbo", "qwen-coder-lite"],
     ollama: ["gpt-oss:120b", "llama3.1", "gemma3", "deepseek-r1", "qwen3"],
     zai: ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air", "glm-4-flash", "glm-4-flashx"],
   },
   apiKeys: {
-    qwen: "",
     ollama: "",
     zai: "",
   },
   isProcessing: false,
   error: null,
   history: [],
-
   setCurrentPrompt: (prompt) => set({ currentPrompt: prompt }),
   setEnhancedPrompt: (enhanced) => set({ enhancedPrompt: enhanced }),
   setPRD: (prd) => set({ prd }),
@@ -81,7 +71,6 @@ const useStore = create<AppState>((set) => ({
     set((state) => ({
       apiKeys: { ...state.apiKeys, [provider]: key },
     })),
-  setQwenTokens: (tokens) => set({ qwenTokens: tokens }),
   setProcessing: (processing) => set({ isProcessing: processing }),
   setError: (error) => set({ error }),
   addToHistory: (prompt) =>
@@ -102,6 +91,7 @@ const useStore = create<AppState>((set) => ({
       enhancedPrompt: null,
       prd: null,
       actionPlan: null,
+      isProcessing: false,
       error: null,
     }),
 }));
