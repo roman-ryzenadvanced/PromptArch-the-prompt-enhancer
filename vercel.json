@@ -2,5 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_SITE_URL": {
+      "description": "The production URL of your app (e.g., https://your-app.vercel.app)",
+      "value": "https://your-app.vercel.app"
+    }
+  }
 }

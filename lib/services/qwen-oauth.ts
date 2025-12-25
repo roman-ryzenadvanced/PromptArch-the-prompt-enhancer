@@ -1,8 +1,17 @@
 import type { ChatMessage, APIResponse } from "@/types";
 
 const DEFAULT_QWEN_ENDPOINT = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
-const DEFAULT_OAUTH_BASE = "/api/qwen";
 const TOKEN_STORAGE_KEY = "promptarch-qwen-tokens";
+
+function getOAuthBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/api/qwen`;
+  }
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return `${process.env.NEXT_PUBLIC_SITE_URL}/api/qwen`;
+  }
+  return "/api/qwen";
+}
 
 export interface QwenOAuthConfig {
   apiKey?: string;
@@ -39,7 +48,7 @@ export class QwenOAuthService {
 
   constructor(config: QwenOAuthConfig = {}) {
     this.endpoint = config.endpoint || DEFAULT_QWEN_ENDPOINT;
-    this.oauthBaseUrl = config.oauthBaseUrl || DEFAULT_OAUTH_BASE;
+    this.oauthBaseUrl = config.oauthBaseUrl || getOAuthBaseUrl();
     this.apiKey = config.apiKey || process.env.QWEN_API_KEY || undefined;
 
     if (config.accessToken) {
@@ -104,7 +113,7 @@ export class QwenOAuthService {
   }
 
   private hydrateTokens() {
-    if (this.storageHydrated || typeof window === "undefined") {
+    if (this.storageHydrated || typeof window === "undefined" || typeof window.localStorage === "undefined") {
       return;
     }
 
@@ -113,7 +122,8 @@ export class QwenOAuthService {
       if (stored) {
         this.token = JSON.parse(stored);
       }
-    } catch {
+    } catch (error) {
+      console.warn("[QwenOAuth] Failed to read tokens from localStorage:", error);
       this.token = null;
     } finally {
       this.storageHydrated = true;
@@ -126,14 +136,18 @@ export class QwenOAuthService {
   }
 
   private persistToken(token: QwenOAuthToken | null) {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
       return;
     }
 
-    if (token) {
-      window.localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
-    } else {
-      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    try {
+      if (token) {
+        window.localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
+      } else {
+        window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.warn("[QwenOAuth] Failed to persist tokens to localStorage:", error);
     }
   }
 
@@ -227,17 +241,23 @@ export class QwenOAuthService {
       throw new Error("Qwen OAuth is only supported in the browser");
     }
 
-    const codeVerifier = this.generateCodeVerifier();
-    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-    const deviceAuth = await this.requestDeviceAuthorization(codeChallenge);
-
     const popup = window.open(
-      deviceAuth.verification_uri_complete,
+      "",
       "qwen-oauth",
       "width=500,height=600,scrollbars=yes,resizable=yes"
     );
 
-    if (!popup) {
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+    const deviceAuth = await this.requestDeviceAuthorization(codeChallenge);
+
+    if (popup) {
+      try {
+        popup.location.href = deviceAuth.verification_uri_complete;
+      } catch {
+        // ignore cross-origin restrictions
+      }
+    } else {
       window.alert(
         `Open this URL to authenticate:\n${deviceAuth.verification_uri_complete}\n\nUser code: ${deviceAuth.user_code}`
       );
