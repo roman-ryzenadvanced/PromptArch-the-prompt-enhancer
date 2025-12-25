@@ -35,6 +35,9 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             PromptArch
           </h1>
         </a>
+        <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="mt-2 block text-xs text-primary hover:underline">
+          github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer
+        </a>
         <p className="mt-2 text-xs text-muted-foreground">
           Forked from <a href="https://github.com/ClavixDev/Clavix" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Clavix</a>
         </p>
