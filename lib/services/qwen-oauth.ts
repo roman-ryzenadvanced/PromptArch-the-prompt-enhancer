@@ -440,7 +440,7 @@ export class QwenOAuthService {
 
   async chatCompletion(
     messages: ChatMessage[],
-    model: string = "qwen-coder-plus",
+    model: string = "coder-model",
     stream: boolean = false
   ): Promise<APIResponse<string>> {
     try {
@@ -505,7 +505,7 @@ Return ONLY the enhanced prompt, no explanations or extra text.`,
       content: `Enhance this prompt for an AI coding agent:\n\n${prompt}`,
     };
 
-    return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
+    return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
   async generatePRD(idea: string, model?: string): Promise<APIResponse<string>> {
@@ -529,7 +529,7 @@ Use clear, specific language suitable for development teams.`,
       content: `Generate a PRD for this idea:\n\n${idea}`,
     };
 
-    return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
+    return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
   async generateActionPlan(prd: string, model?: string): Promise<APIResponse<string>> {
@@ -557,7 +557,7 @@ Include specific recommendations for:
       content: `Generate an action plan based on this PRD:\n\n${prd}`,
     };
 
-    return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
+    return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
   async generateUXDesignerPrompt(appDescription: string, model?: string): Promise<APIResponse<string>> {
@@ -622,29 +622,19 @@ Make's prompt specific, inspiring, and comprehensive. Use professional UX termin
       content: `Create a BEST EVER UX design prompt for this app:\n\n${appDescription}`,
     };
 
-    return this.chatCompletion([systemMessage, userMessage], model || "qwen-coder-plus");
+    return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
   async listModels(): Promise<APIResponse<string[]>> {
     const models = [
-      "qwen-coder-plus",
-      "qwen-coder-turbo",
-      "qwen-coder-lite",
-      "qwen-plus",
-      "qwen-turbo",
-      "qwen-max",
+      "coder-model",
     ];
     return { success: true, data: models };
   }
 
   getAvailableModels(): string[] {
     return [
-      "qwen-coder-plus",
-      "qwen-coder-turbo",
-      "qwen-coder-lite",
-      "qwen-plus",
-      "qwen-turbo",
-      "qwen-max",
+      "coder-model",
     ];
   }
 }
