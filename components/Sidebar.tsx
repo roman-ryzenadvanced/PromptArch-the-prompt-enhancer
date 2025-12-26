@@ -34,9 +34,13 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const SidebarContent = () => (
     <>
       <div className="border-b p-4 lg:p-6">
+        <a href="https://www.rommark.dev" className="mb-4 flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+          <Menu className="h-3 w-3" />
+          Back to rommark.dev
+        </a>
         <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="block">
           <h1 className="flex items-center gap-2 text-lg lg:text-xl font-bold hover:opacity-80 transition-opacity">
-            <div className="flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm lg:text-base">
+            <div className="flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg bg-[#4285F4] text-primary-foreground text-sm lg:text-base">
               PA
             </div>
             PromptArch
