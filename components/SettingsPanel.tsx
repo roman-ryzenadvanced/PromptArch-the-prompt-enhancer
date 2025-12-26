@@ -51,7 +51,7 @@ export default function SettingsPanel() {
 
   const handleApiKeyChange = (provider: string, value: string) => {
     setApiKey(provider as "qwen" | "ollama" | "zai", value);
-    
+
     switch (provider) {
       case "qwen":
         modelAdapter.updateQwenApiKey(value);
@@ -93,21 +93,21 @@ export default function SettingsPanel() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-4 lg:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+            <Key className="h-4 w-4 lg:h-5 lg:w-5" />
             API Configuration
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs lg:text-sm">
             Configure API keys for different AI providers
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 lg:space-y-6 p-4 lg:p-6 pt-0 lg:pt-0">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <Server className="h-4 w-4" />
+            <label className="flex items-center gap-2 text-xs lg:text-sm font-medium">
+              <Server className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               Qwen Code API Key
             </label>
             <div className="relative">
@@ -116,24 +116,24 @@ export default function SettingsPanel() {
                 placeholder="Enter your Qwen API key"
                 value={apiKeys.qwen || ""}
                 onChange={(e) => handleApiKeyChange("qwen", e.target.value)}
-                className="font-mono text-sm"
+                className="font-mono text-xs lg:text-sm pr-10"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full"
+                className="absolute right-0 top-0 h-full w-9 lg:w-10"
                 onClick={() => setShowApiKey((prev) => ({ ...prev, qwen: !prev.qwen }))}
               >
                 {showApiKey.qwen ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 )}
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <p className="text-xs text-muted-foreground flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-4">
+              <p className="text-[10px] lg:text-xs text-muted-foreground flex-1">
                 Get API key from{" "}
                 <a
                   href="https://help.aliyun.com/zh/dashscope/"
@@ -147,27 +147,27 @@ export default function SettingsPanel() {
               <Button
                 variant={qwenTokens ? "secondary" : "outline"}
                 size="sm"
-                className="h-8"
+                className="h-7 lg:h-8 text-[10px] lg:text-xs w-full sm:w-auto"
                 onClick={handleQwenAuth}
                 disabled={isAuthLoading}
               >
                 {isAuthLoading
                   ? "Signing in..."
                   : qwenTokens
-                  ? "Logout from Qwen"
-                  : "Login with Qwen (OAuth)"}
+                    ? "Logout from Qwen"
+                    : "Login with Qwen (OAuth)"}
               </Button>
             </div>
             {qwenTokens && (
-              <p className="text-[10px] text-green-600 dark:text-green-400 font-medium">
+              <p className="text-[9px] lg:text-[10px] text-green-600 dark:text-green-400 font-medium">
                 ✓ Authenticated via OAuth (Expires: {new Date(qwenTokens.expiresAt || 0).toLocaleString()})
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <Server className="h-4 w-4" />
+            <label className="flex items-center gap-2 text-xs lg:text-sm font-medium">
+              <Server className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               Ollama Cloud API Key
             </label>
             <div className="relative">
@@ -176,23 +176,23 @@ export default function SettingsPanel() {
                 placeholder="Enter your Ollama API key"
                 value={apiKeys.ollama || ""}
                 onChange={(e) => handleApiKeyChange("ollama", e.target.value)}
-                className="font-mono text-sm"
+                className="font-mono text-xs lg:text-sm pr-10"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full"
+                className="absolute right-0 top-0 h-full w-9 lg:w-10"
                 onClick={() => setShowApiKey((prev) => ({ ...prev, ollama: !prev.ollama }))}
               >
                 {showApiKey.ollama ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] lg:text-xs text-muted-foreground">
               Get API key from{" "}
               <a
                 href="https://ollama.com/cloud"
@@ -206,8 +206,8 @@ export default function SettingsPanel() {
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <Server className="h-4 w-4" />
+            <label className="flex items-center gap-2 text-xs lg:text-sm font-medium">
+              <Server className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
               Z.AI Plan API Key
             </label>
             <div className="relative">
@@ -216,23 +216,23 @@ export default function SettingsPanel() {
                 placeholder="Enter your Z.AI API key"
                 value={apiKeys.zai || ""}
                 onChange={(e) => handleApiKeyChange("zai", e.target.value)}
-                className="font-mono text-sm"
+                className="font-mono text-xs lg:text-sm pr-10"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full"
+                className="absolute right-0 top-0 h-full w-9 lg:w-10"
                 onClick={() => setShowApiKey((prev) => ({ ...prev, zai: !prev.zai }))}
               >
                 {showApiKey.zai ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] lg:text-xs text-muted-foreground">
               Get API key from{" "}
               <a
                 href="https://docs.z.ai"
@@ -245,45 +245,44 @@ export default function SettingsPanel() {
             </p>
           </div>
 
-          <Button onClick={handleSave} className="w-full">
-            <Save className="mr-2 h-4 w-4" />
+          <Button onClick={handleSave} className="w-full h-9 lg:h-10 text-xs lg:text-sm">
+            <Save className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
             Save API Keys
           </Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Default Provider</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="text-base lg:text-lg">Default Provider</CardTitle>
+          <CardDescription className="text-xs lg:text-sm">
             Select your preferred AI provider
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3">
+        <CardContent className="space-y-3 lg:space-y-4 p-4 lg:p-6 pt-0 lg:pt-0">
+          <div className="grid gap-2 lg:gap-3">
             {(["qwen", "ollama", "zai"] as const).map((provider) => (
               <button
                 key={provider}
                 onClick={() => setSelectedProvider(provider)}
-                className={`flex items-center gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 ${
-                  selectedProvider === provider
+                className={`flex items-center gap-2 lg:gap-3 rounded-lg border p-3 lg:p-4 text-left transition-colors hover:bg-muted/50 ${selectedProvider === provider
                     ? "border-primary bg-primary/5"
                     : "border-border"
-                }`}
+                  }`}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
-                  <Server className="h-5 w-5 text-primary" />
+                <div className="flex h-8 w-8 lg:h-10 lg:w-10 items-center justify-center rounded-md bg-primary/10">
+                  <Server className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-medium capitalize">{provider}</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium capitalize text-sm lg:text-base">{provider}</h3>
+                  <p className="text-[10px] lg:text-sm text-muted-foreground truncate">
                     {provider === "qwen" && "Alibaba DashScope API"}
                     {provider === "ollama" && "Ollama Cloud API"}
                     {provider === "zai" && "Z.AI Plan API"}
                   </p>
                 </div>
                 {selectedProvider === provider && (
-                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                 )}
               </button>
             ))}
@@ -292,15 +291,15 @@ export default function SettingsPanel() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Data Privacy</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="text-base lg:text-lg">Data Privacy</CardTitle>
+          <CardDescription className="text-xs lg:text-sm">
             Your data handling preferences
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border bg-muted/30 p-4">
-            <p className="text-sm">
+        <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
+          <div className="rounded-md border bg-muted/30 p-3 lg:p-4">
+            <p className="text-xs lg:text-sm">
               All API keys are stored locally in your browser. Your prompts are sent directly to the selected AI provider and are not stored by PromptArch.
             </p>
           </div>

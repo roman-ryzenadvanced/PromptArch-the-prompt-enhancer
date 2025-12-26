@@ -53,7 +53,7 @@ export default function ActionPlanGenerator() {
   const loadAvailableModels = async () => {
     const fallbackModels = modelAdapter.getAvailableModels(selectedProvider);
     setAvailableModels(selectedProvider, fallbackModels);
-    
+
     try {
       const result = await modelAdapter.listModels(selectedProvider);
       if (result.success && result.data) {
@@ -126,28 +126,28 @@ export default function ActionPlanGenerator() {
   };
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
+    <div className="mx-auto grid max-w-7xl gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
       <Card className="h-fit">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5" />
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+            <ListTodo className="h-4 w-4 lg:h-5 lg:w-5" />
             Action Plan Generator
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs lg:text-sm">
             Convert PRD into actionable implementation plan
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 lg:space-y-4 p-4 lg:p-6 pt-0 lg:pt-0">
           <div className="space-y-2">
-            <label className="text-sm font-medium">AI Provider</label>
-            <div className="flex gap-2">
+            <label className="text-xs lg:text-sm font-medium">AI Provider</label>
+            <div className="flex flex-wrap gap-1.5 lg:gap-2">
               {(["qwen", "ollama", "zai"] as const).map((provider) => (
                 <Button
                   key={provider}
                   variant={selectedProvider === provider ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedProvider(provider)}
-                  className="capitalize"
+                  className="capitalize text-xs lg:text-sm h-8 lg:h-9 px-2.5 lg:px-3"
                 >
                   {provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI"}
                 </Button>
@@ -156,11 +156,11 @@ export default function ActionPlanGenerator() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Model</label>
+            <label className="text-xs lg:text-sm font-medium">Model</label>
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs lg:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {models.map((model) => (
                 <option key={model} value={model}>
@@ -171,36 +171,36 @@ export default function ActionPlanGenerator() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">PRD / Requirements</label>
+            <label className="text-xs lg:text-sm font-medium">PRD / Requirements</label>
             <Textarea
               placeholder="Paste your PRD or project requirements here..."
               value={currentPrompt}
               onChange={(e) => setCurrentPrompt(e.target.value)}
-              className="min-h-[200px] resize-y"
+              className="min-h-[150px] lg:min-h-[200px] resize-y text-sm"
             />
           </div>
 
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-md bg-destructive/10 p-2.5 lg:p-3 text-xs lg:text-sm text-destructive">
               {error}
               {!apiKeys[selectedProvider] && (
-                <div className="mt-2 flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span className="text-xs">Configure API key in Settings</span>
+                <div className="mt-1.5 lg:mt-2 flex items-center gap-2">
+                  <Settings className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+                  <span className="text-[10px] lg:text-xs">Configure API key in Settings</span>
                 </div>
               )}
             </div>
           )}
 
-          <Button onClick={handleGenerate} disabled={isProcessing || !currentPrompt.trim()} className="w-full">
+          <Button onClick={handleGenerate} disabled={isProcessing || !currentPrompt.trim()} className="w-full h-9 lg:h-10 text-xs lg:text-sm">
             {isProcessing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Action Plan...
+                <Loader2 className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4 animate-spin" />
+                Generating...
               </>
             ) : (
               <>
-                <ListTodo className="mr-2 h-4 w-4" />
+                <ListTodo className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 Generate Action Plan
               </>
             )}
@@ -209,43 +209,43 @@ export default function ActionPlanGenerator() {
       </Card>
 
       <Card className={cn(!actionPlan && "opacity-50")}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className="p-4 lg:p-6">
+          <CardTitle className="flex items-center justify-between text-base lg:text-lg">
             <span className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 text-green-500" />
               Action Plan
             </span>
             {actionPlan && (
-              <Button variant="ghost" size="icon" onClick={handleCopy}>
+              <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8 lg:h-9 lg:w-9">
                 {copied ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-green-500" />
                 ) : (
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 )}
               </Button>
             )}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs lg:text-sm">
             Task breakdown, frameworks, and architecture recommendations
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
           {actionPlan ? (
-            <div className="space-y-4">
-              <div className="rounded-md border bg-primary/5 p-4">
-                <h4 className="mb-2 flex items-center gap-2 font-semibold">
-                  <Clock className="h-4 w-4" />
+            <div className="space-y-3 lg:space-y-4">
+              <div className="rounded-md border bg-primary/5 p-3 lg:p-4">
+                <h4 className="mb-1.5 lg:mb-2 flex items-center gap-2 font-semibold text-xs lg:text-sm">
+                  <Clock className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                   Implementation Roadmap
                 </h4>
-                <pre className="whitespace-pre-wrap text-sm">{actionPlan.rawContent}</pre>
+                <pre className="whitespace-pre-wrap text-xs lg:text-sm">{actionPlan.rawContent}</pre>
               </div>
 
-              <div className="rounded-md border bg-muted/30 p-4">
-                <h4 className="mb-2 flex items-center gap-2 font-semibold">
-                  <AlertTriangle className="h-4 w-4" />
+              <div className="rounded-md border bg-muted/30 p-3 lg:p-4">
+                <h4 className="mb-1.5 lg:mb-2 flex items-center gap-2 font-semibold text-xs lg:text-sm">
+                  <AlertTriangle className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                   Quick Notes
                 </h4>
-                <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                <ul className="list-inside list-disc space-y-0.5 lg:space-y-1 text-[10px] lg:text-xs text-muted-foreground">
                   <li>Review all task dependencies before starting</li>
                   <li>Set up recommended framework architecture</li>
                   <li>Follow best practices for security and performance</li>
@@ -254,7 +254,7 @@ export default function ActionPlanGenerator() {
               </div>
             </div>
           ) : (
-            <div className="flex h-[300px] items-center justify-center text-center text-sm text-muted-foreground">
+            <div className="flex h-[200px] lg:h-[300px] items-center justify-center text-center text-xs lg:text-sm text-muted-foreground">
               Action plan will appear here
             </div>
           )}

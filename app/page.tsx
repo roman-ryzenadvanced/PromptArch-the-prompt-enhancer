@@ -41,7 +41,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto pt-16 lg:pt-0 px-4 py-4 lg:p-8">
         <div className="mx-auto max-w-7xl">
           {renderContent()}
         </div>
