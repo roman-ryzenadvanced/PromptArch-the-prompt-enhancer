@@ -162,6 +162,146 @@ export class OllamaCloudService {
   getAvailableModels(): string[] {
     return this.availableModels.length > 0 ? this.availableModels : DEFAULT_MODELS;
   }
+
+  async enhancePrompt(prompt: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are an expert prompt engineer. Your task is to enhance user prompts to make them more precise, actionable, and effective for AI coding agents.
+
+Apply these principles:
+1. Add specific context about project and requirements
+2. Clarify constraints and preferences
+3. Define expected output format clearly
+4. Include edge cases and error handling requirements
+5. Specify testing and validation criteria
+
+Return ONLY the enhanced prompt, no explanations or extra text.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Enhance this prompt for an AI coding agent:\n\n${prompt}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
+
+  async generatePRD(idea: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are an expert product manager and technical architect. Generate a comprehensive Product Requirements Document (PRD) based on user's idea.
+
+Structure your PRD with these sections:
+1. Overview & Objectives
+2. User Personas & Use Cases
+3. Functional Requirements (prioritized)
+4. Non-functional Requirements
+5. Technical Architecture Recommendations
+6. Success Metrics & KPIs
+
+Use clear, specific language suitable for development teams.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Generate a PRD for this idea:\n\n${idea}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
+
+  async generateActionPlan(prd: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are an expert technical lead and project manager. Generate a detailed action plan based on PRD.
+
+Structure of action plan with:
+1. Task breakdown with priorities (High/Medium/Low)
+2. Dependencies between tasks
+3. Estimated effort for each task
+4. Recommended frameworks and technologies
+5. Architecture guidelines and best practices
+
+Include specific recommendations for:
+- Frontend frameworks
+- Backend architecture
+- Database choices
+- Authentication/authorization
+- Deployment strategy`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Generate an action plan based on this PRD:\n\n${prd}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
+
+  async generateUXDesignerPrompt(appDescription: string, model?: string): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a world-class UX/UI designer with deep expertise in human-centered design principles, user research, interaction design, visual design systems, and modern design tools (Figma, Sketch, Adobe XD).
+
+Your task is to create an exceptional, detailed prompt for generating best possible UX design for a given app description.
+
+Generate a comprehensive UX design prompt that includes:
+
+1. USER RESEARCH & PERSONAS
+   - Primary target users and their motivations
+   - User pain points and needs
+   - User journey maps
+   - Persona archetypes with demographics and goals
+
+2. INFORMATION ARCHITECTURE
+   - Content hierarchy and organization
+   - Navigation structure and patterns
+   - User flows and key pathways
+   - Site map or app structure
+
+3. VISUAL DESIGN SYSTEM
+   - Color palette recommendations (primary, secondary, accent, neutral)
+   - Typography hierarchy and font pairings
+   - Component library approach
+   - Spacing, sizing, and layout grids
+   - Iconography style and set
+
+4. INTERACTION DESIGN
+   - Micro-interactions and animations
+   - Gesture patterns for touch interfaces
+   - Loading states and empty states
+   - Error handling and feedback mechanisms
+   - Accessibility considerations (WCAG compliance)
+
+5. KEY SCREENS & COMPONENTS
+   - Core screens that need detailed design
+   - Critical components (buttons, forms, cards, navigation)
+   - Data visualization needs
+   - Responsive design requirements (mobile, tablet, desktop)
+
+6. DESIGN DELIVERABLES
+   - Wireframes vs. high-fidelity mockups
+   - Design system documentation needs
+   - Prototyping requirements
+   - Handoff specifications for developers
+
+7. COMPETITIVE INSIGHTS
+   - Design patterns from successful apps in this category
+   - Opportunities to differentiate
+   - Modern design trends to consider
+
+The output should be a detailed, actionable prompt that a designer or AI image generator can use to create world-class UX designs.
+
+Make's prompt specific, inspiring, and comprehensive. Use professional UX terminology.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create a BEST EVER UX design prompt for this app:\n\n${appDescription}`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
 }
 
 export default OllamaCloudService;
