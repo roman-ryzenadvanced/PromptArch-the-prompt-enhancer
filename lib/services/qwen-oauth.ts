@@ -68,10 +68,20 @@ export class QwenOAuthService {
     this.apiKey = apiKey;
   }
 
+  hasApiKey(): boolean {
+    return !!this.apiKey;
+  }
+
+  hasOAuthToken(): boolean {
+    return !!this.getTokenInfo()?.accessToken;
+  }
+
   /**
    * Build default headers for Qwen completions (includes OAuth token refresh).
    */
   private async getRequestHeaders(): Promise<Record<string, string>> {
+    console.log("[QwenOAuth] Getting request headers...");
+
     const token = await this.getValidToken();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -79,14 +89,17 @@ export class QwenOAuthService {
 
     if (token?.accessToken) {
       headers["Authorization"] = `Bearer ${token.accessToken}`;
+      console.log("[QwenOAuth] Using OAuth token for authorization");
       return headers;
     }
 
     if (this.apiKey) {
       headers["Authorization"] = `Bearer ${this.apiKey}`;
+      console.log("[QwenOAuth] Using API key for authorization");
       return headers;
     }
 
+    console.error("[QwenOAuth] No OAuth token or API key available");
     throw new Error("Please configure a Qwen API key or authenticate via OAuth.");
   }
 
@@ -96,8 +109,11 @@ export class QwenOAuthService {
   private getEffectiveEndpoint(): string {
     const resourceUrl = this.token?.resourceUrl;
     if (resourceUrl) {
-      return this.normalizeResourceUrl(resourceUrl);
+      const normalized = this.normalizeResourceUrl(resourceUrl);
+      console.log("[Qwen] Using resource URL:", normalized);
+      return normalized;
     }
+    console.log("[Qwen] Using default endpoint:", this.endpoint);
     return this.endpoint;
   }
 
@@ -109,7 +125,12 @@ export class QwenOAuthService {
 
     const withProtocol = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
     const cleaned = withProtocol.replace(/\/$/, "");
-    return cleaned.endsWith("/v1") ? cleaned : `${cleaned}/v1`;
+
+    if (cleaned.endsWith("/v1") || cleaned.endsWith("/compatible-mode/v1")) {
+      return cleaned;
+    }
+
+    return `${cleaned}/v1`;
   }
 
   private hydrateTokens() {
@@ -132,6 +153,7 @@ export class QwenOAuthService {
 
   private getStoredToken(): QwenOAuthToken | null {
     this.hydrateTokens();
+    console.log("[QwenOAuth] Retrieved stored token:", this.token ? { hasAccessToken: !!this.token.accessToken, expiresAt: this.token.expiresAt } : null);
     return this.token;
   }
 
@@ -229,8 +251,18 @@ export class QwenOAuthService {
     this.storageHydrated = true;
   }
 
+  /**
+   * Initialize the service and hydrate tokens from storage.
+   */
+  initialize(): void {
+    console.log("[QwenOAuth] Initializing service...");
+    this.hydrateTokens();
+  }
+
   getTokenInfo(): QwenOAuthToken | null {
-    return this.getStoredToken();
+    this.hydrateTokens();
+    console.log("[QwenOAuth] getTokenInfo called, returning:", this.token ? { hasAccessToken: !!this.token.accessToken, expiresAt: this.token.expiresAt } : null);
+    return this.token;
   }
 
   /**
@@ -353,12 +385,30 @@ export class QwenOAuthService {
   }
 
   private parseTokenResponse(data: any): QwenOAuthToken {
-    return {
+    console.log("[QwenOAuth] Token response received:", data);
+
+    const token: QwenOAuthToken = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      resourceUrl: data.resource_url,
       expiresAt: data.expires_in ? Date.now() + data.expires_in * 1000 : undefined,
     };
+
+    if (data.resource_url) {
+      token.resourceUrl = data.resource_url;
+      console.log("[QwenOAuth] Using resource_url from response:", data.resource_url);
+    } else if (data.endpoint) {
+      token.resourceUrl = data.endpoint;
+      console.log("[QwenOAuth] Using endpoint from response:", data.endpoint);
+    } else if (data.resource_server) {
+      token.resourceUrl = `https://${data.resource_server}/compatible-mode/v1`;
+      console.log("[QwenOAuth] Using resource_server from response:", data.resource_server);
+    } else {
+      console.log("[QwenOAuth] No resource_url/endpoint in response, will use default Qwen endpoint");
+      console.log("[QwenOAuth] Available fields in response:", Object.keys(data));
+    }
+
+    console.log("[QwenOAuth] Parsed token:", { hasAccessToken: !!token.accessToken, hasRefreshToken: !!token.refreshToken, hasResourceUrl: !!token.resourceUrl, expiresAt: token.expiresAt });
+    return token;
   }
 
   /**
@@ -395,12 +445,19 @@ export class QwenOAuthService {
   ): Promise<APIResponse<string>> {
     try {
       const headers = await this.getRequestHeaders();
-      const url = `${this.getEffectiveEndpoint()}/chat/completions`;
+      const baseUrl = this.getEffectiveEndpoint();
+      const url = `${this.oauthBaseUrl}/chat`;
+
+      console.log("[Qwen] Chat completion request:", { url, model, hasAuth: !!headers.Authorization });
 
       const response = await fetch(url, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: headers.Authorization || "",
+        },
         body: JSON.stringify({
+          endpoint: baseUrl,
           model,
           messages,
           stream,
@@ -409,6 +466,7 @@ export class QwenOAuthService {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("[Qwen] Chat completion failed:", response.status, response.statusText, errorText);
         throw new Error(`Chat completion failed (${response.status}): ${response.statusText} - ${errorText}`);
       }
 

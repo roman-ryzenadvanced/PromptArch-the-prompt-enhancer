@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import type { View } from "@/components/Sidebar";
 import PromptEnhancer from "@/components/PromptEnhancer";
@@ -9,9 +9,15 @@ import ActionPlanGenerator from "@/components/ActionPlanGenerator";
 import UXDesignerPrompt from "@/components/UXDesignerPrompt";
 import HistoryPanel from "@/components/HistoryPanel";
 import SettingsPanel from "@/components/SettingsPanel";
+import modelAdapter from "@/lib/services/adapter-instance";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<View>("enhance");
+
+  useEffect(() => {
+    console.log("[Home] Initializing Qwen OAuth service on client...");
+    modelAdapter["qwenService"]["initialize"]?.();
+  }, []);
 
   const renderContent = () => {
     switch (currentView) {

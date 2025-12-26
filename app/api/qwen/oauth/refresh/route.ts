@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { QWEN_OAUTH_CLIENT_ID, QWEN_OAUTH_TOKEN_ENDPOINT } from "../../constants";
+import {
+  QWEN_OAUTH_CLIENT_ID,
+  QWEN_OAUTH_TOKEN_ENDPOINT,
+  createQwenHeaders,
+} from "../../constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,10 +19,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(QWEN_OAUTH_TOKEN_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
-      },
+      headers: createQwenHeaders("application/x-www-form-urlencoded"),
       body: new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token,
@@ -27,18 +28,18 @@ export async function POST(request: NextRequest) {
     });
 
     const payload = await response.text();
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Token refresh failed", details: payload },
-        { status: response.status }
-      );
+    let data;
+    try {
+      data = JSON.parse(payload);
+    } catch {
+      data = { error: payload || "Unknown error from Qwen" };
     }
 
-    return NextResponse.json(JSON.parse(payload));
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Qwen token refresh failed", error);
     return NextResponse.json(
-      { error: "Token refresh failed" },
+      { error: "internal_server_error", message: error instanceof Error ? error.message : "Token refresh failed" },
       { status: 500 }
     );
   }

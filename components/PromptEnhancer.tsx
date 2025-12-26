@@ -71,7 +71,9 @@ export default function PromptEnhancer() {
     }
 
     const apiKey = apiKeys[selectedProvider];
-    if (!apiKey || !apiKey.trim()) {
+    const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
+
+    if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
       setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
       return;
     }
@@ -79,15 +81,21 @@ export default function PromptEnhancer() {
     setProcessing(true);
     setError(null);
 
+    console.log("[PromptEnhancer] Starting enhancement...", { selectedProvider, selectedModel, hasQwenAuth: modelAdapter.hasQwenAuth() });
+
     try {
       const result = await modelAdapter.enhancePrompt(currentPrompt, selectedProvider, selectedModel);
+
+      console.log("[PromptEnhancer] Enhancement result:", result);
 
       if (result.success && result.data) {
         setEnhancedPrompt(result.data);
       } else {
+        console.error("[PromptEnhancer] Enhancement failed:", result.error);
         setError(result.error || "Failed to enhance prompt");
       }
     } catch (err) {
+      console.error("[PromptEnhancer] Enhancement error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setProcessing(false);

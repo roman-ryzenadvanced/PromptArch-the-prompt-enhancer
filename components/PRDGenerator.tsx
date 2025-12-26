@@ -78,7 +78,9 @@ export default function PRDGenerator() {
     }
 
     const apiKey = apiKeys[selectedProvider];
-    if (!apiKey || !apiKey.trim()) {
+    const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
+
+    if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
       setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
       return;
     }
@@ -86,8 +88,12 @@ export default function PRDGenerator() {
     setProcessing(true);
     setError(null);
 
+    console.log("[PRDGenerator] Starting PRD generation...", { selectedProvider, selectedModel, hasQwenAuth: modelAdapter.hasQwenAuth() });
+
     try {
       const result = await modelAdapter.generatePRD(currentPrompt, selectedProvider, selectedModel);
+
+      console.log("[PRDGenerator] Generation result:", result);
 
       if (result.success && result.data) {
         const newPRD = {
@@ -105,9 +111,11 @@ export default function PRDGenerator() {
         };
         setPRD(newPRD);
       } else {
+        console.error("[PRDGenerator] Generation failed:", result.error);
         setError(result.error || "Failed to generate PRD");
       }
     } catch (err) {
+      console.error("[PRDGenerator] Generation error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setProcessing(false);

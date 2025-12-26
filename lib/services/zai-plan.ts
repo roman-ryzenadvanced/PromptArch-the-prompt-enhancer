@@ -17,6 +17,10 @@ export class ZaiPlanService {
     };
   }
 
+  hasAuth(): boolean {
+    return !!this.config.apiKey;
+  }
+
   private getHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { QWEN_OAUTH_BASE_URL } from "../constants";
+import { QWEN_OAUTH_BASE_URL, createQwenHeaders } from "../constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,16 +14,20 @@ export async function GET(request: NextRequest) {
 
     const userResponse = await fetch(`${QWEN_OAUTH_BASE_URL}/api/v1/user`, {
       headers: {
+        ...createQwenHeaders(),
         Authorization: `Bearer ${token}`,
       },
     });
 
     if (!userResponse.ok) {
       const errorText = await userResponse.text();
-      return NextResponse.json(
-        { error: "Failed to fetch user info", details: errorText },
-        { status: userResponse.status }
-      );
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || "Failed to fetch user info" };
+      }
+      return NextResponse.json(errorData, { status: userResponse.status });
     }
 
     const userData = await userResponse.json();
@@ -31,7 +35,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Qwen user info failed", error);
     return NextResponse.json(
-      { error: "Failed to fetch user info" },
+      { error: "internal_server_error", message: error instanceof Error ? error.message : "Failed to fetch user info" },
       { status: 500 }
     );
   }

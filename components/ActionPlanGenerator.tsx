@@ -71,7 +71,9 @@ export default function ActionPlanGenerator() {
     }
 
     const apiKey = apiKeys[selectedProvider];
-    if (!apiKey || !apiKey.trim()) {
+    const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
+
+    if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
       setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
       return;
     }
@@ -79,8 +81,12 @@ export default function ActionPlanGenerator() {
     setProcessing(true);
     setError(null);
 
+    console.log("[ActionPlanGenerator] Starting action plan generation...", { selectedProvider, selectedModel, hasQwenAuth: modelAdapter.hasQwenAuth() });
+
     try {
       const result = await modelAdapter.generateActionPlan(currentPrompt, selectedProvider, selectedModel);
+
+      console.log("[ActionPlanGenerator] Generation result:", result);
 
       if (result.success && result.data) {
         const newPlan = {
@@ -100,9 +106,11 @@ export default function ActionPlanGenerator() {
         };
         setActionPlan(newPlan);
       } else {
+        console.error("[ActionPlanGenerator] Generation failed:", result.error);
         setError(result.error || "Failed to generate action plan");
       }
     } catch (err) {
+      console.error("[ActionPlanGenerator] Generation error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setProcessing(false);

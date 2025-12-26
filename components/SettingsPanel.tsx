@@ -77,6 +77,7 @@ export default function SettingsPanel() {
     try {
       const token = await modelAdapter.startQwenOAuth();
       setQwenTokens(token);
+      modelAdapter.updateQwenTokens(token);
     } catch (error) {
       console.error("Qwen OAuth failed", error);
       window.alert(

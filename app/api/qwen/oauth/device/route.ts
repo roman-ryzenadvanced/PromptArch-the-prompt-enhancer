@@ -3,6 +3,7 @@ import {
   QWEN_OAUTH_CLIENT_ID,
   QWEN_OAUTH_DEVICE_CODE_ENDPOINT,
   QWEN_OAUTH_SCOPE,
+  createQwenHeaders,
 } from "../../constants";
 
 export async function POST(request: NextRequest) {
@@ -17,12 +18,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`[Qwen Device Auth] Calling ${QWEN_OAUTH_DEVICE_CODE_ENDPOINT}...`);
+
     const response = await fetch(QWEN_OAUTH_DEVICE_CODE_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
-      },
+      headers: createQwenHeaders("application/x-www-form-urlencoded"),
       body: new URLSearchParams({
         client_id: QWEN_OAUTH_CLIENT_ID,
         scope: QWEN_OAUTH_SCOPE,
@@ -32,18 +32,25 @@ export async function POST(request: NextRequest) {
     });
 
     const payload = await response.text();
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Device authorization failed", details: payload },
-        { status: response.status }
-      );
+    console.log(`[Qwen Device Auth] Response status: ${response.status}`);
+
+    let data;
+    try {
+      data = JSON.parse(payload);
+    } catch {
+      console.error(`[Qwen Device Auth] Failed to parse response: ${payload}`);
+      data = { error: payload || "Unknown error from Qwen" };
     }
 
-    return NextResponse.json(JSON.parse(payload));
+    if (!response.ok) {
+      console.warn(`[Qwen Device Auth] Error response:`, data);
+    }
+
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Qwen device authorization failed", error);
     return NextResponse.json(
-      { error: "Device authorization failed" },
+      { error: "internal_server_error", message: error instanceof Error ? error.message : "Device authorization failed" },
       { status: 500 }
     );
   }

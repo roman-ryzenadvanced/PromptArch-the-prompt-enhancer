@@ -53,6 +53,10 @@ export class OllamaCloudService {
     };
   }
 
+  hasAuth(): boolean {
+    return !!this.config.apiKey;
+  }
+
   private ensureApiKey(): string {
     if (this.config.apiKey) {
       return this.config.apiKey;

@@ -70,6 +70,23 @@ export class ModelAdapter {
     return this.qwenService.getTokenInfo();
   }
 
+  hasQwenAuth(): boolean {
+    return this.qwenService.hasOAuthToken();
+  }
+
+  private isProviderAuthenticated(provider: ModelProvider): boolean {
+    switch (provider) {
+      case "qwen":
+        return this.hasQwenAuth() || this.qwenService.hasApiKey();
+      case "ollama":
+        return this.ollamaService.hasAuth();
+      case "zai":
+        return this.zaiService.hasAuth();
+      default:
+        return false;
+    }
+  }
+
   private buildFallbackProviders(...providers: ModelProvider[]): ModelProvider[] {
     const seen = new Set<ModelProvider>();
     return providers.filter((provider) => {
@@ -85,13 +102,29 @@ export class ModelAdapter {
     operation: (service: any) => Promise<APIResponse<T>>,
     providers: ModelProvider[]
   ): Promise<APIResponse<T>> {
+    console.log("[ModelAdapter] Attempting providers in order:", providers);
+    let lastError: string | null = null;
+
     for (const provider of providers) {
       try {
+        console.log(`[ModelAdapter] Checking authentication for ${provider}...`);
+
+        if (!this.isProviderAuthenticated(provider)) {
+          console.log(`[ModelAdapter] Provider ${provider} is not authenticated, skipping`);
+          continue;
+        }
+
         let service: any;
+
+        console.log(`[ModelAdapter] Trying provider: ${provider}`);
 
         switch (provider) {
           case "qwen":
             service = this.qwenService;
+            console.log("[ModelAdapter] Qwen service:", {
+              hasApiKey: !!this.qwenService["apiKey"],
+              hasToken: !!this.qwenService.getTokenInfo()?.accessToken
+            });
             break;
           case "ollama":
             service = this.ollamaService;
@@ -102,17 +135,30 @@ export class ModelAdapter {
         }
 
         const result = await operation(service);
+        console.log(`[ModelAdapter] Provider ${provider} result:`, result);
+
         if (result.success) {
+          console.log(`[ModelAdapter] Success with provider: ${provider}`);
           return result;
         }
+
+        if (result.error) {
+          lastError = result.error;
+        }
       } catch (error) {
-        console.error(`Error with ${provider}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[ModelAdapter] Error with ${provider}:`, errorMessage);
+        lastError = errorMessage || lastError;
       }
     }
 
+    const finalError = lastError
+      ? `All providers failed: ${lastError}`
+      : "All providers failed. Please configure API key in Settings";
+    console.error(`[ModelAdapter] ${finalError}`);
     return {
       success: false,
-      error: "All providers failed",
+      error: finalError,
     };
   }
 

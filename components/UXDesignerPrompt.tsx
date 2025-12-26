@@ -70,7 +70,9 @@ export default function UXDesignerPrompt() {
     }
 
     const apiKey = apiKeys[selectedProvider];
-    if (!apiKey || !apiKey.trim()) {
+    const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
+
+    if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
       setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
       return;
     }
@@ -79,16 +81,22 @@ export default function UXDesignerPrompt() {
     setError(null);
     setGeneratedPrompt(null);
 
+    console.log("[UXDesignerPrompt] Starting generation...", { selectedProvider, selectedModel, hasQwenAuth: modelAdapter.hasQwenAuth() });
+
     try {
       const result = await modelAdapter.generateUXDesignerPrompt(currentPrompt, selectedProvider, selectedModel);
+
+      console.log("[UXDesignerPrompt] Generation result:", result);
 
       if (result.success && result.data) {
         setGeneratedPrompt(result.data);
         setEnhancedPrompt(result.data);
       } else {
+        console.error("[UXDesignerPrompt] Generation failed:", result.error);
         setError(result.error || "Failed to generate UX designer prompt");
       }
     } catch (err) {
+      console.error("[UXDesignerPrompt] Generation error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setProcessing(false);
