@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import useStore from "@/lib/store";
 import { translations } from "@/lib/i18n/translations";
 import modelAdapter from "@/lib/services/adapter-instance";
-import { Search, Globe, Plus, Trash2, ShieldAlert, BarChart3, TrendingUp, Target, Rocket, Lightbulb, CheckCircle2, AlertCircle, Loader2, X } from "lucide-react";
+import { Search, Globe, Plus, Trash2, ShieldAlert, BarChart3, TrendingUp, Target, Rocket, Lightbulb, CheckCircle2, AlertCircle, Loader2, X, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MarketResearcher = () => {
@@ -170,8 +170,21 @@ const MarketResearcher = () => {
                                 {marketResearchResult.competitors.map((comp) => {
                                     const compPrice = item.competitorPrices.find(cp => cp.competitor === comp || comp.includes(cp.competitor));
                                     return (
-                                        <td key={comp} className="px-4 py-4 font-medium text-slate-600">
-                                            {compPrice ? compPrice.price : "N/A"}
+                                        <td key={comp} className="px-4 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-medium text-slate-600">{compPrice ? compPrice.price : "N/A"}</span>
+                                                {compPrice?.url && (
+                                                    <a
+                                                        href={compPrice.url.startsWith('http') ? compPrice.url : `https://${compPrice.url}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-bold transition-colors group/link"
+                                                    >
+                                                        <ExternalLink className="h-2.5 w-2.5" />
+                                                        View Product
+                                                    </a>
+                                                )}
+                                            </div>
                                         </td>
                                     );
                                 })}

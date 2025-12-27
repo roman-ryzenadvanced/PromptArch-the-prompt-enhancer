@@ -954,7 +954,7 @@ OUTPUT FORMAT - JSON:
 {
   "executiveSummary": "findings",
   "priceComparisonMatrix": [
-    { "product": "P", "userPrice": "$", "competitorPrices": [{ "competitor": "C", "price": "$" }] }
+    { "product": "P", "userPrice": "$", "competitorPrices": [{ "competitor": "C", "price": "$", "url": "link" }] }
   ],
   "featureComparisonTable": [
     { "feature": "F", "userStatus": "status", "competitorStatus": [{ "competitor": "C", "status": "status" }] }

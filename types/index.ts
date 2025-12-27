@@ -272,7 +272,7 @@ export interface MarketResearchResult {
   priceComparisonMatrix: {
     product: string;
     userPrice: string;
-    competitorPrices: { competitor: string; price: string }[];
+    competitorPrices: { competitor: string; price: string; url?: string }[];
   }[];
   featureComparisonTable: {
     feature: string;

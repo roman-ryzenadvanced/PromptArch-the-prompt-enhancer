@@ -713,7 +713,7 @@ OUTPUT FORMAT - Return ONLY valid JSON with this structure:
       "product": "Product Name",
       "userPrice": "$XX.XX",
       "competitorPrices": [
-        { "competitor": "Competitor Name", "price": "$XX.XX" }
+        { "competitor": "Competitor Name", "price": "$XX.XX", "url": "https://competitor.com/product-page" }
       ]
     }
   ],
