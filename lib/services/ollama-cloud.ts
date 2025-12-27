@@ -303,6 +303,98 @@ Make's prompt specific, inspiring, and comprehensive. Use professional UX termin
 
     return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
   }
+
+  async generateSlides(
+    topic: string,
+    options: {
+      language?: string;
+      theme?: string;
+      slideCount?: number;
+      audience?: string;
+      organization?: string;
+    } = {},
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const { language = "English", theme = "modern", slideCount = 10, audience = "general", organization = "" } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a world-class presentation designer and content strategist specializing in creating stunning, impactful slide decks for organizations and professionals.
+
+Your task is to generate a complete presentation with HTML5-ready slide content. Each slide should be designed with modern, visually impressive aesthetics.
+
+OUTPUT FORMAT:
+Return a JSON object with the following structure:
+\`\`\`json
+{
+  "title": "Presentation Title",
+  "subtitle": "Presentation Subtitle",
+  "theme": "${theme}",
+  "language": "${language}",
+  "slides": [
+    {
+      "id": "slide-1",
+      "title": "Slide Title",
+      "content": "Main content text",
+      "htmlContent": "<div class='slide'>Complete HTML content for the slide</div>",
+      "notes": "Speaker notes",
+      "layout": "title|content|two-column|quote|statistics|timeline|comparison",
+      "order": 1
+    }
+  ]
+}
+\`\`\`
+
+DESIGN GUIDELINES:
+1. Create ${slideCount} slides maximum
+2. Use the "${theme}" design theme
+3. All content MUST be in ${language}
+4. Target audience: ${audience}
+${organization ? `5. Organization: ${organization}` : ""}
+
+SLIDE TYPES TO INCLUDE:
+- Title slide with compelling headline
+- Problem/Opportunity statement
+- Key insights with data visualizations
+- Solution/Strategy overview
+- Timeline or roadmap if applicable
+- Key metrics or statistics
+- Call-to-action or next steps
+- Summary/Conclusion slide
+
+HTML CONTENT REQUIREMENTS:
+- Use semantic HTML5 elements
+- Include inline CSS for styling
+- Use modern gradients, shadows, and animations
+- Incorporate icons using Unicode or SVG
+- Ensure responsive design considerations
+- Use professional typography (specify font-family)
+- Include color schemes matching the theme
+
+CONTENT QUALITY:
+- Concise, impactful headlines (max 8 words)
+- Bullet points with 3-5 items maximum
+- Relevant statistics with compelling visuals
+- Professional, business-appropriate language
+- Clear narrative flow between slides`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create a stunning presentation about: ${topic}
+
+Requirements:
+- Language: ${language}
+- Theme: ${theme}
+- Number of slides: ${slideCount}
+- Target audience: ${audience}
+${organization ? `- Organization: ${organization}` : ""}
+
+Generate the complete presentation with HTML5 content for each slide. Make it visually impressive and content-rich.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
 }
 
 export default OllamaCloudService;

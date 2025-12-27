@@ -186,6 +186,23 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateUXDesignerPrompt(appDescription, model), providers);
   }
 
+  async generateSlides(
+    topic: string,
+    options: {
+      language?: string;
+      theme?: string;
+      slideCount?: number;
+      audience?: string;
+      organization?: string;
+    } = {},
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+    return this.callWithFallback((service) => service.generateSlides(topic, options, model), providers);
+  }
+
   async chatCompletion(
     messages: ChatMessage[],
     model: string,
@@ -222,7 +239,7 @@ export class ModelAdapter {
       zai: ["glm-4.7", "glm-4.5", "glm-4.5-air", "glm-4-flash", "glm-4-flashx"],
     };
     const models: Record<ModelProvider, string[]> = { ...fallbackModels };
-    
+
     if (provider === "ollama" || !provider) {
       try {
         const ollamaModels = await this.ollamaService.listModels();

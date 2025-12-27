@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import useStore from "@/lib/store";
-import { Sparkles, FileText, ListTodo, Palette, History, Settings, Github, Menu, X } from "lucide-react";
+import { Sparkles, FileText, ListTodo, Palette, Presentation, History, Settings, Github, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type View = "enhance" | "prd" | "action" | "uxdesigner" | "history" | "settings";
+export type View = "enhance" | "prd" | "action" | "uxdesigner" | "slides" | "history" | "settings";
 
 interface SidebarProps {
   currentView: View;
@@ -22,6 +22,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { id: "prd" as View, label: "PRD Generator", icon: FileText },
     { id: "action" as View, label: "Action Plan", icon: ListTodo },
     { id: "uxdesigner" as View, label: "UX Designer", icon: Palette },
+    { id: "slides" as View, label: "Slides Generator", icon: Presentation },
     { id: "history" as View, label: "History", icon: History, count: history.length },
     { id: "settings" as View, label: "Settings", icon: Settings },
   ];

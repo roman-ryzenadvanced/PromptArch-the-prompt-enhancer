@@ -91,3 +91,27 @@ export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
+
+export interface Slide {
+  id: string;
+  title: string;
+  content: string;
+  htmlContent: string;
+  notes?: string;
+  layout: "title" | "content" | "two-column" | "image-left" | "image-right" | "quote" | "statistics" | "timeline" | "comparison";
+  order: number;
+}
+
+export interface SlidesPresentation {
+  id: string;
+  title: string;
+  subtitle?: string;
+  author?: string;
+  organization?: string;
+  theme: "corporate" | "modern" | "minimal" | "dark" | "vibrant" | "gradient";
+  language: string;
+  slides: Slide[];
+  rawContent: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

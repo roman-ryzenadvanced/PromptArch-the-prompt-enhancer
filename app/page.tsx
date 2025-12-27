@@ -7,6 +7,7 @@ import PromptEnhancer from "@/components/PromptEnhancer";
 import PRDGenerator from "@/components/PRDGenerator";
 import ActionPlanGenerator from "@/components/ActionPlanGenerator";
 import UXDesignerPrompt from "@/components/UXDesignerPrompt";
+import SlidesGenerator from "@/components/SlidesGenerator";
 import HistoryPanel from "@/components/HistoryPanel";
 import SettingsPanel from "@/components/SettingsPanel";
 import modelAdapter from "@/lib/services/adapter-instance";
@@ -29,6 +30,8 @@ export default function Home() {
         return <ActionPlanGenerator />;
       case "uxdesigner":
         return <UXDesignerPrompt />;
+      case "slides":
+        return <SlidesGenerator />;
       case "history":
         return <HistoryPanel />;
       case "settings":
@@ -49,3 +52,4 @@ export default function Home() {
     </div>
   );
 }
+
