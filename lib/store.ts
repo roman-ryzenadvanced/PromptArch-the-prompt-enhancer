@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation } from "@/types";
+import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult } from "@/types";
 
 interface AppState {
   currentPrompt: string;
@@ -7,6 +7,7 @@ interface AppState {
   prd: PRD | null;
   actionPlan: ActionPlan | null;
   slidesPresentation: SlidesPresentation | null;
+  googleAdsResult: GoogleAdsResult | null;
   selectedProvider: ModelProvider;
   selectedModels: Record<ModelProvider, string>;
   availableModels: Record<ModelProvider, string[]>;
@@ -29,6 +30,7 @@ interface AppState {
   setPRD: (prd: PRD) => void;
   setActionPlan: (plan: ActionPlan) => void;
   setSlidesPresentation: (slides: SlidesPresentation | null) => void;
+  setGoogleAdsResult: (result: GoogleAdsResult | null) => void;
   setSelectedProvider: (provider: ModelProvider) => void;
   setSelectedModel: (provider: ModelProvider, model: string) => void;
   setAvailableModels: (provider: ModelProvider, models: string[]) => void;
@@ -47,6 +49,7 @@ const useStore = create<AppState>((set) => ({
   prd: null,
   actionPlan: null,
   slidesPresentation: null,
+  googleAdsResult: null,
   selectedProvider: "qwen",
   selectedModels: {
     qwen: "coder-model",
@@ -72,6 +75,7 @@ const useStore = create<AppState>((set) => ({
   setPRD: (prd) => set({ prd }),
   setActionPlan: (plan) => set({ actionPlan: plan }),
   setSlidesPresentation: (slides) => set({ slidesPresentation: slides }),
+  setGoogleAdsResult: (result) => set({ googleAdsResult: result }),
   setSelectedProvider: (provider) => set({ selectedProvider: provider }),
   setSelectedModel: (provider, model) =>
     set((state) => ({
@@ -107,6 +111,7 @@ const useStore = create<AppState>((set) => ({
       prd: null,
       actionPlan: null,
       slidesPresentation: null,
+      googleAdsResult: null,
       error: null,
     }),
 }));

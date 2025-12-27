@@ -407,7 +407,206 @@ Return the complete JSON with full htmlContent for each slide. Make each slide V
 
     return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
   }
+
+  async generateGoogleAds(
+    websiteUrl: string,
+    options: {
+      productsServices: string[];
+      targetAudience?: string;
+      budgetRange?: { min: number; max: number; currency: string };
+      campaignDuration?: string;
+      industry?: string;
+      competitors?: string[];
+      language?: string;
+    } = { productsServices: [] },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const {
+      productsServices = [],
+      targetAudience = "General consumers",
+      budgetRange,
+      campaignDuration,
+      industry = "General",
+      competitors = [],
+      language = "English"
+    } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are an EXPERT Google Ads strategist with 15+ years of experience managing $100M+ in ad spend. You create HIGH-CONVERTING campaigns that consistently outperform industry benchmarks.
+
+Your expertise includes:
+- Keyword research and competitive analysis
+- Ad copywriting that drives clicks and conversions
+- Campaign structure optimization
+- Quality Score improvement strategies
+- ROI maximization techniques
+
+OUTPUT FORMAT - Return ONLY valid JSON:
+\`\`\`json
+{
+  "keywords": {
+    "primary": [
+      {
+        "keyword": "exact keyword phrase",
+        "type": "primary",
+        "searchVolume": 12000,
+        "competition": "medium",
+        "difficultyScore": 65,
+        "relevanceScore": 95,
+        "cpc": "$2.50"
+      }
+    ],
+    "longTail": [
+      {
+        "keyword": "longer specific keyword phrase",
+        "type": "long-tail",
+        "searchVolume": 1200,
+        "competition": "low",
+        "difficultyScore": 35,
+        "relevanceScore": 90,
+        "cpc": "$1.25"
+      }
+    ],
+    "negative": [
+      {
+        "keyword": "irrelevant term to exclude",
+        "type": "negative",
+        "competition": "low"
+      }
+    ]
+  },
+  "adCopies": [
+    {
+      "id": "ad-1",
+      "campaignType": "search",
+      "headlines": [
+        "Headline 1 (max 30 chars)",
+        "Headline 2 (max 30 chars)",
+        "Headline 3 (max 30 chars)"
+      ],
+      "descriptions": [
+        "Description line 1 - compelling copy under 90 chars",
+        "Description line 2 - call to action under 90 chars"
+      ],
+      "callToAction": "Get Started Today",
+      "displayUrl": "example.com/offers",
+      "mobileOptimized": true
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "campaign-1",
+      "name": "Campaign Name",
+      "type": "search",
+      "budget": {
+        "daily": 50,
+        "monthly": 1500,
+        "currency": "USD"
+      },
+      "targeting": {
+        "locations": ["United States", "Canada"],
+        "demographics": ["25-54", "All genders"],
+        "devices": ["Desktop", "Mobile", "Tablet"],
+        "schedule": ["Mon-Fri 8am-8pm"]
+      },
+      "adGroups": [
+        {
+          "id": "adgroup-1",
+          "name": "Product Category Group",
+          "theme": "Main product focus",
+          "keywords": ["keyword1", "keyword2"],
+          "biddingStrategy": "Maximize conversions"
+        }
+      ]
+    }
+  ],
+  "implementation": {
+    "setupSteps": [
+      "Step 1: Create Google Ads account...",
+      "Step 2: Set up conversion tracking..."
+    ],
+    "qualityScoreTips": [
+      "Tip 1: Match keywords to ad copy...",
+      "Tip 2: Optimize landing pages..."
+    ],
+    "trackingSetup": [
+      "Install Google Tag Manager...",
+      "Set up conversion goals..."
+    ],
+    "optimizationTips": [
+      "Monitor search terms weekly...",
+      "A/B test ad variations..."
+    ]
+  },
+  "predictions": {
+    "estimatedClicks": "500-800 per month",
+    "estimatedImpressions": "15,000-25,000 per month",
+    "estimatedCtr": "3.2%-4.5%",
+    "estimatedConversions": "25-50 per month"
+  }
+}
+\`\`\`
+
+KEYWORD RESEARCH REQUIREMENTS:
+- Generate 10-15 PRIMARY keywords (high-volume, highly relevant)
+- Generate 15-20 LONG-TAIL keywords (specific, lower-competition)
+- Generate 5-10 NEGATIVE keywords (terms to exclude)
+- Include realistic search volume estimates
+- Provide competition level and CPC estimates
+
+AD COPY REQUIREMENTS:
+- Headlines MUST be 30 characters or less
+- Descriptions MUST be 90 characters or less
+- Create 3-5 unique ad variations per campaign type
+- Include strong calls-to-action
+- Focus on benefits and unique value propositions
+- Mobile-optimized versions required
+
+CAMPAIGN STRUCTURE:
+- Organize by product/service theme
+- Recommend appropriate bidding strategies
+- Include targeting recommendations
+- Suggest budget allocation
+
+QUALITY STANDARDS:
+- All keywords must be relevant (>85% match)
+- Ad copy must comply with Google Ads policies
+- No trademark violations
+- Professional, compelling language
+- Clear value propositions`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create a COMPREHENSIVE Google Ads campaign for:
+
+WEBSITE: ${websiteUrl}
+
+PRODUCTS/SERVICES TO PROMOTE:
+${productsServices.map((p, i) => `${i + 1}. ${p}`).join("\n")}
+
+TARGET AUDIENCE: ${targetAudience}
+INDUSTRY: ${industry}
+LANGUAGE: ${language}
+${budgetRange ? `BUDGET: ${budgetRange.min}-${budgetRange.max} ${budgetRange.currency}/month` : ""}
+${campaignDuration ? `DURATION: ${campaignDuration}` : ""}
+${competitors.length > 0 ? `COMPETITORS: ${competitors.join(", ")}` : ""}
+
+Generate a COMPLETE Google Ads package including:
+🔍 Comprehensive keyword research (primary, long-tail, negative)
+✍️ High-converting ad copy (multiple variations)
+📊 Optimized campaign structure
+📈 Performance predictions
+🎯 Implementation guidance
+
+Make this campaign READY TO LAUNCH with copy-paste ready content!`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
+  }
 }
 
 export default ZaiPlanService;
+
 

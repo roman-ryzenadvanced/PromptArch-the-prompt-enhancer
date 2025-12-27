@@ -434,7 +434,100 @@ Generate SPECTACULAR slides with CSS3 animations, SVG charts, modern gradients, 
 
     return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
   }
+
+  async generateGoogleAds(
+    websiteUrl: string,
+    options: {
+      productsServices: string[];
+      targetAudience?: string;
+      budgetRange?: { min: number; max: number; currency: string };
+      campaignDuration?: string;
+      industry?: string;
+      competitors?: string[];
+      language?: string;
+    } = { productsServices: [] },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const {
+      productsServices = [],
+      targetAudience = "General consumers",
+      budgetRange,
+      campaignDuration,
+      industry = "General",
+      competitors = [],
+      language = "English"
+    } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are an EXPERT Google Ads strategist. Create HIGH-CONVERTING campaigns with comprehensive keyword research, compelling ad copy, and optimized campaign structures.
+
+OUTPUT FORMAT - Return ONLY valid JSON with this structure:
+\`\`\`json
+{
+  "keywords": {
+    "primary": [{"keyword": "term", "type": "primary", "searchVolume": 12000, "competition": "medium", "cpc": "$2.50"}],
+    "longTail": [{"keyword": "specific term", "type": "long-tail", "searchVolume": 1200, "competition": "low", "cpc": "$1.25"}],
+    "negative": [{"keyword": "exclude term", "type": "negative", "competition": "low"}]
+  },
+  "adCopies": [{
+    "id": "ad-1",
+    "campaignType": "search",
+    "headlines": ["Headline 1 (30 chars)", "Headline 2", "Headline 3"],
+    "descriptions": ["Description 1 (90 chars)", "Description 2"],
+    "callToAction": "Get Started",
+    "mobileOptimized": true
+  }],
+  "campaigns": [{
+    "id": "campaign-1",
+    "name": "Campaign Name",
+    "type": "search",
+    "budget": {"daily": 50, "monthly": 1500, "currency": "USD"},
+    "targeting": {"locations": [], "demographics": [], "devices": []},
+    "adGroups": [{"id": "adgroup-1", "name": "Group", "theme": "Theme", "keywords": [], "biddingStrategy": "Maximize conversions"}]
+  }],
+  "implementation": {
+    "setupSteps": [],
+    "qualityScoreTips": [],
+    "trackingSetup": [],
+    "optimizationTips": []
+  },
+  "predictions": {
+    "estimatedClicks": "500-800/month",
+    "estimatedImpressions": "15,000-25,000/month",
+    "estimatedCtr": "3.2%-4.5%",
+    "estimatedConversions": "25-50/month"
+  }
+}
+\`\`\`
+
+Requirements:
+- 10-15 primary keywords, 15-20 long-tail, 5-10 negative
+- Headlines max 30 chars, descriptions max 90 chars
+- 3-5 ad variations per campaign
+- Include budget and targeting recommendations`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `Create a Google Ads campaign for:
+
+WEBSITE: ${websiteUrl}
+PRODUCTS/SERVICES: ${productsServices.join(", ")}
+TARGET AUDIENCE: ${targetAudience}
+INDUSTRY: ${industry}
+LANGUAGE: ${language}
+${budgetRange ? `BUDGET: ${budgetRange.min}-${budgetRange.max} ${budgetRange.currency}/month` : ""}
+${campaignDuration ? `DURATION: ${campaignDuration}` : ""}
+${competitors.length > 0 ? `COMPETITORS: ${competitors.join(", ")}` : ""}
+
+Generate complete Google Ads package with keywords, ad copy, campaigns, and implementation guidance.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
 }
 
 export default OllamaCloudService;
+
 

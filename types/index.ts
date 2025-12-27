@@ -115,3 +115,90 @@ export interface SlidesPresentation {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface GoogleAdsKeyword {
+  keyword: string;
+  type: "primary" | "long-tail" | "negative";
+  searchVolume?: number;
+  competition: "low" | "medium" | "high";
+  difficultyScore?: number;
+  relevanceScore?: number;
+  cpc?: string;
+}
+
+export interface GoogleAdCopy {
+  id: string;
+  campaignType: "search" | "display" | "shopping" | "video" | "performance-max";
+  headlines: string[];
+  descriptions: string[];
+  callToAction: string;
+  displayUrl?: string;
+  finalUrl?: string;
+  mobileOptimized: boolean;
+}
+
+export interface GoogleAdGroup {
+  id: string;
+  name: string;
+  theme: string;
+  keywords: string[];
+  ads: GoogleAdCopy[];
+  biddingStrategy?: string;
+}
+
+export interface GoogleAdsCampaign {
+  id: string;
+  name: string;
+  type: "search" | "display" | "shopping" | "video" | "performance-max";
+  budget: {
+    daily?: number;
+    monthly?: number;
+    currency: string;
+  };
+  targeting: {
+    locations?: string[];
+    demographics?: string[];
+    devices?: string[];
+    schedule?: string[];
+  };
+  adGroups: GoogleAdGroup[];
+}
+
+export interface GoogleAdsResult {
+  id: string;
+  websiteUrl: string;
+  productsServices: string[];
+  generatedAt: Date;
+
+  // Keyword Research Package
+  keywords: {
+    primary: GoogleAdsKeyword[];
+    longTail: GoogleAdsKeyword[];
+    negative: GoogleAdsKeyword[];
+  };
+
+  // Ad Copy Suite
+  adCopies: GoogleAdCopy[];
+
+  // Campaign Structure
+  campaigns: GoogleAdsCampaign[];
+
+  // Implementation Guidance
+  implementation: {
+    setupSteps: string[];
+    qualityScoreTips: string[];
+    trackingSetup: string[];
+    optimizationTips: string[];
+  };
+
+  // Performance Predictions
+  predictions?: {
+    estimatedClicks?: string;
+    estimatedImpressions?: string;
+    estimatedCtr?: string;
+    estimatedConversions?: string;
+  };
+
+  rawContent: string;
+}
+

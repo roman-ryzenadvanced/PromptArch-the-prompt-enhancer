@@ -207,6 +207,25 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateSlides(topic, options, model), providers);
   }
 
+  async generateGoogleAds(
+    websiteUrl: string,
+    options: {
+      productsServices: string[];
+      targetAudience?: string;
+      budgetRange?: { min: number; max: number; currency: string };
+      campaignDuration?: string;
+      industry?: string;
+      competitors?: string[];
+      language?: string;
+    } = { productsServices: [] },
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+    return this.callWithFallback((service) => service.generateGoogleAds(websiteUrl, options, model), providers);
+  }
+
   async chatCompletion(
     messages: ChatMessage[],
     model: string,
