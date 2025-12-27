@@ -606,6 +606,80 @@ Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategi
 
     return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
   }
+
+  async generateMarketResearch(
+    options: {
+      websiteUrl: string;
+      additionalUrls?: string[];
+      competitors: string[];
+      productMapping: string;
+      specialInstructions?: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const { websiteUrl, additionalUrls = [], competitors = [], productMapping, specialInstructions = "" } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert. Your task is to perform a deep-dive automated market analysis and competitive intelligence gathering.
+
+OUTPUT FORMAT - Return ONLY valid JSON with this structure:
+\`\`\`json
+{
+  "executiveSummary": "High-level overview of findings",
+  "priceComparisonMatrix": [
+    {
+      "product": "Product Name",
+      "userPrice": "$XX.XX",
+      "competitorPrices": [
+        { "competitor": "Competitor Name", "price": "$XX.XX" }
+      ]
+    }
+  ],
+  "featureComparisonTable": [
+    {
+      "feature": "Feature Name",
+      "userStatus": "Yes/No or description",
+      "competitorStatus": [
+        { "competitor": "Competitor Name", "status": "Yes/No or description" }
+      ]
+    }
+  ],
+  "marketPositioning": {
+    "landscape": "Current market landscape description",
+    "segmentation": "Target market segments"
+  },
+  "competitiveAnalysis": {
+    "advantages": ["Point 1", "Point 2"],
+    "disadvantages": ["Point 1", "Point 2"]
+  },
+  "recommendations": ["Rec 1", "Rec 2"],
+  "methodology": "How the research was conducted"
+}
+\`\`\`
+
+REQUIREMENTS:
+- Analysis must be based on the provided website and competitor URLs.
+- Price comparison should be as realistic as possible based on industry knowledge.
+- Feature table should focus on core technical and business value.
+- Competitive analysis must highlight USP (Unique Selling Proposition).`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `🔬 MARKET RESEARCH REQUEST 🔬
+
+PRIMARY WEBSITE: ${websiteUrl}
+ADDITIONAL PAGES: ${additionalUrls.join(", ")}
+COMPETITORS: ${competitors.join(", ")}
+PRODUCT COMPARISON MAPPING: ${productMapping}
+${specialInstructions ? `CUSTOM PARAMETERS: ${specialInstructions}` : ""}
+
+Please conduct a comprehensive competitive analysis and market research report.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
 }
 
 export default OllamaCloudService;

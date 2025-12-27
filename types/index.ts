@@ -256,4 +256,40 @@ export interface MagicWandResult {
   rawContent: string;
 }
 
+export interface MarketResearchResult {
+  id: string;
+  websiteUrl: string;
+  additionalUrls: string[];
+  competitors: string[];
+  productMapping: {
+    productName: string;
+    features: string[];
+    pricePoint?: string;
+  }[];
+  generatedAt: Date;
 
+  executiveSummary: string;
+  priceComparisonMatrix: {
+    product: string;
+    userPrice: string;
+    competitorPrices: { competitor: string; price: string }[];
+  }[];
+  featureComparisonTable: {
+    feature: string;
+    userStatus: boolean | string;
+    competitorStatus: { competitor: string; status: boolean | string }[];
+  }[];
+  marketPositioning: {
+    landscape: string;
+    segmentation: string;
+  };
+  competitiveAnalysis: {
+    advantages: string[];
+    disadvantages: string[];
+  };
+  recommendations: string[];
+  methodology: string;
+  rawContent: string;
+}
+
+export type AppView = "prompt-enhancer" | "prd-generator" | "action-plan" | "slides-gen" | "google-ads" | "ux-designer" | "market-research" | "settings" | "history";

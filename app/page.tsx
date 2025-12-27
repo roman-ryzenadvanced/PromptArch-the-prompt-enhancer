@@ -9,6 +9,7 @@ import ActionPlanGenerator from "@/components/ActionPlanGenerator";
 import UXDesignerPrompt from "@/components/UXDesignerPrompt";
 import SlidesGenerator from "@/components/SlidesGenerator";
 import GoogleAdsGenerator from "@/components/GoogleAdsGenerator";
+import MarketResearcher from "@/components/MarketResearcher";
 import HistoryPanel from "@/components/HistoryPanel";
 import SettingsPanel from "@/components/SettingsPanel";
 import modelAdapter from "@/lib/services/adapter-instance";
@@ -35,6 +36,8 @@ export default function Home() {
         return <SlidesGenerator />;
       case "googleads":
         return <GoogleAdsGenerator />;
+      case "market-research":
+        return <MarketResearcher />;
       case "history":
         return <HistoryPanel />;
       case "settings":

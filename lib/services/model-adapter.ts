@@ -240,6 +240,22 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateMagicWand(websiteUrl, product, budget, specialInstructions, model), providers);
   }
 
+  async generateMarketResearch(
+    options: {
+      websiteUrl: string;
+      additionalUrls?: string[];
+      competitors: string[];
+      productMapping: string;
+      specialInstructions?: string;
+    },
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+    return this.callWithFallback((service) => service.generateMarketResearch(options, model), providers);
+  }
+
 
   async chatCompletion(
     messages: ChatMessage[],

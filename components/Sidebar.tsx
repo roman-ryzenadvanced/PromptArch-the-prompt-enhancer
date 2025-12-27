@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import useStore from "@/lib/store";
-import { Sparkles, FileText, ListTodo, Palette, Presentation, History, Settings, Github, Menu, X, Megaphone, Languages } from "lucide-react";
+import { Sparkles, FileText, ListTodo, Palette, Presentation, History, Settings, Github, Menu, X, Megaphone, Languages, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translations } from "@/lib/i18n/translations";
 
-export type View = "enhance" | "prd" | "action" | "uxdesigner" | "slides" | "googleads" | "history" | "settings";
+export type View = "enhance" | "prd" | "action" | "uxdesigner" | "slides" | "googleads" | "market-research" | "history" | "settings";
 
 interface SidebarProps {
   currentView: View;
@@ -27,6 +27,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { id: "uxdesigner" as View, label: t.uxDesigner, icon: Palette },
     { id: "slides" as View, label: t.slidesGen, icon: Presentation },
     { id: "googleads" as View, label: t.googleAds, icon: Megaphone },
+    { id: "market-research" as View, label: t.marketResearch, icon: Search },
     { id: "history" as View, label: t.history, icon: History, count: history.length },
     { id: "settings" as View, label: t.settings, icon: Settings },
   ];

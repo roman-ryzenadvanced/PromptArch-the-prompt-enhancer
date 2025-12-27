@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult } from "@/types";
+import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult, MarketResearchResult, AppView } from "@/types";
 
 interface AppState {
   currentPrompt: string;
@@ -9,6 +9,7 @@ interface AppState {
   slidesPresentation: SlidesPresentation | null;
   googleAdsResult: GoogleAdsResult | null;
   magicWandResult: MagicWandResult | null;
+  marketResearchResult: MarketResearchResult | null;
   language: "en" | "ru" | "he";
   selectedProvider: ModelProvider;
   selectedModels: Record<ModelProvider, string>;
@@ -34,6 +35,7 @@ interface AppState {
   setSlidesPresentation: (slides: SlidesPresentation | null) => void;
   setGoogleAdsResult: (result: GoogleAdsResult | null) => void;
   setMagicWandResult: (result: MagicWandResult | null) => void;
+  setMarketResearchResult: (result: MarketResearchResult | null) => void;
   setLanguage: (lang: "en" | "ru" | "he") => void;
   setSelectedProvider: (provider: ModelProvider) => void;
   setSelectedModel: (provider: ModelProvider, model: string) => void;
@@ -55,6 +57,7 @@ const useStore = create<AppState>((set) => ({
   slidesPresentation: null,
   googleAdsResult: null,
   magicWandResult: null,
+  marketResearchResult: null,
   language: "en",
   selectedProvider: "qwen",
   selectedModels: {
@@ -83,6 +86,7 @@ const useStore = create<AppState>((set) => ({
   setSlidesPresentation: (slides) => set({ slidesPresentation: slides }),
   setGoogleAdsResult: (result) => set({ googleAdsResult: result }),
   setMagicWandResult: (result) => set({ magicWandResult: result }),
+  setMarketResearchResult: (result) => set({ marketResearchResult: result }),
   setLanguage: (lang) => set({ language: lang }),
   setSelectedProvider: (provider) => set({ selectedProvider: provider }),
   setSelectedModel: (provider, model) =>
@@ -121,6 +125,7 @@ const useStore = create<AppState>((set) => ({
       slidesPresentation: null,
       googleAdsResult: null,
       magicWandResult: null,
+      marketResearchResult: null,
       error: null,
     }),
 }));

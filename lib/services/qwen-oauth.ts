@@ -934,6 +934,55 @@ Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategi
     return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
+  async generateMarketResearch(
+    options: {
+      websiteUrl: string;
+      additionalUrls?: string[];
+      competitors: string[];
+      productMapping: string;
+      specialInstructions?: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const { websiteUrl, additionalUrls = [], competitors = [], productMapping, specialInstructions = "" } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a WORLD-CLASS Market Research Analyst. Perform a deep-dive automated market analysis.
+
+OUTPUT FORMAT - JSON:
+{
+  "executiveSummary": "findings",
+  "priceComparisonMatrix": [
+    { "product": "P", "userPrice": "$", "competitorPrices": [{ "competitor": "C", "price": "$" }] }
+  ],
+  "featureComparisonTable": [
+    { "feature": "F", "userStatus": "status", "competitorStatus": [{ "competitor": "C", "status": "status" }] }
+  ],
+  "marketPositioning": { "landscape": "LS", "segmentation": "SG" },
+  "competitiveAnalysis": { "advantages": [], "disadvantages": [] },
+  "recommendations": [],
+  "methodology": "method"
+}
+
+REQUIREMENTS: Use provided URLs. Be realistic.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `🔬 MARKET RESEARCH REQUEST 🔬
+WEBSITE: ${websiteUrl}
+PAGES: ${additionalUrls.join(", ")}
+COMPETITORS: ${competitors.join(", ")}
+MAPPING: ${productMapping}
+${specialInstructions ? `CUSTOM: ${specialInstructions}` : ""}
+
+Perform analysis based on provided instructions.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
+  }
+
   async listModels(): Promise<APIResponse<string[]>> {
     const models = [
       "coder-model",

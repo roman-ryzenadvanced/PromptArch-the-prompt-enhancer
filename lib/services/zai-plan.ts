@@ -687,6 +687,78 @@ MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7
 
     return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
   }
+
+  async generateMarketResearch(
+    options: {
+      websiteUrl: string;
+      additionalUrls?: string[];
+      competitors: string[];
+      productMapping: string;
+      specialInstructions?: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const { websiteUrl, additionalUrls = [], competitors = [], productMapping, specialInstructions = "" } = options;
+
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert. Perform a deep-dive automated market analysis.
+
+OUTPUT FORMAT - Return ONLY valid JSON with this structure:
+\`\`\`json
+{
+  "executiveSummary": "High-level overview of findings",
+  "priceComparisonMatrix": [
+    {
+      "product": "Product Name",
+      "userPrice": "$XX.XX",
+      "competitorPrices": [
+        { "competitor": "Competitor Name", "price": "$XX.XX" }
+      ]
+    }
+  ],
+  "featureComparisonTable": [
+    {
+      "feature": "Feature Name",
+      "userStatus": "Yes/No or description",
+      "competitorStatus": [
+        { "competitor": "Competitor Name", "status": "Yes/No or description" }
+      ]
+    }
+  ],
+  "marketPositioning": {
+    "landscape": "Current market landscape description",
+    "segmentation": "Target market segments"
+  },
+  "competitiveAnalysis": {
+    "advantages": ["Point 1", "Point 2"],
+    "disadvantages": ["Point 1", "Point 2"]
+  },
+  "recommendations": ["Rec 1", "Rec 2"],
+  "methodology": "How the research was conducted"
+}
+\`\`\`
+
+REQUIREMENTS:
+- Focus on accuracy and actionable intelligence.
+- Be realistic with price and feature estimates based on the provided URLs.`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `🔬 MARKET RESEARCH REQUEST 🔬
+
+PRIMARY WEBSITE: ${websiteUrl}
+ADDITIONAL PAGES: ${additionalUrls.join(", ")}
+COMPETITORS: ${competitors.join(", ")}
+PRODUCT COMPARISON MAPPING: ${productMapping}
+${specialInstructions ? `CUSTOM PARAMETERS: ${specialInstructions}` : ""}
+
+Perform a COMPREHENSIVE competitive intelligence analysis.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
+  }
 }
 
 export default ZaiPlanService;
