@@ -5,8 +5,9 @@ export interface OllamaCloudConfig {
   endpoint?: string;
 }
 
-const LOCAL_MODELS_URL = "/api/ollama/models";
-const LOCAL_CHAT_URL = "/api/ollama/chat";
+const BASE_PATH = "/tools/promptarch";
+const LOCAL_MODELS_URL = `${BASE_PATH}/api/ollama/models`;
+const LOCAL_CHAT_URL = `${BASE_PATH}/api/ollama/chat`;
 const DEFAULT_MODELS = [
   "gpt-oss:120b",
   "llama3.1:latest",
