@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,15 @@ import {
     Hash,
     Play,
     Pause,
-    RotateCcw,
+    Upload,
+    X,
+    FileText,
+    Image as ImageIcon,
+    File,
+    Sparkles,
+    BarChart3,
+    TrendingUp,
+    Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,23 +59,52 @@ const LANGUAGES = [
 ];
 
 const THEMES = [
-    { id: "corporate", name: "Corporate", colors: ["#1e3a5f", "#2563eb", "#ffffff"], icon: "🏢" },
-    { id: "modern", name: "Modern", colors: ["#0f172a", "#6366f1", "#f8fafc"], icon: "✨" },
-    { id: "minimal", name: "Minimal", colors: ["#ffffff", "#374151", "#f3f4f6"], icon: "◻️" },
-    { id: "dark", name: "Dark Mode", colors: ["#0a0a0a", "#a855f7", "#fafafa"], icon: "🌙" },
-    { id: "vibrant", name: "Vibrant", colors: ["#7c3aed", "#ec4899", "#fef3c7"], icon: "🎨" },
-    { id: "gradient", name: "Gradient", colors: ["#667eea", "#764ba2", "#ffffff"], icon: "🌈" },
+    { id: "corporate-blue", name: "Corporate Blue", colors: ["#0f172a", "#3b82f6", "#60a5fa", "#ffffff"], icon: "🏢", gradient: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%)" },
+    { id: "executive-dark", name: "Executive Dark", colors: ["#09090b", "#6366f1", "#a855f7", "#fafafa"], icon: "👔", gradient: "linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%)" },
+    { id: "modern-gradient", name: "Modern Gradient", colors: ["#0c0a09", "#f97316", "#eab308", "#fafaf9"], icon: "✨", gradient: "linear-gradient(135deg, #0c0a09 0%, #1c1917 50%, #292524 100%)" },
+    { id: "tech-neon", name: "Tech Neon", colors: ["#020617", "#22d3ee", "#a3e635", "#f8fafc"], icon: "⚡", gradient: "linear-gradient(135deg, #020617 0%, #0c1929 50%, #172554 100%)" },
+    { id: "minimal-light", name: "Minimal Light", colors: ["#ffffff", "#18181b", "#71717a", "#f4f4f5"], icon: "◻️", gradient: "linear-gradient(135deg, #ffffff 0%, #f4f4f5 50%, #e4e4e7 100%)" },
+    { id: "premium-gold", name: "Premium Gold", colors: ["#1a1a2e", "#d4af37", "#ffd700", "#f5f5dc"], icon: "👑", gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" },
+    { id: "nature-green", name: "Nature Green", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"], icon: "🌿", gradient: "linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%)" },
+    { id: "sunset-warm", name: "Sunset Warm", colors: ["#1f1f1f", "#f43f5e", "#fb923c", "#fef2f2"], icon: "🌅", gradient: "linear-gradient(135deg, #1f1f1f 0%, #2d1b1b 50%, #3d2424 100%)" },
 ];
 
 const AUDIENCES = [
-    { id: "executives", name: "Executives & C-Suite", icon: "👔" },
-    { id: "investors", name: "Investors & Stakeholders", icon: "💼" },
-    { id: "technical", name: "Technical Team", icon: "💻" },
-    { id: "marketing", name: "Marketing & Sales", icon: "📈" },
-    { id: "general", name: "General Audience", icon: "👥" },
-    { id: "students", name: "Students & Educators", icon: "🎓" },
-    { id: "customers", name: "Customers & Clients", icon: "🤝" },
+    { id: "executives", name: "Executives & C-Suite", icon: "👔", style: "Sophisticated, data-driven, strategic focus" },
+    { id: "investors", name: "Investors & Board", icon: "💼", style: "ROI-focused, metrics-heavy, growth narrative" },
+    { id: "technical", name: "Technical Team", icon: "💻", style: "Detailed, architecture diagrams, code snippets" },
+    { id: "marketing", name: "Marketing & Sales", icon: "📈", style: "Persuasive, visual storytelling, emotional appeal" },
+    { id: "general", name: "General Audience", icon: "👥", style: "Clear, engaging, accessible language" },
+    { id: "stakeholders", name: "Stakeholders", icon: "🤝", style: "Project updates, milestones, risk mitigation" },
+    { id: "clients", name: "Clients & Customers", icon: "⭐", style: "Benefits-focused, testimonials, case studies" },
 ];
+
+const ANIMATION_STYLES = [
+    { id: "professional", name: "Professional", description: "Subtle fade & slide transitions" },
+    { id: "dynamic", name: "Dynamic", description: "Engaging animations with emphasis effects" },
+    { id: "minimal", name: "Minimal", description: "Clean, simple transitions only" },
+    { id: "impressive", name: "Impressive", description: "Bold animations, parallax, morphing effects" },
+];
+
+interface AttachedFile {
+    id: string;
+    name: string;
+    type: string;
+    size: number;
+    content?: string;
+    preview?: string;
+    colors?: string[];
+}
+
+const ACCEPTED_FILE_TYPES = {
+    documents: [".pdf", ".doc", ".docx", ".txt", ".rtf", ".md"],
+    presentations: [".pptx", ".ppt", ".key", ".odp"],
+    images: [".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"],
+    data: [".json", ".csv", ".xlsx", ".xls"],
+    design: [".ase", ".aco", ".gpl", ".css"], // Color palette formats
+};
+
+const ALL_ACCEPTED = Object.values(ACCEPTED_FILE_TYPES).flat().join(",");
 
 export default function SlidesGenerator() {
     const {
@@ -88,17 +125,22 @@ export default function SlidesGenerator() {
 
     const [topic, setTopic] = useState("");
     const [language, setLanguage] = useState("en");
-    const [theme, setTheme] = useState("modern");
-    const [audience, setAudience] = useState("general");
+    const [theme, setTheme] = useState("executive-dark");
+    const [audience, setAudience] = useState("executives");
     const [organization, setOrganization] = useState("");
-    const [slideCount, setSlideCount] = useState(8);
+    const [slideCount, setSlideCount] = useState(10);
+    const [animationStyle, setAnimationStyle] = useState("professional");
     const [copied, setCopied] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isAutoPlaying, setIsAutoPlaying] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+    const [isDragOver, setIsDragOver] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<string | null>(null);
     const slideContainerRef = useRef<HTMLDivElement>(null);
     const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const selectedModel = selectedModels[selectedProvider];
     const models = availableModels[selectedProvider] || modelAdapter.getAvailableModels(selectedProvider);
@@ -149,12 +191,171 @@ export default function SlidesGenerator() {
         }
     };
 
+    // Extract colors from image
+    const extractColorsFromImage = (file: File): Promise<string[]> => {
+        return new Promise((resolve) => {
+            const img = document.createElement("img");
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            img.onload = () => {
+                canvas.width = 50;
+                canvas.height = 50;
+                ctx?.drawImage(img, 0, 0, 50, 50);
+
+                const imageData = ctx?.getImageData(0, 0, 50, 50);
+                if (!imageData) {
+                    resolve([]);
+                    return;
+                }
+
+                const colorCounts: Record<string, number> = {};
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    const r = Math.round(imageData.data[i] / 32) * 32;
+                    const g = Math.round(imageData.data[i + 1] / 32) * 32;
+                    const b = Math.round(imageData.data[i + 2] / 32) * 32;
+                    const hex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+                    colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+                }
+
+                const sortedColors = Object.entries(colorCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([color]) => color);
+
+                resolve(sortedColors);
+                URL.revokeObjectURL(img.src);
+            };
+
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    // Process uploaded file
+    const processFile = async (file: File): Promise<AttachedFile | null> => {
+        const id = Math.random().toString(36).substr(2, 9);
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+
+        const attachedFile: AttachedFile = {
+            id,
+            name: file.name,
+            type: file.type || ext,
+            size: file.size,
+        };
+
+        try {
+            // Handle text-based files
+            if ([...ACCEPTED_FILE_TYPES.documents, ".json", ".csv", ".css", ".md"].some(e => file.name.endsWith(e))) {
+                const text = await file.text();
+                attachedFile.content = text.slice(0, 50000); // Limit to 50KB of text
+
+                // Extract colors from CSS files
+                if (file.name.endsWith(".css")) {
+                    const colorMatches = text.match(/#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|hsl\([^)]+\)/g);
+                    if (colorMatches) {
+                        attachedFile.colors = [...new Set(colorMatches)].slice(0, 10);
+                    }
+                }
+
+                // Parse JSON color palettes
+                if (file.name.endsWith(".json")) {
+                    try {
+                        const json = JSON.parse(text);
+                        if (json.colors || json.palette) {
+                            attachedFile.colors = (json.colors || json.palette).slice(0, 10);
+                        }
+                    } catch { }
+                }
+            }
+
+            // Handle images
+            if (ACCEPTED_FILE_TYPES.images.some(e => file.name.toLowerCase().endsWith(e))) {
+                attachedFile.preview = URL.createObjectURL(file);
+                attachedFile.colors = await extractColorsFromImage(file);
+            }
+
+            // Handle presentations (extract text content if possible)
+            if (ACCEPTED_FILE_TYPES.presentations.some(e => file.name.toLowerCase().endsWith(e))) {
+                attachedFile.content = `[Presentation file: ${file.name}] - Analyze structure and content for redesign.`;
+            }
+
+            return attachedFile;
+        } catch (err) {
+            console.error("Error processing file:", err);
+            return attachedFile;
+        }
+    };
+
+    const handleFileDrop = useCallback(async (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        await handleFileUpload(files);
+    }, []);
+
+    const handleFileUpload = async (files: File[]) => {
+        setUploadProgress("Processing files...");
+
+        const newFiles: AttachedFile[] = [];
+        for (const file of files) {
+            setUploadProgress(`Processing ${file.name}...`);
+            const processed = await processFile(file);
+            if (processed) {
+                newFiles.push(processed);
+            }
+        }
+
+        setAttachedFiles(prev => [...prev, ...newFiles]);
+        setUploadProgress(null);
+    };
+
+    const removeFile = (id: string) => {
+        setAttachedFiles(prev => {
+            const file = prev.find(f => f.id === id);
+            if (file?.preview) {
+                URL.revokeObjectURL(file.preview);
+            }
+            return prev.filter(f => f.id !== id);
+        });
+    };
+
+    const getFileIcon = (type: string, name: string) => {
+        if (name.match(/\.(png|jpg|jpeg|svg|webp|gif)$/i)) return <ImageIcon className="h-4 w-4" />;
+        if (name.match(/\.(pdf|doc|docx|txt|md)$/i)) return <FileText className="h-4 w-4" />;
+        if (name.match(/\.(pptx|ppt|key)$/i)) return <Presentation className="h-4 w-4" />;
+        return <File className="h-4 w-4" />;
+    };
+
+    const buildFileContext = (): string => {
+        if (attachedFiles.length === 0) return "";
+
+        let context = "\n\n## ATTACHED FILES CONTEXT:\n";
+
+        for (const file of attachedFiles) {
+            context += `\n### File: ${file.name}\n`;
+
+            if (file.colors && file.colors.length > 0) {
+                context += `Brand Colors Extracted: ${file.colors.join(", ")}\n`;
+                context += "USE THESE EXACT COLORS in the presentation design.\n";
+            }
+
+            if (file.content) {
+                context += `Content:\n\`\`\`\n${file.content.slice(0, 10000)}\n\`\`\`\n`;
+            }
+
+            if (file.name.match(/\.(pptx|ppt|key)$/i)) {
+                context += "This is an existing presentation - analyze its structure and REDESIGN with modern aesthetics while preserving the content flow.\n";
+            }
+        }
+
+        return context;
+    };
+
     const parseSlides = (content: string): SlidesPresentation | null => {
         try {
-            // Try to extract JSON from markdown code blocks
             const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
             const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
-
             const parsed = JSON.parse(jsonStr);
 
             if (parsed.slides && Array.isArray(parsed.slides)) {
@@ -170,7 +371,7 @@ export default function SlidesGenerator() {
                         id: slide.id || `slide-${index + 1}`,
                         title: slide.title || `Slide ${index + 1}`,
                         content: slide.content || "",
-                        htmlContent: slide.htmlContent || generateDefaultHtml(slide, index),
+                        htmlContent: slide.htmlContent || generateAnimatedHtml(slide, index),
                         notes: slide.notes || "",
                         layout: slide.layout || "content",
                         order: slide.order || index + 1,
@@ -186,33 +387,101 @@ export default function SlidesGenerator() {
         return null;
     };
 
-    const generateDefaultHtml = (slide: any, index: number): string => {
+    const generateAnimatedHtml = (slide: any, index: number): string => {
         const themeConfig = THEMES.find(t => t.id === theme) || THEMES[1];
-        const [bg, accent, text] = themeConfig.colors;
+        const [bg, accent, secondary, text] = themeConfig.colors;
+        const gradient = themeConfig.gradient;
+
+        // Get brand colors from attached files if available
+        const brandColors = attachedFiles.flatMap(f => f.colors || []).slice(0, 3);
+        const primaryColor = brandColors[0] || accent;
+        const secondaryColor = brandColors[1] || secondary;
 
         return `
-      <div style="
+      <div class="slide-container" style="
         min-height: 100%;
-        padding: 3rem;
-        background: linear-gradient(135deg, ${bg} 0%, ${accent}22 100%);
-        color: ${theme === 'minimal' ? '#1f2937' : text};
-        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        padding: 4rem;
+        background: ${gradient};
+        color: ${text};
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        position: relative;
+        overflow: hidden;
       ">
-        <h2 style="
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 1.5rem;
-          background: linear-gradient(90deg, ${accent}, ${accent}cc);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        ">${slide.title || `Slide ${index + 1}`}</h2>
-        <div style="font-size: 1.25rem; line-height: 1.8; opacity: 0.9;">
-          ${slide.content || "Content goes here..."}
+        <!-- Animated Background Elements -->
+        <div style="
+          position: absolute;
+          top: -50%;
+          right: -20%;
+          width: 80%;
+          height: 150%;
+          background: radial-gradient(ellipse at center, ${primaryColor}15 0%, transparent 70%);
+          animation: pulse 8s ease-in-out infinite;
+        "></div>
+        <div style="
+          position: absolute;
+          bottom: -30%;
+          left: -10%;
+          width: 60%;
+          height: 100%;
+          background: radial-gradient(ellipse at center, ${secondaryColor}10 0%, transparent 70%);
+          animation: pulse 10s ease-in-out infinite reverse;
+        "></div>
+        
+        <!-- Content -->
+        <div style="position: relative; z-index: 2;">
+          <h2 style="
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: slideIn 0.8s ease-out;
+          ">${slide.title || `Slide ${index + 1}`}</h2>
+          
+          <div style="
+            font-size: 1.35rem;
+            line-height: 1.9;
+            opacity: 0.95;
+            max-width: 90%;
+            animation: fadeIn 1s ease-out 0.3s both;
+          ">
+            ${slide.content || "Content goes here..."}
+          </div>
         </div>
+
+        <!-- Decorative Elements -->
+        <div style="
+          position: absolute;
+          bottom: 3rem;
+          right: 4rem;
+          display: flex;
+          gap: 0.5rem;
+        ">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: ${primaryColor}; opacity: 0.6;"></div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: ${secondaryColor}; opacity: 0.4;"></div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: ${text}; opacity: 0.2;"></div>
+        </div>
+
+        <style>
+          @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+          }
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 0.95; transform: translateY(0); }
+          }
+        </style>
       </div>
     `;
     };
@@ -235,26 +504,38 @@ export default function SlidesGenerator() {
         setError(null);
         setCurrentSlide(0);
 
-        console.log("[SlidesGenerator] Starting slides generation...", {
+        console.log("[SlidesGenerator] Starting animated slides generation...", {
             selectedProvider,
             selectedModel,
             topic,
             language,
-            theme
+            theme,
+            animationStyle,
+            attachedFilesCount: attachedFiles.length
         });
 
         try {
             const languageName = LANGUAGES.find(l => l.code === language)?.name || "English";
-            const audienceName = AUDIENCES.find(a => a.id === audience)?.name || "General Audience";
+            const audienceConfig = AUDIENCES.find(a => a.id === audience);
+            const animConfig = ANIMATION_STYLES.find(a => a.id === animationStyle);
+            const themeConfig = THEMES.find(t => t.id === theme);
+            const fileContext = buildFileContext();
+
+            // Build enhanced topic with file context
+            const enhancedTopic = `${topic}${fileContext}`;
 
             const result = await modelAdapter.generateSlides(
-                topic,
+                enhancedTopic,
                 {
                     language: languageName,
                     theme,
                     slideCount,
-                    audience: audienceName,
+                    audience: audienceConfig?.name || "General Audience",
                     organization,
+                    animationStyle: animConfig?.name,
+                    audienceStyle: audienceConfig?.style,
+                    themeColors: themeConfig?.colors,
+                    brandColors: attachedFiles.flatMap(f => f.colors || []).slice(0, 5),
                 },
                 selectedProvider,
                 selectedModel
@@ -267,7 +548,6 @@ export default function SlidesGenerator() {
                 if (presentation) {
                     setSlidesPresentation(presentation);
                 } else {
-                    // Fallback: create a simple presentation with the raw content
                     setSlidesPresentation({
                         id: Math.random().toString(36).substr(2, 9),
                         title: topic.slice(0, 50),
@@ -280,8 +560,8 @@ export default function SlidesGenerator() {
                             title: "Generated Content",
                             content: result.data,
                             htmlContent: `
-                <div style="padding: 2rem; font-family: system-ui;">
-                  <pre style="white-space: pre-wrap; font-size: 0.875rem;">${result.data}</pre>
+                <div style="padding: 2rem; font-family: system-ui; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100%; color: #f8fafc;">
+                  <pre style="white-space: pre-wrap; font-size: 0.875rem; opacity: 0.9;">${result.data}</pre>
                 </div>
               `,
                             layout: "content",
@@ -316,7 +596,10 @@ export default function SlidesGenerator() {
         if (!slidesPresentation) return;
 
         const themeConfig = THEMES.find(t => t.id === slidesPresentation.theme) || THEMES[1];
-        const [bg, accent, text] = themeConfig.colors;
+        const [bg, accent, secondary, text] = themeConfig.colors;
+        const brandColors = attachedFiles.flatMap(f => f.colors || []);
+        const primaryColor = brandColors[0] || accent;
+        const secondaryColor = brandColors[1] || secondary;
 
         const html = `<!DOCTYPE html>
 <html lang="${language}">
@@ -324,24 +607,118 @@ export default function SlidesGenerator() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${slidesPresentation.title}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: ${bg}; color: ${text}; }
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+      background: ${bg}; 
+      color: ${text};
+      overflow: hidden;
+    }
     .slides-container { width: 100vw; height: 100vh; overflow: hidden; position: relative; }
-    .slide { width: 100%; height: 100%; display: none; animation: fadeIn 0.5s ease; }
-    .slide.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .controls { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); 
-      display: flex; gap: 1rem; background: rgba(0,0,0,0.8); padding: 0.75rem 1.5rem; border-radius: 2rem; }
-    .controls button { background: ${accent}; color: white; border: none; padding: 0.5rem 1rem; 
-      border-radius: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-    .controls button:hover { transform: scale(1.05); }
-    .slide-counter { position: fixed; bottom: 2rem; right: 2rem; background: rgba(0,0,0,0.6); 
-      padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.875rem; }
+    .slide { 
+      width: 100%; 
+      height: 100%; 
+      display: none; 
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .slide.active { 
+      display: block; 
+      animation: slideEnter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .slide.exit {
+      animation: slideExit 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes slideEnter {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideExit {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-40px); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .controls { 
+      position: fixed; 
+      bottom: 2rem; 
+      left: 50%; 
+      transform: translateX(-50%);
+      display: flex; 
+      gap: 1rem; 
+      background: rgba(0,0,0,0.85); 
+      backdrop-filter: blur(20px);
+      padding: 0.875rem 1.75rem; 
+      border-radius: 2rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .controls button { 
+      background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%);
+      color: white; 
+      border: none; 
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.625rem; 
+      cursor: pointer; 
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px ${primaryColor}40;
+    }
+    .controls button:hover { 
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 25px ${primaryColor}50;
+    }
+    .controls button:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+    .slide-counter { 
+      position: fixed; 
+      bottom: 2rem; 
+      right: 2rem; 
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      padding: 0.625rem 1.25rem; 
+      border-radius: 1rem; 
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.1);
+      z-index: 100;
+    }
+    ${organization ? `
+    .org-logo {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      opacity: 0.6;
+      z-index: 100;
+    }` : ''}
   </style>
 </head>
 <body>
+  <div class="progress-bar" id="progress"></div>
+  ${organization ? `<div class="org-logo">${organization}</div>` : ''}
   <div class="slides-container">
     ${slidesPresentation.slides.map((slide, i) => `
       <div class="slide${i === 0 ? ' active' : ''}" data-slide="${i}">
@@ -350,29 +727,62 @@ export default function SlidesGenerator() {
     `).join('')}
   </div>
   <div class="controls">
-    <button onclick="prevSlide()">← Previous</button>
+    <button onclick="prevSlide()">← Prev</button>
+    <button onclick="toggleAutoplay()" id="autoplayBtn">▶ Auto</button>
     <button onclick="nextSlide()">Next →</button>
   </div>
   <div class="slide-counter"><span id="current">1</span> / ${slidesPresentation.slides.length}</div>
   <script>
     let current = 0;
+    let autoplay = null;
     const slides = document.querySelectorAll('.slide');
     const counter = document.getElementById('current');
+    const progress = document.getElementById('progress');
+    const autoplayBtn = document.getElementById('autoplayBtn');
+    const total = slides.length;
     
-    function showSlide(n) {
-      slides.forEach(s => s.classList.remove('active'));
-      current = (n + slides.length) % slides.length;
-      slides[current].classList.add('active');
-      counter.textContent = current + 1;
+    function updateProgress() {
+      progress.style.width = ((current + 1) / total * 100) + '%';
     }
     
-    function nextSlide() { showSlide(current + 1); }
-    function prevSlide() { showSlide(current - 1); }
+    function showSlide(n, direction = 1) {
+      const prev = current;
+      slides[prev].classList.add('exit');
+      slides[prev].classList.remove('active');
+      
+      current = (n + total) % total;
+      
+      setTimeout(() => {
+        slides[prev].classList.remove('exit');
+        slides[current].classList.add('active');
+      }, 400);
+      
+      counter.textContent = current + 1;
+      updateProgress();
+    }
+    
+    function nextSlide() { showSlide(current + 1, 1); }
+    function prevSlide() { showSlide(current - 1, -1); }
+    
+    function toggleAutoplay() {
+      if (autoplay) {
+        clearInterval(autoplay);
+        autoplay = null;
+        autoplayBtn.textContent = '▶ Auto';
+      } else {
+        autoplay = setInterval(nextSlide, 5000);
+        autoplayBtn.textContent = '⏸ Stop';
+      }
+    }
     
     document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+      if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+      if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen?.();
     });
+    
+    updateProgress();
   </script>
 </body>
 </html>`;
@@ -381,7 +791,7 @@ export default function SlidesGenerator() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${slidesPresentation.title.replace(/[^a-z0-9]/gi, '_')}_presentation.html`;
+        a.download = `${slidesPresentation.title.replace(/[^a-z0-9]/gi, '_')}_animated_presentation.html`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -404,19 +814,28 @@ export default function SlidesGenerator() {
         }
     };
 
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    };
+
     return (
         <div className="mx-auto grid max-w-7xl gap-4 lg:gap-6 grid-cols-1 xl:grid-cols-2">
             {/* Input Panel */}
             <Card className="h-fit">
                 <CardHeader className="p-4 lg:p-6">
                     <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
-                            <Presentation className="h-4 w-4" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25">
+                            <Sparkles className="h-4 w-4" />
                         </div>
-                        Slides Generator
+                        <span>Slides Generator</span>
+                        <span className="ml-auto text-[10px] font-normal px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border border-amber-200/50">
+                            PRO
+                        </span>
                     </CardTitle>
                     <CardDescription className="text-xs lg:text-sm">
-                        Generate stunning HTML5 presentation slides with multi-language support
+                        Generate stunning, animated HTML5 presentations with charts, graphics & corporate-ready design
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 lg:space-y-5 p-4 lg:p-6 pt-0 lg:pt-0">
@@ -458,11 +877,110 @@ export default function SlidesGenerator() {
                     <div className="space-y-2">
                         <label className="text-xs lg:text-sm font-medium">Presentation Topic</label>
                         <Textarea
-                            placeholder="e.g., Q4 2024 Company Performance Review, AI in Healthcare: Transforming Patient Care, Product Launch Strategy for Global Markets..."
+                            placeholder="e.g., Q4 2024 Revenue Analysis with YoY Growth Comparison, AI Integration Roadmap for Enterprise, Product Launch Strategy with Market Positioning..."
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             className="min-h-[100px] lg:min-h-[120px] resize-y text-sm"
                         />
+                    </div>
+
+                    {/* File Upload Zone */}
+                    <div className="space-y-2">
+                        <label className="text-xs lg:text-sm font-medium flex items-center gap-1.5">
+                            <Upload className="h-3.5 w-3.5 text-blue-500" />
+                            Attach Files for Context
+                            <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                        </label>
+                        <div
+                            className={cn(
+                                "relative border-2 border-dashed rounded-lg p-4 transition-all text-center",
+                                isDragOver
+                                    ? "border-violet-500 bg-violet-500/5"
+                                    : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                            )}
+                            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                            onDragLeave={() => setIsDragOver(false)}
+                            onDrop={handleFileDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                accept={ALL_ACCEPTED}
+                                className="hidden"
+                                onChange={(e) => e.target.files && handleFileUpload(Array.from(e.target.files))}
+                            />
+                            <div className="flex flex-col items-center gap-2 cursor-pointer">
+                                <div className="p-3 rounded-full bg-muted/50">
+                                    <Upload className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-medium">
+                                        {isDragOver ? "Drop files here" : "Drag & drop or click to upload"}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                        PowerPoint, PDFs, Docs, Images, Color Palettes
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {uploadProgress && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                {uploadProgress}
+                            </div>
+                        )}
+
+                        {/* Attached Files List */}
+                        {attachedFiles.length > 0 && (
+                            <div className="space-y-1.5 mt-2">
+                                {attachedFiles.map((file) => (
+                                    <div
+                                        key={file.id}
+                                        className="flex items-center gap-2 p-2 rounded-md bg-muted/30 border text-xs group"
+                                    >
+                                        {file.preview ? (
+                                            <img src={file.preview} alt="" className="w-8 h-8 rounded object-cover" />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                                {getFileIcon(file.type, file.name)}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium truncate">{file.name}</p>
+                                            <p className="text-[10px] text-muted-foreground">
+                                                {formatFileSize(file.size)}
+                                                {file.colors && file.colors.length > 0 && (
+                                                    <span className="ml-2">
+                                                        • {file.colors.length} colors extracted
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        {file.colors && file.colors.length > 0 && (
+                                            <div className="flex gap-0.5">
+                                                {file.colors.slice(0, 4).map((color, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="w-4 h-4 rounded-sm border border-white/20"
+                                                        style={{ backgroundColor: color }}
+                                                        title={color}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); removeFile(file.id); }}
+                                            className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Language & Theme Row */}
@@ -501,6 +1019,31 @@ export default function SlidesGenerator() {
                                     </option>
                                 ))}
                             </select>
+                        </div>
+                    </div>
+
+                    {/* Animation Style */}
+                    <div className="space-y-2">
+                        <label className="text-xs lg:text-sm font-medium flex items-center gap-1.5">
+                            <Zap className="h-3.5 w-3.5 text-amber-500" />
+                            Animation Style
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {ANIMATION_STYLES.map((style) => (
+                                <button
+                                    key={style.id}
+                                    onClick={() => setAnimationStyle(style.id)}
+                                    className={cn(
+                                        "p-2.5 rounded-lg border text-left transition-all",
+                                        animationStyle === style.id
+                                            ? "border-violet-500 bg-violet-500/10"
+                                            : "border-muted hover:border-violet-300"
+                                    )}
+                                >
+                                    <p className="text-xs font-medium">{style.name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{style.description}</p>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -545,7 +1088,7 @@ export default function SlidesGenerator() {
                                         onChange={(e) => setSlideCount(parseInt(e.target.value))}
                                         className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     >
-                                        {[5, 8, 10, 12, 15, 20].map((n) => (
+                                        {[5, 8, 10, 12, 15, 20, 25, 30].map((n) => (
                                             <option key={n} value={n}>{n} slides</option>
                                         ))}
                                     </select>
@@ -564,6 +1107,19 @@ export default function SlidesGenerator() {
                                     onChange={(e) => setOrganization(e.target.value)}
                                     className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 />
+                            </div>
+
+                            {/* Feature badges */}
+                            <div className="flex flex-wrap gap-1.5 pt-2">
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-200/50 flex items-center gap-1">
+                                    <BarChart3 className="h-2.5 w-2.5" /> SVG Charts
+                                </span>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-200/50 flex items-center gap-1">
+                                    <Sparkles className="h-2.5 w-2.5" /> Animations
+                                </span>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 border border-green-200/50 flex items-center gap-1">
+                                    <TrendingUp className="h-2.5 w-2.5" /> Data Viz
+                                </span>
                             </div>
                         </div>
                     )}
@@ -585,17 +1141,17 @@ export default function SlidesGenerator() {
                     <Button
                         onClick={handleGenerate}
                         disabled={isProcessing || !topic.trim()}
-                        className="w-full h-10 lg:h-11 text-sm lg:text-base font-medium bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                        className="w-full h-10 lg:h-11 text-sm lg:text-base font-medium bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/25"
                     >
                         {isProcessing ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Generating Slides...
+                                Creating Animated Slides...
                             </>
                         ) : (
                             <>
-                                <Presentation className="mr-2 h-4 w-4" />
-                                Generate Presentation
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Generate Animated Presentation
                             </>
                         )}
                     </Button>
@@ -652,20 +1208,28 @@ export default function SlidesGenerator() {
                                 <button
                                     onClick={() => goToSlide(currentSlide - 1)}
                                     disabled={currentSlide === 0}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
                                 >
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
                                 <button
                                     onClick={() => goToSlide(currentSlide + 1)}
                                     disabled={currentSlide >= slidesPresentation.slides.length - 1}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
                                 >
                                     <ChevronRight className="h-5 w-5" />
                                 </button>
 
+                                {/* Progress Bar */}
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-black/30">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300"
+                                        style={{ width: `${((currentSlide + 1) / slidesPresentation.slides.length) * 100}%` }}
+                                    />
+                                </div>
+
                                 {/* Slide Counter */}
-                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
+                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 text-white text-xs font-medium backdrop-blur-sm">
                                     {currentSlide + 1} / {slidesPresentation.slides.length}
                                 </div>
                             </div>
@@ -683,7 +1247,7 @@ export default function SlidesGenerator() {
                                                 : "border-muted hover:border-violet-300"
                                         )}
                                     >
-                                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[8px] text-white/70 font-medium">
+                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-[8px] text-white/70 font-medium">
                                             {index + 1}
                                         </div>
                                     </button>
@@ -708,13 +1272,13 @@ export default function SlidesGenerator() {
                     ) : (
                         <div className="flex h-[300px] lg:h-[400px] items-center justify-center text-center">
                             <div className="space-y-3">
-                                <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
-                                    <Presentation className="h-8 w-8 text-violet-500/50" />
+                                <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center">
+                                    <Sparkles className="h-8 w-8 text-violet-500/50" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">No presentation yet</p>
                                     <p className="text-xs text-muted-foreground/70 mt-1">
-                                        Enter a topic and generate your slides
+                                        Enter a topic and generate your animated slides
                                     </p>
                                 </div>
                             </div>

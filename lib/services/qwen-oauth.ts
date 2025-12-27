@@ -639,85 +639,124 @@ Make's prompt specific, inspiring, and comprehensive. Use professional UX termin
       slideCount?: number;
       audience?: string;
       organization?: string;
+      animationStyle?: string;
+      audienceStyle?: string;
+      themeColors?: string[];
+      brandColors?: string[];
     } = {},
     model?: string
   ): Promise<APIResponse<string>> {
-    const { language = "English", theme = "modern", slideCount = 10, audience = "general", organization = "" } = options;
+    const {
+      language = "English",
+      theme = "executive-dark",
+      slideCount = 10,
+      audience = "Executives & C-Suite",
+      organization = "",
+      animationStyle = "Professional",
+      audienceStyle = "Sophisticated, data-driven, strategic focus",
+      themeColors = ["#09090b", "#6366f1", "#a855f7", "#fafafa"],
+      brandColors = []
+    } = options;
+
+    const [bgColor, primaryColor, secondaryColor, textColor] = themeColors;
+    const brandColorStr = brandColors.length > 0
+      ? `\nBRAND COLORS TO USE: ${brandColors.join(", ")}`
+      : "";
 
     const systemMessage: ChatMessage = {
       role: "system",
-      content: `You are a world-class presentation designer and content strategist specializing in creating stunning, impactful slide decks for organizations and professionals.
+      content: `You are a WORLD-CLASS presentation designer who creates STUNNING, AWARD-WINNING slide decks that rival McKinsey, Apple, and TED presentations.
 
-Your task is to generate a complete presentation with HTML5-ready slide content. Each slide should be designed with modern, visually impressive aesthetics.
+Your slides must be VISUALLY SPECTACULAR with:
+- Modern CSS3 animations (fade-in, slide-in, scale, parallax effects)
+- Sophisticated gradient backgrounds with depth
+- SVG charts and data visualizations inline
+- Glassmorphism and neumorphism effects
+- Professional typography with Inter/SF Pro fonts
+- Strategic use of whitespace
+- Micro-animations on hover/focus states
+- Progress indicators and visual hierarchy
 
-OUTPUT FORMAT:
-Return a JSON object with the following structure:
+OUTPUT FORMAT - Return ONLY valid JSON:
 \`\`\`json
 {
   "title": "Presentation Title",
-  "subtitle": "Presentation Subtitle",
+  "subtitle": "Compelling Subtitle",
   "theme": "${theme}",
   "language": "${language}",
   "slides": [
     {
       "id": "slide-1",
       "title": "Slide Title",
-      "content": "Main content text",
-      "htmlContent": "<div class='slide'>Complete HTML content for the slide</div>",
+      "content": "Plain text content summary",
+      "htmlContent": "<div>FULL HTML with inline CSS and animations</div>",
       "notes": "Speaker notes",
-      "layout": "title|content|two-column|quote|statistics|timeline|comparison",
+      "layout": "title|content|two-column|chart|statistics|timeline|quote|comparison",
       "order": 1
     }
   ]
 }
 \`\`\`
 
-DESIGN GUIDELINES:
-1. Create ${slideCount} slides maximum
-2. Use the "${theme}" design theme
-3. All content MUST be in ${language}
-4. Target audience: ${audience}
-${organization ? `5. Organization: ${organization}` : ""}
+DESIGN SYSTEM:
+- Primary: ${brandColors[0] || primaryColor}
+- Secondary: ${brandColors[1] || secondaryColor}
+- Background: ${bgColor}
+- Text: ${textColor}${brandColorStr}
 
-SLIDE TYPES TO INCLUDE:
-- Title slide with compelling headline
-- Problem/Opportunity statement
-- Key insights with data visualizations
-- Solution/Strategy overview
-- Timeline or roadmap if applicable
-- Key metrics or statistics
-- Call-to-action or next steps
-- Summary/Conclusion slide
+ANIMATION STYLE: ${animationStyle}
+- Professional: Subtle 0.3-0.5s ease transitions, fade and slide
+- Dynamic: 0.5-0.8s spring animations, emphasis effects, stagger delays
+- Impressive: Bold 0.8-1.2s animations, parallax, morphing, particle effects
 
-HTML CONTENT REQUIREMENTS:
-- Use semantic HTML5 elements
-- Include inline CSS for styling
-- Use modern gradients, shadows, and animations
-- Incorporate icons using Unicode or SVG
-- Ensure responsive design considerations
-- Use professional typography (specify font-family)
-- Include color schemes matching the theme
+CSS ANIMATIONS TO INCLUDE:
+\`\`\`css
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+\`\`\`
 
-CONTENT QUALITY:
-- Concise, impactful headlines (max 8 words)
-- Bullet points with 3-5 items maximum
-- Relevant statistics with compelling visuals
-- Professional, business-appropriate language
-- Clear narrative flow between slides`,
+SLIDE TYPES TO CREATE:
+1. TITLE SLIDE: Hero-style with animated gradient background, large typography
+2. AGENDA/OVERVIEW: Icon grid with staggered fade-in animations
+3. DATA/CHARTS: Inline SVG bar/line/pie charts with animated drawing effects
+4. KEY METRICS: Large animated numbers with KPI cards
+5. TIMELINE: Horizontal/vertical timeline with sequential reveal animations
+6. COMPARISON: Side-by-side cards with hover lift effects
+7. QUOTE: Large typography with decorative quote marks
+8. CALL-TO-ACTION: Bold CTA with pulsing button effect
+
+TARGET AUDIENCE: ${audience}
+AUDIENCE STYLE: ${audienceStyle}
+${organization ? `ORGANIZATION BRANDING: ${organization}` : ""}
+
+REQUIREMENTS:
+- Create EXACTLY ${slideCount} slides
+- ALL content in ${language}
+- Each slide MUST have complete htmlContent with inline <style> tags
+- Use animation-delay for staggered reveal effects
+- Include decorative background elements (gradients, shapes)
+- Ensure text contrast meets WCAG AA standards
+- Add subtle shadow/glow effects for depth`,
     };
 
     const userMessage: ChatMessage = {
       role: "user",
-      content: `Create a stunning presentation about: ${topic}
+      content: `Create a STUNNING, ANIMATED presentation about:
 
-Requirements:
+${topic}
+
+SPECIFICATIONS:
 - Language: ${language}
 - Theme: ${theme}
-- Number of slides: ${slideCount}
-- Target audience: ${audience}
+- Slides: ${slideCount}
+- Audience: ${audience} (${audienceStyle})
+- Animation Style: ${animationStyle}
 ${organization ? `- Organization: ${organization}` : ""}
+${brandColors.length > 0 ? `- Brand Colors: ${brandColors.join(", ")}` : ""}
 
-Generate the complete presentation with HTML5 content for each slide. Make it visually impressive and content-rich.`,
+Generate SPECTACULAR slides with CSS3 animations, SVG charts, modern gradients, and corporate-ready design!`,
     };
 
     return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
@@ -740,3 +779,4 @@ Generate the complete presentation with HTML5 content for each slide. Make it vi
 const qwenOAuthService = new QwenOAuthService();
 export default qwenOAuthService;
 export { qwenOAuthService };
+

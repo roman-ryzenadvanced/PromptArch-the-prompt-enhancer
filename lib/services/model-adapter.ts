@@ -194,6 +194,10 @@ export class ModelAdapter {
       slideCount?: number;
       audience?: string;
       organization?: string;
+      animationStyle?: string;
+      audienceStyle?: string;
+      themeColors?: string[];
+      brandColors?: string[];
     } = {},
     provider?: ModelProvider,
     model?: string
