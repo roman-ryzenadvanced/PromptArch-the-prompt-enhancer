@@ -37,7 +37,7 @@ export default function GoogleAdsGenerator() {
 
     // Input states
     const [websiteUrl, setWebsiteUrl] = useState("");
-    const [products, setProducts] = useState<string[]>([""]);
+    const [products, setProducts] = useState<{ name: string; url: string }[]>([{ name: "", url: "" }]);
     const [targetAudience, setTargetAudience] = useState("");
     const [budgetMin, setBudgetMin] = useState("500");
     const [budgetMax, setBudgetMax] = useState("2000");
@@ -48,8 +48,44 @@ export default function GoogleAdsGenerator() {
     const [expandedSections, setExpandedSections] = useState<string[]>(["keywords"]);
 
     const [isMagicThinking, setIsMagicThinking] = useState(false);
+    const [progressMessage, setProgressMessage] = useState("");
+    const [progressIndex, setProgressIndex] = useState(0);
+
     const selectedModel = selectedModels[selectedProvider];
     const models = availableModels[selectedProvider] || modelAdapter.getAvailableModels(selectedProvider);
+
+    // Fun progress messages
+    const progressMessages = language === "ru" ? [
+        "🔍 Изучаю ваш сайт...",
+        "🧠 Анализирую конкурентов...",
+        "💡 Генерирую гениальные идеи...",
+        "📊 Исследую рыночные тренды...",
+        "🎯 Определяю целевую аудиторию...",
+        "✨ Создаю магию рекламы...",
+        "🚀 Почти готово, потерпите...",
+        "📝 Пишу убедительные тексты...",
+        "🔥 Оптимизирую для конверсий..."
+    ] : language === "he" ? [
+        "🔍 בודק את האתר שלך...",
+        "🧠 מנתח מתחרים...",
+        "💡 מייצר רעיונות גאוניים...",
+        "📊 חוקר מגמות שוק...",
+        "🎯 מזהה קהל יעד...",
+        "✨ יוצר קסם פרסום...",
+        "🚀 כמעט שם, רק רגע...",
+        "📝 כותב טקסטים משכנעים...",
+        "🔥 מייעל להמרות..."
+    ] : [
+        "🔍 Studying your website...",
+        "🧠 Analyzing competitors...",
+        "💡 Generating brilliant ideas...",
+        "📊 Researching market trends...",
+        "🎯 Identifying target audience...",
+        "✨ Creating advertising magic...",
+        "🚀 Almost there, hang tight...",
+        "📝 Writing persuasive copy...",
+        "🔥 Optimizing for conversions..."
+    ];
 
     const toggleSection = (section: string) => {
         setExpandedSections((prev) =>
@@ -74,6 +110,27 @@ export default function GoogleAdsGenerator() {
         }
     }, [selectedProvider]);
 
+    // Cycle through progress messages while generating
+    useEffect(() => {
+        if (isProcessing || isMagicThinking) {
+            setProgressMessage(progressMessages[0]);
+            setProgressIndex(0);
+
+            const interval = setInterval(() => {
+                setProgressIndex(prev => {
+                    const nextIndex = (prev + 1) % progressMessages.length;
+                    setProgressMessage(progressMessages[nextIndex]);
+                    return nextIndex;
+                });
+            }, 2500);
+
+            return () => clearInterval(interval);
+        } else {
+            setProgressMessage("");
+            setProgressIndex(0);
+        }
+    }, [isProcessing, isMagicThinking, language]);
+
     const loadAvailableModels = async () => {
         const fallbackModels = modelAdapter.getAvailableModels(selectedProvider);
         setAvailableModels(selectedProvider, fallbackModels);
@@ -88,14 +145,14 @@ export default function GoogleAdsGenerator() {
         }
     };
 
-    const addProduct = () => setProducts([...products, ""]);
+    const addProduct = () => setProducts([...products, { name: "", url: "" }]);
     const removeProduct = (index: number) => {
         const newProducts = products.filter((_, i) => i !== index);
-        setProducts(newProducts.length ? newProducts : [""]);
+        setProducts(newProducts.length ? newProducts : [{ name: "", url: "" }]);
     };
-    const updateProduct = (index: number, value: string) => {
+    const updateProduct = (index: number, field: "name" | "url", value: string) => {
         const newProducts = [...products];
-        newProducts[index] = value;
+        newProducts[index] = { ...newProducts[index], [field]: value };
         setProducts(newProducts);
     };
 
@@ -104,9 +161,9 @@ export default function GoogleAdsGenerator() {
             setError("Please enter a website URL");
             return;
         }
-        const filteredProducts = products.filter(p => p.trim() !== "");
+        const filteredProducts = products.filter(p => p.name.trim() !== "");
         if (filteredProducts.length === 0) {
-            setError("Please add at least one product or service");
+            setError(language === "ru" ? "Добавьте хотя бы один продукт или услугу" : language === "he" ? "הוסף לפחות מוצר או שירות אחד" : "Please add at least one product or service");
             return;
         }
 
@@ -125,8 +182,13 @@ export default function GoogleAdsGenerator() {
         console.log("[GoogleAdsGenerator] Starting generation...", { selectedProvider, selectedModel });
 
         try {
+            // Convert products to strings with optional URLs for AI context
+            const productStrings = filteredProducts.map(p =>
+                p.url ? `${p.name} (URL: ${p.url})` : p.name
+            );
+
             const result = await modelAdapter.generateGoogleAds(websiteUrl, {
-                productsServices: filteredProducts,
+                productsServices: productStrings,
                 targetAudience,
                 budgetRange: { min: parseInt(budgetMin), max: parseInt(budgetMax), currency: "USD" },
                 campaignDuration: duration,
@@ -194,9 +256,9 @@ export default function GoogleAdsGenerator() {
             setError("Please enter a website URL");
             return;
         }
-        const firstProduct = products.find(p => p.trim() !== "");
+        const firstProduct = products.find(p => p.name.trim() !== "");
         if (!firstProduct) {
-            setError("Please add at least one product to promote");
+            setError(language === "ru" ? "Добавьте хотя бы один продукт" : language === "he" ? "הוסף לפחות מוצר אחד" : "Please add at least one product to promote");
             return;
         }
 
@@ -213,9 +275,14 @@ export default function GoogleAdsGenerator() {
         setGoogleAdsResult(null);
 
         try {
+            // Pass product with URL for enhanced AI research
+            const productString = firstProduct.url
+                ? `${firstProduct.name} (Product URL for research: ${firstProduct.url})`
+                : firstProduct.name;
+
             const result = await modelAdapter.generateMagicWand(
                 websiteUrl,
-                firstProduct,
+                productString,
                 parseInt(budgetMax),
                 selectedProvider,
                 selectedModel
@@ -605,25 +672,33 @@ export default function GoogleAdsGenerator() {
 
                     <div className="space-y-2">
                         <label className="text-xs lg:text-sm font-medium">{t.products}</label>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {products.map((product, index) => (
-                                <div key={index} className="flex gap-2">
+                                <div key={index} className="space-y-1.5 p-2.5 rounded-lg border bg-muted/20">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder={`${language === "ru" ? "Название продукта" : language === "he" ? "שם המוצר" : "Product name"} ${index + 1}`}
+                                            value={product.name}
+                                            onChange={(e) => updateProduct(index, "name", e.target.value)}
+                                            className="text-sm"
+                                        />
+                                        {products.length > 1 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeProduct(index)}
+                                                className="h-10 w-10 shrink-0 text-muted-foreground hover:text-destructive"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                     <Input
-                                        placeholder={`${language === "ru" ? "Продукт" : language === "he" ? "מוצר" : "Product"} ${index + 1}`}
-                                        value={product}
-                                        onChange={(e) => updateProduct(index, e.target.value)}
-                                        className="text-sm"
+                                        placeholder={language === "ru" ? "URL страницы продукта (необязательно)" : language === "he" ? "כתובת URL של עמוד המוצר (אופציונלי)" : "Product page URL (optional)"}
+                                        value={product.url}
+                                        onChange={(e) => updateProduct(index, "url", e.target.value)}
+                                        className="text-xs text-muted-foreground"
                                     />
-                                    {products.length > 1 && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => removeProduct(index)}
-                                            className="h-10 w-10 shrink-0"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    )}
                                 </div>
                             ))}
                             <Button variant="outline" size="sm" onClick={addProduct} className="w-full text-xs">
@@ -723,6 +798,33 @@ export default function GoogleAdsGenerator() {
                             )}
                         </Button>
                     </div>
+
+                    {/* Progress Messages */}
+                    {(isProcessing || isMagicThinking) && progressMessage && (
+                        <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/50">
+                            <div className="flex items-center gap-3">
+                                <div className="flex space-x-1">
+                                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                    <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                    <span className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                </div>
+                                <p className="text-xs lg:text-sm font-medium text-foreground/80 animate-pulse">
+                                    {progressMessage}
+                                </p>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                                <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${((progressIndex + 1) / progressMessages.length) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground font-mono">
+                                    {progressIndex + 1}/{progressMessages.length}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
