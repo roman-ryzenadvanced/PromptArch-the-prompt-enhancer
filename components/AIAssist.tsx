@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/select";
 import useStore from "@/lib/store";
 import { translations } from "@/lib/i18n/translations";
 import modelAdapter from "@/lib/services/adapter-instance";
@@ -30,7 +31,7 @@ const AGENTS = [
 ];
 
 const AIAssist = () => {
-    const { language, selectedProvider, selectedModels, apiKeys, aiAssistHistory, setAIAssistHistory } = useStore();
+    const { language, selectedProvider, selectedModels, setSelectedModel, apiKeys, aiAssistHistory, setAIAssistHistory } = useStore();
     const t = translations[language].aiAssist;
     const common = translations[language].common;
 
@@ -39,6 +40,7 @@ const AIAssist = () => {
     const [currentAgent, setCurrentAgent] = useState("general");
     const [activeTab, setActiveTab] = useState("chat");
     const [previewData, setPreviewData] = useState<{ type: string; data: string; language?: string } | null>(null);
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -47,6 +49,20 @@ const AIAssist = () => {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [aiAssistHistory]);
+
+    useEffect(() => {
+        const loadModels = async () => {
+            try {
+                const models = await modelAdapter.listModels(selectedProvider);
+                if (models.success && models.data) {
+                    setAvailableModels(models.data[selectedProvider] || []);
+                }
+            } catch (e) {
+                setAvailableModels(modelAdapter.getAvailableModels(selectedProvider));
+            }
+        };
+        loadModels();
+    }, [selectedProvider]);
 
     const handleSendMessage = async () => {
         if (!input.trim() || isProcessing) return;
@@ -69,10 +85,15 @@ const AIAssist = () => {
                 throw new Error(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
             }
 
+            // Convert history to clean message format for API
+            const cleanMessages = aiAssistHistory.concat(userMessage).map(m => ({
+                role: m.role,
+                content: String(m.content || "")
+            }));
+
             // Call model adapter for AI Assist
-            // Note: We'll implement generateAIAssist in model-adapter.ts next
             const result = await modelAdapter.generateAIAssist({
-                messages: aiAssistHistory.concat(userMessage),
+                messages: cleanMessages as any,
                 currentAgent
             }, selectedProvider, selectedModels[selectedProvider]);
 
@@ -203,8 +224,19 @@ const AIAssist = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Select
+                            value={selectedModels[selectedProvider]}
+                            onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
+                            className="h-9 w-[180px] text-xs rounded-xl border-slate-200 bg-white"
+                        >
+                            {availableModels.map((model) => (
+                                <option key={model} value={model}>
+                                    {model}
+                                </option>
+                            ))}
+                        </Select>
                         <Button variant="outline" size="sm" onClick={clearHistory} className="rounded-xl border-slate-200 text-slate-500 hover:text-rose-500 hover:border-rose-200">
-                            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                            <Trash2 className="h-4 w-4 mr-2" /> Clear
                         </Button>
                     </div>
                 </div>
