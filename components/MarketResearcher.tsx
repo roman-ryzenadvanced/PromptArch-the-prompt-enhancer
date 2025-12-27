@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,8 @@ const MarketResearcher = () => {
     const [specialInstructions, setSpecialInstructions] = useState("");
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [thoughtIndex, setThoughtIndex] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
     const selectedModel = selectedModels[selectedProvider];
@@ -61,6 +63,31 @@ const MarketResearcher = () => {
         return null;
     };
 
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isProcessing) {
+            setProgress(0);
+            setThoughtIndex(0);
+            interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 95) return prev;
+                    return prev + (prev < 30 ? 2 : prev < 70 ? 1 : 0.5);
+                });
+            }, 300);
+
+            const thoughtInterval = setInterval(() => {
+                setThoughtIndex(prev => (prev < (t.thoughts?.length || 0) - 1 ? prev + 1 : prev));
+            }, 4000);
+
+            return () => {
+                clearInterval(interval);
+                clearInterval(thoughtInterval);
+            };
+        } else {
+            setProgress(0);
+        }
+    }, [isProcessing, t.thoughts]);
+
     const handleStartResearch = async () => {
         const validationError = validateUrls();
         if (validationError) {
@@ -93,6 +120,7 @@ const MarketResearcher = () => {
             }, selectedProvider, selectedModel);
 
             if (result.success && result.data) {
+                setProgress(100);
                 try {
                     const cleanJson = result.data.replace(/```json\s*([\s\S]*?)\s*```/i, '$1').trim();
                     const parsed = JSON.parse(cleanJson);
@@ -318,6 +346,37 @@ const MarketResearcher = () => {
                                     className="min-h-[80px] bg-slate-50/50 border-slate-200 focus:bg-white transition-all text-sm"
                                 />
                             </div>
+
+                            {isProcessing && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                                            <span className="text-indigo-600 flex items-center gap-1.5">
+                                                <Loader2 className="h-3 w-3 animate-spin" /> {language === "ru" ? "Идет анализ" : language === "he" ? "מנתח..." : "Analysis in progress"}
+                                            </span>
+                                            <span className="text-slate-400">{Math.round(progress)}%</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500 transition-all duration-300 ease-out"
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-slate-900 text-white shadow-lg relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20">
+                                            <Rocket className="h-4 w-4 text-indigo-400 group-hover:block hidden" />
+                                        </div>
+                                        <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2 flex items-center gap-1.5">
+                                            <span className="h-1 w-1 bg-indigo-400 rounded-full animate-pulse" /> AI Thoughts & Actions
+                                        </h4>
+                                        <p className="text-xs font-bold leading-relaxed italic animate-in fade-in slide-in-from-left-2 duration-700">
+                                            "{t.thoughts?.[thoughtIndex] || t.researching}"
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {error && (
                                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">

@@ -138,6 +138,16 @@ export const translations = {
             generate: "Start Research",
             researching: "Performing Deep Analysis...",
             emptyState: "Your comprehensive market research report will appear here",
+            thoughts: [
+                "Initializing deep scan of primary website...",
+                "Extracting product hierarchy and pricing structures...",
+                "Identifying competitor digital footprints...",
+                "Analyzing competitor feature sets and USPs...",
+                "Cross-referencing pricing data across target URLs...",
+                "Evaluating market positioning and landscape...",
+                "Synthesizing strategic advantages and identifying gaps...",
+                "Finalizing comprehensive intelligence report..."
+            ]
         }
     },
     ru: {
@@ -277,6 +287,16 @@ export const translations = {
             generate: "Начать исследование",
             researching: "Выполнение глубокого анализа...",
             emptyState: "Ваш подробный отчет об исследовании рынка появится здесь",
+            thoughts: [
+                "Инициализация глубокого сканирования основного сайта...",
+                "Извлечение иерархии продуктов и структур ценообразования...",
+                "Идентификация цифровых следов конкурентов...",
+                "Анализ наборов функций и УТП конкурентов...",
+                "Перекрестная проверка ценовых данных по целевым URL...",
+                "Оценка позиционирования на рынке и ландшафта...",
+                "Синтез стратегических преимуществ и выявление пробелов...",
+                "Финализация подробного отчета о разведке..."
+            ]
         }
     },
     he: {
@@ -416,6 +436,16 @@ export const translations = {
             generate: "התחל מחקר",
             researching: "מבצע ניתוח מעמיק...",
             emptyState: "דו\"ח מחקר השוק המקיף שלך יופיע כאן",
+            thoughts: [
+                "מאתחל סריקה עמוקה של אתר האינטרנט הראשי...",
+                "מחלץ היררכיית מוצרים ומבני תמחור...",
+                "מזהה טביעות רגל דיגיטליות של מתחרים...",
+                "מנתח סטים של תכונות ו-USP של מתחרים...",
+                "מצליב נתוני תמחור בין כתובות URL ממוקדות...",
+                "מעריך מיצוב שוק ונוף תחרותי...",
+                "מסנכרן יתרונות אסטרטגיים ומזהה פערים...",
+                "מגבש דו\"ח מודיעין מקיף סופי..."
+            ]
         }
     }
 };
