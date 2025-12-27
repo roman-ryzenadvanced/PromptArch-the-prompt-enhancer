@@ -1,4 +1,4 @@
-import type { ModelProvider, APIResponse, ChatMessage } from "@/types";
+import type { ModelProvider, APIResponse, ChatMessage, AIAssistMessage } from "@/types";
 import OllamaCloudService from "./ollama-cloud";
 import ZaiPlanService from "./zai-plan";
 import qwenOAuthService, { QwenOAuthConfig, QwenOAuthToken } from "./qwen-oauth";
@@ -254,6 +254,19 @@ export class ModelAdapter {
     const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
     const providers: ModelProvider[] = provider ? [provider] : fallback;
     return this.callWithFallback((service) => service.generateMarketResearch(options, model), providers);
+  }
+
+  async generateAIAssist(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+    },
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+    return this.callWithFallback((service) => service.generateAIAssist(options, model), providers);
   }
 
 

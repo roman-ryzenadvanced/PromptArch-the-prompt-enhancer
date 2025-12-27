@@ -1,4 +1,4 @@
-import type { ChatMessage, APIResponse } from "@/types";
+import type { ChatMessage, APIResponse, AIAssistMessage } from "@/types";
 
 const DEFAULT_QWEN_ENDPOINT = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
 const TOKEN_STORAGE_KEY = "promptarch-qwen-tokens";
@@ -983,6 +983,29 @@ Perform analysis based on provided instructions.`,
     return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
   }
 
+  async generateAIAssist(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const systemPrompt = `You are "AI Assist". Help conversationally.
+    Switch agents if needed (content, seo, smm, pm, code, design, web, app).
+    Output JSON for previews or agent switches:
+    { "content": "text", "agent": "id", "preview": { "type": "code|design|content|seo", "data": "...", "language": "..." } }`;
+
+    const chatMessages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...options.messages.map(m => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content
+      }))
+    ];
+
+    return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
+  }
+
   async listModels(): Promise<APIResponse<string[]>> {
     const models = [
       "coder-model",
@@ -999,6 +1022,5 @@ Perform analysis based on provided instructions.`,
 
 const qwenOAuthService = new QwenOAuthService();
 export default qwenOAuthService;
-export { qwenOAuthService };
 
 

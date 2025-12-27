@@ -292,4 +292,16 @@ export interface MarketResearchResult {
   rawContent: string;
 }
 
-export type AppView = "prompt-enhancer" | "prd-generator" | "action-plan" | "slides-gen" | "google-ads" | "ux-designer" | "market-research" | "settings" | "history";
+export interface AIAssistMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  agent?: string;
+  preview?: {
+    type: "code" | "design" | "content" | "seo";
+    data: string;
+    language?: string;
+  };
+  timestamp: Date;
+}
+
+export type AppView = "prompt-enhancer" | "prd-generator" | "action-plan" | "slides-gen" | "google-ads" | "ux-designer" | "market-research" | "ai-assist" | "settings" | "history";

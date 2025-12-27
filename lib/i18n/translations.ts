@@ -12,6 +12,7 @@ export const translations = {
             googleAds: "Google Ads",
             uxDesigner: "UX Designer",
             marketResearch: "Market Research",
+            aiAssist: "AI Assist",
             settings: "Settings",
             history: "History",
         },
@@ -148,6 +149,16 @@ export const translations = {
                 "Synthesizing strategic advantages and identifying gaps...",
                 "Finalizing comprehensive intelligence report..."
             ]
+        },
+        aiAssist: {
+            title: "AI Assist",
+            description: "Conversational intelligence with agent switching",
+            placeholder: "Discuss any topic, concern or project...",
+            chatStart: "How can I help you today?",
+            switchingAgent: "Switching to specialized agent...",
+            routing: "Routing your request...",
+            preview: "Real-time Preview",
+            actions: "Agent Actions"
         }
     },
     ru: {
@@ -161,6 +172,7 @@ export const translations = {
             googleAds: "Google Реклама",
             uxDesigner: "UX Дизайнер",
             marketResearch: "Анализ рынка",
+            aiAssist: "ИИ Ассистент",
             settings: "Настройки",
             history: "История",
         },
@@ -297,6 +309,16 @@ export const translations = {
                 "Синтез стратегических преимуществ и выявление пробелов...",
                 "Финализация подробного отчета о разведке..."
             ]
+        },
+        aiAssist: {
+            title: "ИИ Ассистент",
+            description: "Диалоговый интеллект с переключением агентов",
+            placeholder: "Обсудите любую тему, проблему или проект...",
+            chatStart: "Чем я могу помочь вам сегодня?",
+            switchingAgent: "Переключение на специализированного агента...",
+            routing: "Маршрутизация вашего запроса...",
+            preview: "Предпросмотр в реальном времени",
+            actions: "Действия агента"
         }
     },
     he: {
@@ -310,6 +332,7 @@ export const translations = {
             googleAds: "Google Ads",
             uxDesigner: "מעצב UX",
             marketResearch: "מחקר שוק",
+            aiAssist: "סייען AI",
             settings: "הגדרות",
             history: "היסטוריה",
         },
@@ -446,6 +469,16 @@ export const translations = {
                 "מסנכרן יתרונות אסטרטגיים ומזהה פערים...",
                 "מגבש דו\"ח מודיעין מקיף סופי..."
             ]
+        },
+        aiAssist: {
+            title: "סייען AI",
+            description: "אינטליגנציה שיחתית עם החלפת סוכנים",
+            placeholder: "דון בכל נושא, חשש או פרויקט...",
+            chatStart: "במה אוכל לעזור לך היום?",
+            switchingAgent: "עובר לסוכן מתמחה...",
+            routing: "מנתב את הבקשה שלך...",
+            preview: "תצוגה מקדימה בזמן אמת",
+            actions: "פעולות סוכן"
         }
     }
 };

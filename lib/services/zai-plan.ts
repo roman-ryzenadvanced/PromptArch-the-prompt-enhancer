@@ -1,4 +1,4 @@
-import type { ChatMessage, APIResponse } from "@/types";
+import type { ChatMessage, APIResponse, AIAssistMessage } from "@/types";
 
 export interface ZaiPlanConfig {
   apiKey?: string;
@@ -700,67 +700,105 @@ MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7
   ): Promise<APIResponse<string>> {
     const { websiteUrl, additionalUrls = [], competitors = [], productMapping, specialInstructions = "" } = options;
 
-    const systemMessage: ChatMessage = {
-      role: "system",
-      content: `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert. Perform a deep-dive automated market analysis.
-
-OUTPUT FORMAT - Return ONLY valid JSON with this structure:
-\`\`\`json
-{
-  "executiveSummary": "High-level overview of findings",
-  "priceComparisonMatrix": [
+    const systemPrompt = `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert.
+    Focus on accuracy and actionable intelligence.
+    
+    You MUST return your analysis in the following STRICT JSON format:
     {
-      "product": "Product Name",
-      "userPrice": "$XX.XX",
-      "competitorPrices": [
-        { "competitor": "Competitor Name", "price": "$XX.XX", "url": "https://competitor.com/product-page" }
-      ]
+      "executiveSummary": "A concise overview of the market landscape and key findings.",
+      "priceComparisonMatrix": [
+        { 
+          "product": "Product Name", 
+          "userPrice": "$XX.XX", 
+          "competitorPrices": [
+            { "competitor": "Competitor Name", "price": "$XX.XX", "url": "https://competitor.com/product-page" }
+          ] 
+        }
+      ],
+      "featureComparisonTable": [
+        { 
+          "feature": "Feature Name", 
+          "userStatus": true/false/text, 
+          "competitorStatus": [
+            { "competitor": "Competitor Name", "status": true/false/text }
+          ] 
+        }
+      ],
+      "marketPositioning": {
+        "landscape": "Description of the current market state.",
+        "segmentation": "Analysis of target customer segments."
+      },
+      "competitiveAnalysis": {
+        "advantages": ["Point 1", "Point 2"],
+        "disadvantages": ["Point 1", "Point 2"]
+      },
+      "recommendations": ["Actionable step 1", "Actionable step 2"],
+      "methodology": "Brief description of the research process."
     }
-  ],
-  "featureComparisonTable": [
+
+    Requirements:
+    1. Base your analysis on realistic price and feature estimates.
+    2. Focus on core technical/business value.
+    3. Ensure JSON is valid.`;
+
+    const userMsg = `WEBSITE TO ANALYZE: ${options.websiteUrl}
+    COMPETITOR URLS: ${options.competitors.join(', ')}
+    PRODUCT/FEATURE MAPPING: ${options.productMapping}
+    SPECIAL REQUESTS: ${options.specialInstructions || 'Perform comprehensive analysis'}
+    
+    Provide a COMPREHENSIVE competitive intelligence analysis.`;
+
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMsg }
+    ];
+
+    return await this.chatCompletion(messages, model || this.getAvailableModels()[0]);
+  }
+
+  async generateAIAssist(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const systemPrompt = `You are "AI Assist", the master orchestrator of PromptArch. 
+    Your goal is to provide intelligent conversational support and switch to specialized agents when necessary.
+
+    CURRENT SPECIALIZED AGENTS:
+    - content, seo, smm, pm, code, design, web, app
+
+    STRICT OUTPUT FORMAT:
+    You MUST respond in JSON format if you want to activate a preview or switch agents.
     {
-      "feature": "Feature Name",
-      "userStatus": "Yes/No or description",
-      "competitorStatus": [
-        { "competitor": "Competitor Name", "status": "Yes/No or description" }
-      ]
+      "content": "Your natural language response here...",
+      "agent": "agent_id_to_switch_to (optional)",
+      "preview": {  // (optional)
+        "type": "code" | "design" | "content" | "seo",
+        "data": "The actual code, layout, or content to preview",
+        "language": "javascript/html/css/markdown (optional)"
+      }
     }
-  ],
-  "marketPositioning": {
-    "landscape": "Current market landscape description",
-    "segmentation": "Target market segments"
-  },
-  "competitiveAnalysis": {
-    "advantages": ["Point 1", "Point 2"],
-    "disadvantages": ["Point 1", "Point 2"]
-  },
-  "recommendations": ["Rec 1", "Rec 2"],
-  "methodology": "How the research was conducted"
-}
-\`\`\`
 
-REQUIREMENTS:
-- Focus on accuracy and actionable intelligence.
-- Be realistic with price and feature estimates based on the provided URLs.`,
-    };
+    ROUTING LOGIC:
+    - Automatically detect user intent and switch agents if appropriate.
+    - Provide deep technical or creative output based on the active agent.
+    
+    PREVIEW GUIDELINES:
+    - Provide full code for 'web'/'app'/'code'.
+    - Provide structured analysis for 'seo'/'content'.`;
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: `🔬 MARKET RESEARCH REQUEST 🔬
+    const chatMessages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...options.messages.map(m => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content
+      }))
+    ];
 
-PRIMARY WEBSITE: ${websiteUrl}
-ADDITIONAL PAGES: ${additionalUrls.join(", ")}
-COMPETITORS: ${competitors.join(", ")}
-PRODUCT COMPARISON MAPPING: ${productMapping}
-${specialInstructions ? `CUSTOM PARAMETERS: ${specialInstructions}` : ""}
-
-Perform a COMPREHENSIVE competitive intelligence analysis.`,
-    };
-
-    return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
+    return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
   }
 }
 
 export default ZaiPlanService;
-
-

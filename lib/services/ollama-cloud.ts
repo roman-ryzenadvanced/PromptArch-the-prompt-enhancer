@@ -1,4 +1,4 @@
-import type { ChatMessage, APIResponse } from "@/types";
+import type { ChatMessage, APIResponse, AIAssistMessage } from "@/types";
 
 export interface OllamaCloudConfig {
   apiKey?: string;
@@ -617,71 +617,119 @@ Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategi
     },
     model?: string
   ): Promise<APIResponse<string>> {
-    const { websiteUrl, additionalUrls = [], competitors = [], productMapping, specialInstructions = "" } = options;
-
-    const systemMessage: ChatMessage = {
-      role: "system",
-      content: `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert. Your task is to perform a deep-dive automated market analysis and competitive intelligence gathering.
-
-OUTPUT FORMAT - Return ONLY valid JSON with this structure:
-\`\`\`json
-{
-  "executiveSummary": "High-level overview of findings",
-  "priceComparisonMatrix": [
+    const systemPrompt = `You are a WORLD-CLASS Market Research Analyst and Competitive Intelligence Expert.
+    Your objective is to perform a deep-dive analysis of a business and its competitors based on provided URLs and product mappings.
+    
+    You MUST return your analysis in the following STRICT JSON format:
     {
-      "product": "Product Name",
-      "userPrice": "$XX.XX",
-      "competitorPrices": [
-        { "competitor": "Competitor Name", "price": "$XX.XX", "url": "https://competitor.com/product-page" }
-      ]
+      "executiveSummary": "A concise overview of the market landscape and key findings.",
+      "priceComparisonMatrix": [
+        { 
+          "product": "Product Name", 
+          "userPrice": "$XX.XX", 
+          "competitorPrices": [
+            { "competitor": "Competitor Name", "price": "$XX.XX", "url": "https://competitor.com/product-page" }
+          ] 
+        }
+      ],
+      "featureComparisonTable": [
+        { 
+          "feature": "Feature Name", 
+          "userStatus": true/false/text, 
+          "competitorStatus": [
+            { "competitor": "Competitor Name", "status": true/false/text }
+          ] 
+        }
+      ],
+      "marketPositioning": {
+        "landscape": "Description of the current market state.",
+        "segmentation": "Analysis of target customer segments."
+      },
+      "competitiveAnalysis": {
+        "advantages": ["Point 1", "Point 2"],
+        "disadvantages": ["Point 1", "Point 2"]
+      },
+      "recommendations": ["Actionable step 1", "Actionable step 2"],
+      "methodology": "Brief description of the research process."
     }
-  ],
-  "featureComparisonTable": [
+
+    Requirements:
+    1. Base your analysis on realistic price and feature estimates if exact data isn't visible.
+    2. Focus on core technical/business value rather than marketing fluff.
+    3. Ensure JSON is valid and properly escaped.`;
+
+    const userMsg = `WEBSITE TO ANALYZE: ${options.websiteUrl}
+    ADDITIONAL COMPANY URLS: ${options.additionalUrls?.join(', ') || 'None'}
+    COMPETITOR URLS: ${options.competitors.join(', ')}
+    PRODUCT/FEATURE MAPPING: ${options.productMapping}
+    SPECIAL REQUESTS: ${options.specialInstructions || 'Perform comprehensive analysis'}
+    
+    Provide a COMPREHENSIVE competitive intelligence report.`;
+
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMsg }
+    ];
+
+    return await this.chatCompletion(messages, model || this.getAvailableModels()[0]);
+  }
+
+  async generateAIAssist(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+    },
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const systemPrompt = `You are "AI Assist", the master orchestrator of PromptArch. 
+    Your goal is to provide intelligent conversational support and switch to specialized agents when necessary.
+
+    CURRENT SPECIALIZED AGENTS:
+    - content: Content creation and optimization expert.
+    - seo: SEO analyst and recommendations specialist.
+    - smm: SMM strategy and social content planner.
+    - pm: Project planning and management lead.
+    - code: Code architect (JavaScript/TypeScript/React focus).
+    - design: UI/UX designer.
+    - web: HTML/CSS/JS web development specialist with real-time preview.
+    - app: Mobile-first app development specialist with real-time preview.
+
+    STRICT OUTPUT FORMAT:
+    You MUST respond in JSON format if you want to activate a preview or switch agents.
     {
-      "feature": "Feature Name",
-      "userStatus": "Yes/No or description",
-      "competitorStatus": [
-        { "competitor": "Competitor Name", "status": "Yes/No or description" }
-      ]
+      "content": "Your natural language response here...",
+      "agent": "agent_id_to_switch_to (optional)",
+      "preview": {  // (optional)
+        "type": "code" | "design" | "content" | "seo",
+        "data": "The actual code, layout, or content to preview",
+        "language": "javascript/html/css/markdown (optional)"
+      }
     }
-  ],
-  "marketPositioning": {
-    "landscape": "Current market landscape description",
-    "segmentation": "Target market segments"
-  },
-  "competitiveAnalysis": {
-    "advantages": ["Point 1", "Point 2"],
-    "disadvantages": ["Point 1", "Point 2"]
-  },
-  "recommendations": ["Rec 1", "Rec 2"],
-  "methodology": "How the research was conducted"
-}
-\`\`\`
 
-REQUIREMENTS:
-- Analysis must be based on the provided website and competitor URLs.
-- Price comparison should be as realistic as possible based on industry knowledge.
-- Feature table should focus on core technical and business value.
-- Competitive analysis must highlight USP (Unique Selling Proposition).`,
-    };
+    ROUTING LOGIC:
+    - If user asks for code, switch to 'code' or 'web'.
+    - If user asks for design/mockups, switch to 'design'.
+    - If user asks for market/SEO, switch to 'seo'.
+    - If user asks for marketing/social, switch to 'smm'.
+    - Maintain the 'content' of the conversation regardless of the agent switch.
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: `🔬 MARKET RESEARCH REQUEST 🔬
+    PREVIEW GUIDELINES:
+    - For 'web'/'app', provide full runnable HTML/CSS/JS.
+    - For 'code', provide clean, commented snippets.
+    - For 'design', provide text-based UI components or layout structures.
+    
+    RESPONSE TIME REQUIREMENT: Be concise and accurate.`;
 
-PRIMARY WEBSITE: ${websiteUrl}
-ADDITIONAL PAGES: ${additionalUrls.join(", ")}
-COMPETITORS: ${competitors.join(", ")}
-PRODUCT COMPARISON MAPPING: ${productMapping}
-${specialInstructions ? `CUSTOM PARAMETERS: ${specialInstructions}` : ""}
+    const chatMessages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...options.messages.map(m => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content
+      }))
+    ];
 
-Please conduct a comprehensive competitive analysis and market research report.`,
-    };
-
-    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+    return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
   }
 }
 
 export default OllamaCloudService;
-
-

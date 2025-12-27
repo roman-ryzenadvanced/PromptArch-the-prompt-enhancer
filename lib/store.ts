@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult, MarketResearchResult, AppView } from "@/types";
+import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult, MarketResearchResult, AppView, AIAssistMessage } from "@/types";
 
 interface AppState {
   currentPrompt: string;
@@ -10,6 +10,7 @@ interface AppState {
   googleAdsResult: GoogleAdsResult | null;
   magicWandResult: MagicWandResult | null;
   marketResearchResult: MarketResearchResult | null;
+  aiAssistHistory: AIAssistMessage[];
   language: "en" | "ru" | "he";
   selectedProvider: ModelProvider;
   selectedModels: Record<ModelProvider, string>;
@@ -36,6 +37,7 @@ interface AppState {
   setGoogleAdsResult: (result: GoogleAdsResult | null) => void;
   setMagicWandResult: (result: MagicWandResult | null) => void;
   setMarketResearchResult: (result: MarketResearchResult | null) => void;
+  setAIAssistHistory: (history: AIAssistMessage[] | ((prev: AIAssistMessage[]) => AIAssistMessage[])) => void;
   setLanguage: (lang: "en" | "ru" | "he") => void;
   setSelectedProvider: (provider: ModelProvider) => void;
   setSelectedModel: (provider: ModelProvider, model: string) => void;
@@ -58,6 +60,7 @@ const useStore = create<AppState>((set) => ({
   googleAdsResult: null,
   magicWandResult: null,
   marketResearchResult: null,
+  aiAssistHistory: [],
   language: "en",
   selectedProvider: "qwen",
   selectedModels: {
@@ -87,6 +90,9 @@ const useStore = create<AppState>((set) => ({
   setGoogleAdsResult: (result) => set({ googleAdsResult: result }),
   setMagicWandResult: (result) => set({ magicWandResult: result }),
   setMarketResearchResult: (result) => set({ marketResearchResult: result }),
+  setAIAssistHistory: (update) => set((state) => ({
+    aiAssistHistory: typeof update === 'function' ? update(state.aiAssistHistory) : update
+  })),
   setLanguage: (lang) => set({ language: lang }),
   setSelectedProvider: (provider) => set({ selectedProvider: provider }),
   setSelectedModel: (provider, model) =>
@@ -126,6 +132,7 @@ const useStore = create<AppState>((set) => ({
       googleAdsResult: null,
       magicWandResult: null,
       marketResearchResult: null,
+      aiAssistHistory: [],
       error: null,
     }),
 }));
