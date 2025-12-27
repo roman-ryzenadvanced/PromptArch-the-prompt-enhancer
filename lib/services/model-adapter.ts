@@ -217,6 +217,7 @@ export class ModelAdapter {
       industry?: string;
       competitors?: string[];
       language?: string;
+      specialInstructions?: string;
     } = { productsServices: [] },
     provider?: ModelProvider,
     model?: string
@@ -230,12 +231,13 @@ export class ModelAdapter {
     websiteUrl: string,
     product: string,
     budget: number,
+    specialInstructions?: string,
     provider?: ModelProvider,
     model?: string
   ): Promise<APIResponse<string>> {
     const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
     const providers: ModelProvider[] = provider ? [provider] : fallback;
-    return this.callWithFallback((service) => service.generateMagicWand(websiteUrl, product, budget, model), providers);
+    return this.callWithFallback((service) => service.generateMagicWand(websiteUrl, product, budget, specialInstructions, model), providers);
   }
 
 

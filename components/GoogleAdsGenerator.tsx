@@ -43,6 +43,7 @@ export default function GoogleAdsGenerator() {
     const [budgetMax, setBudgetMax] = useState("2000");
     const [duration, setDuration] = useState("30 days");
     const [industry, setIndustry] = useState("");
+    const [specialInstructions, setSpecialInstructions] = useState("");
 
     const [copied, setCopied] = useState(false);
     const [expandedSections, setExpandedSections] = useState<string[]>(["keywords"]);
@@ -193,7 +194,9 @@ export default function GoogleAdsGenerator() {
                 budgetRange: { min: parseInt(budgetMin), max: parseInt(budgetMax), currency: "USD" },
                 campaignDuration: duration,
                 industry,
-                language: "English"
+                competitors: [],
+                language: language === "ru" ? "Russian" : language === "he" ? "Hebrew" : "English",
+                specialInstructions: specialInstructions,
             }, selectedProvider, selectedModel);
 
             console.log("[GoogleAdsGenerator] Generation result:", result);
@@ -282,8 +285,9 @@ export default function GoogleAdsGenerator() {
 
             const result = await modelAdapter.generateMagicWand(
                 websiteUrl,
-                productString,
-                parseInt(budgetMax),
+                firstProduct.url ? `${firstProduct.name} (URL: ${firstProduct.url})` : firstProduct.name,
+                Number(budgetMax),
+                specialInstructions,
                 selectedProvider,
                 selectedModel
             );
@@ -892,6 +896,16 @@ export default function GoogleAdsGenerator() {
                             placeholder="e.g., Small business owners in USA looking for productivity tools"
                             value={targetAudience}
                             onChange={(e) => setTargetAudience(e.target.value)}
+                            className="min-h-[80px] lg:min-h-[100px] resize-y text-sm"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs lg:text-sm font-medium">{t.specialInstructions}</label>
+                        <Textarea
+                            placeholder={t.specialInstructionsPlaceholder}
+                            value={specialInstructions}
+                            onChange={(e) => setSpecialInstructions(e.target.value)}
                             className="min-h-[80px] lg:min-h-[100px] resize-y text-sm"
                         />
                     </div>

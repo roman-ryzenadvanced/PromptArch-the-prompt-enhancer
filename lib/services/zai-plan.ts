@@ -418,6 +418,7 @@ Return the complete JSON with full htmlContent for each slide. Make each slide V
       industry?: string;
       competitors?: string[];
       language?: string;
+      specialInstructions?: string;
     } = { productsServices: [] },
     model?: string
   ): Promise<APIResponse<string>> {
@@ -428,7 +429,8 @@ Return the complete JSON with full htmlContent for each slide. Make each slide V
       campaignDuration,
       industry = "General",
       competitors = [],
-      language = "English"
+      language = "English",
+      specialInstructions = ""
     } = options;
 
     const systemMessage: ChatMessage = {
@@ -592,6 +594,7 @@ LANGUAGE: ${language}
 ${budgetRange ? `BUDGET: ${budgetRange.min}-${budgetRange.max} ${budgetRange.currency}/month` : ""}
 ${campaignDuration ? `DURATION: ${campaignDuration}` : ""}
 ${competitors.length > 0 ? `COMPETITORS: ${competitors.join(", ")}` : ""}
+${specialInstructions ? `SPECIAL INSTRUCTIONS: ${specialInstructions}` : ""}
 
 Generate a COMPLETE Google Ads package including:
 🔍 Comprehensive keyword research (primary, long-tail, negative)
@@ -610,6 +613,7 @@ Make this campaign READY TO LAUNCH with copy-paste ready content!`,
     websiteUrl: string,
     product: string,
     budget: number,
+    specialInstructions?: string,
     model?: string
   ): Promise<APIResponse<string>> {
     const systemMessage: ChatMessage = {
@@ -676,6 +680,7 @@ CRITICAL REQUIREMENTS:
 WEBSITE: ${websiteUrl}
 PRODUCT/SERVICE: ${product}
 MONTHLY BUDGET: $${budget}
+${specialInstructions ? `SPECIAL INSTRUCTIONS: ${specialInstructions}` : ""}
 
 MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategic campaign directions that will DOMINATE this market.`,
     };

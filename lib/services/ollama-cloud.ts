@@ -445,6 +445,7 @@ Generate SPECTACULAR slides with CSS3 animations, SVG charts, modern gradients, 
       industry?: string;
       competitors?: string[];
       language?: string;
+      specialInstructions?: string;
     } = { productsServices: [] },
     model?: string
   ): Promise<APIResponse<string>> {
@@ -455,7 +456,8 @@ Generate SPECTACULAR slides with CSS3 animations, SVG charts, modern gradients, 
       campaignDuration,
       industry = "General",
       competitors = [],
-      language = "English"
+      language = "English",
+      specialInstructions = ""
     } = options;
 
     const systemMessage: ChatMessage = {
@@ -520,6 +522,7 @@ LANGUAGE: ${language}
 ${budgetRange ? `BUDGET: ${budgetRange.min}-${budgetRange.max} ${budgetRange.currency}/month` : ""}
 ${campaignDuration ? `DURATION: ${campaignDuration}` : ""}
 ${competitors.length > 0 ? `COMPETITORS: ${competitors.join(", ")}` : ""}
+${specialInstructions ? `SPECIAL INSTRUCTIONS: ${specialInstructions}` : ""}
 
 Generate complete Google Ads package with keywords, ad copy, campaigns, and implementation guidance.`,
     };
@@ -531,6 +534,7 @@ Generate complete Google Ads package with keywords, ad copy, campaigns, and impl
     websiteUrl: string,
     product: string,
     budget: number,
+    specialInstructions?: string,
     model?: string
   ): Promise<APIResponse<string>> {
     const systemMessage: ChatMessage = {
@@ -595,6 +599,7 @@ CRITICAL REQUIREMENTS:
 WEBSITE: ${websiteUrl}
 PRODUCT/SERVICE: ${product}
 MONTHLY BUDGET: $${budget}
+${specialInstructions ? `SPECIAL INSTRUCTIONS: ${specialInstructions}` : ""}
 
 Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategic campaign directions.`,
     };
