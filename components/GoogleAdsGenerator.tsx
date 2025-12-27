@@ -147,20 +147,54 @@ export default function GoogleAdsGenerator() {
 
             if (result.success && result.data) {
                 try {
-                    const parsedData = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+                    // Optimized parsing helper
+                    const extractJson = (text: string) => {
+                        try {
+                            // 1. Direct parse
+                            return JSON.parse(text);
+                        } catch (e) {
+                            // 2. Extract from markdown code blocks
+                            const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/i) ||
+                                text.match(/```\s*([\s\S]*?)\s*```/i);
+
+                            if (jsonMatch && jsonMatch[1]) {
+                                try {
+                                    return JSON.parse(jsonMatch[1].trim());
+                                } catch (e2) {
+                                    console.error("Failed to parse extracted JSON block", e2);
+                                }
+                            }
+
+                            // 3. Last resort: extract anything between the first { and last }
+                            const braceMatch = text.match(/(\{[\s\S]*\})/);
+                            if (braceMatch) {
+                                try {
+                                    return JSON.parse(braceMatch[0].trim());
+                                } catch (e3) {
+                                    console.error("Failed to parse content between braces", e3);
+                                }
+                            }
+
+                            throw new Error("Invalid format: AI response did not contain valid JSON");
+                        }
+                    };
+
+                    const rawData = typeof result.data === 'string' ? result.data : JSON.stringify(result.data);
+                    const parsedData = extractJson(rawData);
+
                     const adsResult: GoogleAdsResult = {
                         ...parsedData,
                         id: Math.random().toString(36).substr(2, 9),
                         websiteUrl,
                         productsServices: filteredProducts,
                         generatedAt: new Date(),
-                        rawContent: typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+                        rawContent: rawData
                     };
                     setGoogleAdsResult(adsResult);
                     setActiveTab("keywords");
                 } catch (e) {
                     console.error("Failed to parse ads data:", e);
-                    setError("Failed to parse the generated ads content. Please try again.");
+                    setError("Failed to parse the generated ads content. Please try again or switch AI providers.");
                 }
             } else {
                 setError(result.error || "Failed to generate Google Ads campaign");
@@ -216,16 +250,16 @@ export default function GoogleAdsGenerator() {
     };
 
     return (
-        <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
-            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-3">
-                        <Megaphone className="h-8 w-8 text-blue-600" />
-                        Google Ads Gen
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">PRO</Badge>
+                    <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 bg-clip-text text-transparent flex items-center gap-4">
+                        <Megaphone className="h-10 w-10 text-blue-600" />
+                        Google Ads Strategist
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1 font-bold text-xs uppercase tracking-widest">Premium AI</Badge>
                     </h1>
-                    <p className="text-muted-foreground mt-1">
-                        Generate high-converting keywords, ad copy, and campaign structures with AI.
+                    <p className="text-muted-foreground mt-2 text-lg">
+                        Convert concepts into high-ROI Google Ads campaigns with precision-engineered keywords and copy.
                     </p>
                 </div>
 
@@ -246,15 +280,15 @@ export default function GoogleAdsGenerator() {
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-12">
                 {/* Input Panel */}
                 <div className={cn("lg:col-span-4 space-y-6", activeTab !== "input" && googleAdsResult && "hidden lg:block")}>
-                    <Card className="border-blue-100 shadow-sm overflow-hidden">
-                        <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600" />
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Target className="h-5 w-5 text-blue-600" />
-                                Campaign Parameters
+                    <Card className="border-blue-100/50 shadow-xl shadow-blue-500/5 bg-white/70 backdrop-blur-md overflow-hidden transition-all hover:shadow-blue-500/10 active:scale-[0.995]">
+                        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-xl flex items-center gap-3 text-slate-800">
+                                <Target className="h-6 w-6 text-blue-600" />
+                                Campaign Inputs
                             </CardTitle>
-                            <CardDescription>
-                                Define your goals and target audience.
+                            <CardDescription className="text-slate-500 font-medium">
+                                Configure your primary triggers and constraints.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -264,10 +298,10 @@ export default function GoogleAdsGenerator() {
                                     Website URL
                                 </label>
                                 <Input
-                                    placeholder="e.g. https://www.your-business.com"
+                                    placeholder="e.g. www.startup-x.io"
                                     value={websiteUrl}
                                     onChange={(e) => setWebsiteUrl(e.target.value)}
-                                    className="bg-muted/30 focus-visible:ring-blue-500"
+                                    className="bg-white/50 border-blue-100 focus:border-blue-500 focus-visible:ring-blue-500 h-11 text-base shadow-sm"
                                 />
                             </div>
 
@@ -476,20 +510,27 @@ export default function GoogleAdsGenerator() {
                     )}
 
                     {isProcessing && (
-                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-pulse">
-                            <div className="relative mb-8">
-                                <div className="w-24 h-24 border-4 border-blue-100 rounded-full animate-spin" style={{ borderTopColor: 'rgb(37 99 235)' }} />
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 lg:p-12 text-center bg-white/30 backdrop-blur-xl rounded-[2.5rem] border border-white/50 shadow-2xl animate-in zoom-in-95 duration-500 relative overflow-hidden">
+                            {/* Decorative background blur */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-400/10 blur-[100px] rounded-full -z-10" />
+
+                            <div className="relative mb-10">
+                                <div className="w-32 h-32 border-[6px] border-blue-100 rounded-full animate-[spin_3s_linear_infinite]" style={{ borderTopColor: 'rgb(37 99 235)' }} />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <Search className="h-8 w-8 text-blue-600 animate-bounce" />
+                                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40">
+                                        <Search className="h-8 w-8 text-white animate-pulse" />
+                                    </div>
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-foreground mb-2">Analyzing Domain Content</h3>
-                            <div className="max-w-md w-full bg-muted/40 rounded-full h-2 mb-4 overflow-hidden">
-                                <div className="bg-blue-600 h-full animate-progress-indeterminate w-[60%]" />
-                            </div>
-                            <p className="text-muted-foreground text-sm">
-                                Scanning {websiteUrl}, fetching search volumes, and drafting high-converting copy...
+
+                            <h3 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">Strategizing Your Campaign...</h3>
+                            <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
+                                Scouring <span className="text-blue-600 font-bold">{websiteUrl}</span> for conversion triggers and competitive edges.
                             </p>
+
+                            <div className="max-w-md w-full bg-slate-200/50 rounded-full h-3 mb-10 overflow-hidden border border-white/20">
+                                <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 h-full animate-progress-indeterminate shadow-[0_0_15px_rgba(37,99,235,0.5)]" />
+                            </div>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12 w-full max-w-2xl px-4">
                                 {[
                                     { label: "Keywords", delay: "0s" },
