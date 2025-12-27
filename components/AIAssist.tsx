@@ -13,7 +13,8 @@ import modelAdapter from "@/lib/services/adapter-instance";
 import {
     MessageSquare, Send, Sparkles, Brain, Cpu, Code2, Palette, FileText, Search,
     BarChart, Rocket, Terminal, Eye, History, Trash2, Loader2, Bot, User,
-    Settings, Layers, AppWindow, Smartphone, Monitor, X
+    Settings, Layers, AppWindow, Smartphone, Monitor, X, ArrowLeftRight, RotateCcw,
+    CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AIAssistMessage } from "@/types";
@@ -153,6 +154,11 @@ const AIAssist = () => {
         setCurrentAgent("general");
     };
 
+    const undoLast = () => {
+        if (aiAssistHistory.length === 0) return;
+        setAIAssistHistory(prev => prev.slice(0, -2));
+    };
+
     const renderPreview = () => {
         if (!previewData) return (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4">
@@ -162,42 +168,110 @@ const AIAssist = () => {
         );
 
         switch (previewData.type) {
-            case "code":
             case "web":
             case "app":
                 return (
+                    <div className="h-full flex flex-col">
+                        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 text-white shrink-0">
+                            <div className="flex items-center gap-2">
+                                <Monitor className="h-3.5 w-3.5 text-indigo-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Live Runtime Sandbox</span>
+                            </div>
+                            <div className="flex gap-1">
+                                <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                            </div>
+                        </div>
+                        <div className="flex-1 bg-white overflow-hidden relative">
+                            <iframe
+                                title="web-preview"
+                                srcDoc={previewData.data}
+                                className="w-full h-full border-none"
+                                sandbox="allow-scripts"
+                            />
+                        </div>
+                    </div>
+                );
+            case "code":
+                return (
                     <div className="h-full flex flex-col gap-4">
-                        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 text-white rounded-t-xl">
+                        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 text-white rounded-t-xl shrink-0">
                             <div className="flex items-center gap-2">
                                 <Terminal className="h-3.5 w-3.5 text-indigo-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Live Execution Sandbox</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Code Architect Output</span>
                             </div>
-                            <Badge variant="outline" className="text-[8px] border-slate-700 text-slate-400 uppercase">Secure Booted</Badge>
+                            <Badge variant="outline" className="text-[8px] border-slate-700 text-slate-400 uppercase">{previewData.language || "source"}</Badge>
                         </div>
-                        <div className="flex-1 bg-slate-950 rounded-b-xl overflow-hidden p-6 font-mono text-sm relative group">
-                            <pre className="text-emerald-400 whitespace-pre-wrap">{previewData.data}</pre>
-                            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                                <Button size="sm" className="bg-white text-slate-900 hover:bg-slate-100 font-black uppercase tracking-widest text-[10px]">Execute Preview</Button>
-                            </div>
+                        <div className="flex-1 bg-slate-950 rounded-b-xl overflow-auto p-6 font-mono text-sm relative group">
+                            <pre className="text-emerald-400 whitespace-pre leading-relaxed">{previewData.data}</pre>
                         </div>
                     </div>
                 );
             case "design":
                 return (
                     <div className="h-full flex flex-col gap-4">
-                        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 text-white rounded-t-xl">
+                        <div className="flex items-center justify-between px-4 py-2 bg-slate-900 text-white rounded-t-xl shrink-0">
                             <div className="flex items-center gap-2">
                                 <Palette className="h-3.5 w-3.5 text-orange-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">UI Layout Preview</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">UI/UX Layout Frame</span>
                             </div>
                         </div>
-                        <div className="flex-1 bg-slate-50 border-2 border-dashed border-slate-200 rounded-b-xl flex items-center justify-center p-8">
-                            <div className="max-w-md w-full p-6 bg-white rounded-2xl shadow-xl border border-slate-100 animate-in zoom-in-95 duration-500">
-                                {previewData.data}
+                        <div className="flex-1 bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-b-xl overflow-y-auto p-8">
+                            <div className="mx-auto max-w-[400px] w-full bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-500">
+                                <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <div className="flex gap-1">
+                                        <div className="w-2 h-2 rounded-full bg-slate-200" />
+                                        <div className="w-2 h-2 rounded-full bg-slate-200" />
+                                    </div>
+                                    <div className="h-2 w-16 bg-slate-200 rounded-full" />
+                                </div>
+                                <div className="p-8 prose prose-slate">
+                                    {previewData.data}
+                                </div>
                             </div>
                         </div>
                     </div>
                 );
+            case "seo":
+                try {
+                    const seoData = JSON.parse(previewData.data);
+                    return (
+                        <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-4">
+                                {Object.entries(seoData.metrics || {}).map(([key, val]: [string, any]) => (
+                                    <Card key={key} className="border-slate-100 shadow-sm bg-gradient-to-br from-white to-slate-50">
+                                        <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{key}</span>
+                                            <span className="text-2xl font-black text-indigo-600">{val}</span>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                                    <Search className="h-3.5 w-3.5 text-emerald-500" /> Recommendations
+                                </h4>
+                                <ul className="space-y-2">
+                                    {(seoData.recommendations || []).map((rec: string, i: number) => (
+                                        <li key={i} className="flex gap-3 text-sm font-medium text-slate-600 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50">
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                                            {rec}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    );
+                } catch (e) {
+                    return (
+                        <div className="h-full overflow-y-auto p-6 bg-white rounded-xl border border-slate-200 prose prose-slate max-w-none">
+                            <div className="whitespace-pre-wrap font-medium text-slate-700 leading-relaxed">
+                                {previewData.data}
+                            </div>
+                        </div>
+                    );
+                }
             default:
                 return (
                     <div className="h-full overflow-y-auto p-6 bg-white rounded-xl border border-slate-200 prose prose-slate max-w-none">
@@ -235,6 +309,9 @@ const AIAssist = () => {
                                 </option>
                             ))}
                         </Select>
+                        <Button variant="outline" size="sm" onClick={undoLast} disabled={aiAssistHistory.length === 0} className="rounded-xl border-slate-200 text-slate-500 hover:text-amber-500 hover:border-amber-200">
+                            <RotateCcw className="h-4 w-4 mr-2" /> Undo
+                        </Button>
                         <Button variant="outline" size="sm" onClick={clearHistory} className="rounded-xl border-slate-200 text-slate-500 hover:text-rose-500 hover:border-rose-200">
                             <Trash2 className="h-4 w-4 mr-2" /> Clear
                         </Button>
@@ -302,14 +379,28 @@ const AIAssist = () => {
                                             {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                                         </div>
                                         <div className={cn(
-                                            "max-w-[80%] space-y-2",
+                                            "max-w-[80%] space-y-2 group/msg",
                                             msg.role === "user" ? "items-end text-right" : "items-start text-left"
                                         )}>
-                                            {msg.agent && (
-                                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-indigo-200 text-indigo-500 bg-indigo-50/50">
-                                                    {AGENTS.find(a => a.id === msg.agent)?.label || msg.agent}
-                                                </Badge>
-                                            )}
+                                            <div className="flex items-center gap-2 justify-end">
+                                                {msg.role === "user" && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setInput(msg.content);
+                                                            setAIAssistHistory(prev => prev.slice(0, i));
+                                                        }}
+                                                        className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-slate-100 rounded text-slate-400 transition-all"
+                                                        title="Revise from here"
+                                                    >
+                                                        <ArrowLeftRight className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                                {msg.agent && (
+                                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-indigo-200 text-indigo-500 bg-indigo-50/50">
+                                                        {AGENTS.find(a => a.id === msg.agent)?.label || msg.agent}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                             <div className={cn(
                                                 "p-4 rounded-3xl text-sm font-medium leading-relaxed shadow-sm",
                                                 msg.role === "user"
