@@ -4,13 +4,19 @@ const DEFAULT_QWEN_ENDPOINT = "https://dashscope-intl.aliyuncs.com/compatible-mo
 const TOKEN_STORAGE_KEY = "promptarch-qwen-tokens";
 
 function getOAuthBaseUrl(): string {
+  const basePath = '/tools/promptarch';
   if (typeof window !== "undefined") {
-    return `${window.location.origin}/api/qwen`;
+    const origin = window.location.origin;
+    return `${origin}${basePath}/api/qwen`;
   }
   if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return `${process.env.NEXT_PUBLIC_SITE_URL}/api/qwen`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    if (siteUrl.endsWith(basePath)) {
+      return `${siteUrl}/api/qwen`;
+    }
+    return `${siteUrl}${basePath}/api/qwen`;
   }
-  return "/api/qwen";
+  return `${basePath}/api/qwen`;
 }
 
 export interface QwenOAuthConfig {
