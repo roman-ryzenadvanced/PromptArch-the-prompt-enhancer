@@ -605,6 +605,74 @@ Make this campaign READY TO LAUNCH with copy-paste ready content!`,
 
     return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
   }
+
+  async generateMagicWand(
+    websiteUrl: string,
+    product: string,
+    budget: number,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a WORLD-CLASS marketing strategist with 20+ years of experience in competitive intelligence, market research, and Google Ads campaign strategy. You have access to deep industry knowledge and can analyze markets like a Fortune 500 CMO.
+
+OUTPUT FORMAT - Return ONLY valid JSON with this EXACT structure:
+\`\`\`json
+{
+  "marketAnalysis": {
+    "industrySize": "Estimated market size",
+    "growthRate": "Annual growth percentage",
+    "topCompetitors": ["Competitor 1", "Competitor 2", "Competitor 3"],
+    "marketTrends": ["Trend 1", "Trend 2", "Trend 3"]
+  },
+  "competitorInsights": [
+    {
+      "competitor": "Competitor Name",
+      "strengths": ["Strength 1", "Strength 2"],
+      "weaknesses": ["Weakness 1", "Weakness 2"],
+      "adStrategy": "Their current advertising approach"
+    }
+  ],
+  "strategies": [
+    {
+      "id": "strategy-1",
+      "direction": "Strategic Direction Name",
+      "rationale": "Why this strategy works for this product/market",
+      "targetAudience": "Specific audience segment",
+      "competitiveAdvantage": "How this beats competitors",
+      "keyMessages": ["Message 1", "Message 2", "Message 3"],
+      "recommendedChannels": ["Google Search", "Display", "YouTube"],
+      "estimatedBudgetAllocation": { "search": 40, "display": 30, "video": 20, "social": 10 },
+      "expectedROI": "150-200%",
+      "riskLevel": "low",
+      "timeToResults": "2-3 months"
+    }
+  ]
+}
+\`\`\`
+
+CRITICAL REQUIREMENTS:
+- Provide 5-7 DISTINCT strategic directions
+- Each strategy must be ACTIONABLE and SPECIFIC
+- Include REAL competitive insights based on industry knowledge
+- Budget allocations must sum to 100%
+- Risk levels: "low", "medium", or "high"
+- Be REALISTIC with ROI and timeline estimates`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `🔮 MAGIC WAND ANALYSIS REQUEST 🔮
+
+WEBSITE: ${websiteUrl}
+PRODUCT/SERVICE: ${product}
+MONTHLY BUDGET: $${budget}
+
+MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategic campaign directions that will DOMINATE this market.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "glm-4.7", true);
+  }
 }
 
 export default ZaiPlanService;

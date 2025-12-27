@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import useStore from "@/lib/store";
-import { Sparkles, FileText, ListTodo, Palette, Presentation, History, Settings, Github, Menu, X, Megaphone } from "lucide-react";
+import { Sparkles, FileText, ListTodo, Palette, Presentation, History, Settings, Github, Menu, X, Megaphone, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { translations } from "@/lib/i18n/translations";
 
 export type View = "enhance" | "prd" | "action" | "uxdesigner" | "slides" | "googleads" | "history" | "settings";
 
@@ -14,18 +15,20 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
-  const history = useStore((state) => state.history);
+  const { language, setLanguage, history } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const t = translations[language].sidebar;
+  const common = translations[language].common;
 
   const menuItems = [
-    { id: "enhance" as View, label: "Prompt Enhancer", icon: Sparkles },
-    { id: "prd" as View, label: "PRD Generator", icon: FileText },
-    { id: "action" as View, label: "Action Plan", icon: ListTodo },
-    { id: "uxdesigner" as View, label: "UX Designer", icon: Palette },
-    { id: "slides" as View, label: "Slides Generator", icon: Presentation },
-    { id: "googleads" as View, label: "Google Ads Gen", icon: Megaphone },
-    { id: "history" as View, label: "History", icon: History, count: history.length },
-    { id: "settings" as View, label: "Settings", icon: Settings },
+    { id: "enhance" as View, label: t.promptEnhancer, icon: Sparkles },
+    { id: "prd" as View, label: t.prdGenerator, icon: FileText },
+    { id: "action" as View, label: t.actionPlan, icon: ListTodo },
+    { id: "uxdesigner" as View, label: t.uxDesigner, icon: Palette },
+    { id: "slides" as View, label: t.slidesGen, icon: Presentation },
+    { id: "googleads" as View, label: t.googleAds, icon: Megaphone },
+    { id: "history" as View, label: t.history, icon: History, count: history.length },
+    { id: "settings" as View, label: t.settings, icon: Settings },
   ];
 
   const handleViewChange = (view: View) => {
@@ -38,7 +41,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
       <div className="border-b p-4 lg:p-6">
         <a href="https://www.rommark.dev" className="mb-4 flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
           <Menu className="h-3 w-3" />
-          Back to rommark.dev
+          <span>{language === "en" ? "Back to rommark.dev" : language === "ru" ? "Вернуться на rommark.dev" : "חזרה ל-rommark.dev"}</span>
         </a>
         <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="block">
           <h1 className="flex items-center gap-2 text-lg lg:text-xl font-bold hover:opacity-80 transition-opacity">
@@ -78,21 +81,22 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
           </Button>
         ))}
 
-        <div className="mt-6 lg:mt-8 p-2 lg:p-3 text-[9px] lg:text-[10px] leading-relaxed text-muted-foreground border-t border-border/50 pt-3 lg:pt-4">
-          <p className="font-semibold text-foreground mb-1">Developed by Roman | RyzenAdvanced</p>
-          <div className="space-y-0.5 lg:space-y-1">
-            <p>
-              GitHub: <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">roman-ryzenadvanced</a>
-            </p>
-            <p>
-              Telegram: <a href="https://t.me/VibeCodePrompterSystem" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@VibeCodePrompterSystem</a>
-            </p>
-            <p className="mt-1 lg:mt-2 text-[8px] lg:text-[9px] opacity-80">
-              100% Developed using GLM 4.7 model on TRAE.AI IDE.
-            </p>
-            <p className="text-[8px] lg:text-[9px] opacity-80">
-              Model Info: <a href="https://z.ai/subscribe?ic=R0K78RJKNW" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn here</a>
-            </p>
+        <div className="mt-4 p-2 lg:p-3 border-t border-border/50">
+          <div className="flex items-center gap-2 mb-2 text-[10px] lg:text-xs font-semibold text-muted-foreground uppercase">
+            <Languages className="h-3 w-3" /> {language === "en" ? "Language" : language === "ru" ? "Язык" : "שפה"}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {(["en", "ru", "he"] as const).map((lang) => (
+              <Button
+                key={lang}
+                variant={language === lang ? "default" : "outline"}
+                size="sm"
+                className="h-7 px-2 text-[10px] uppercase font-bold"
+                onClick={() => setLanguage(lang)}
+              >
+                {lang}
+              </Button>
+            ))}
           </div>
         </div>
       </nav>

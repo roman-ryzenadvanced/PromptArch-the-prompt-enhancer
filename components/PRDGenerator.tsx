@@ -8,6 +8,7 @@ import useStore from "@/lib/store";
 import modelAdapter from "@/lib/services/adapter-instance";
 import { FileText, Copy, Loader2, CheckCircle2, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { translations } from "@/lib/i18n/translations";
 
 export default function PRDGenerator() {
   const {
@@ -19,6 +20,7 @@ export default function PRDGenerator() {
     apiKeys,
     isProcessing,
     error,
+    language,
     setCurrentPrompt,
     setSelectedProvider,
     setPRD,
@@ -27,6 +29,9 @@ export default function PRDGenerator() {
     setAvailableModels,
     setSelectedModel,
   } = useStore();
+
+  const t = translations[language].prdGenerator;
+  const common = translations[language].common;
 
   const [copied, setCopied] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
@@ -131,29 +136,29 @@ export default function PRDGenerator() {
   };
 
   const sections = [
-    { id: "overview", title: "Overview & Objectives" },
-    { id: "personas", title: "User Personas & Use Cases" },
-    { id: "functional", title: "Functional Requirements" },
-    { id: "nonfunctional", title: "Non-functional Requirements" },
-    { id: "architecture", title: "Technical Architecture" },
-    { id: "metrics", title: "Success Metrics" },
+    { id: "overview", title: language === "ru" ? "Обзор продукта" : language === "he" ? "סקירת מוצר" : "Product Overview" },
+    { id: "personas", title: language === "ru" ? "Персоны пользователей" : language === "he" ? "פרסונות משתמשים" : "User Personas & Use Cases" },
+    { id: "functional", title: language === "ru" ? "Функциональные требования" : language === "he" ? "דרישות פונקציונליות" : "Functional Requirements" },
+    { id: "nonfunctional", title: language === "ru" ? "Нефункциональные требования" : language === "he" ? "דרישות לא פונקציונליות" : "Non-functional Requirements" },
+    { id: "architecture", title: language === "ru" ? "Техническая архитектура" : language === "he" ? "ארכיטקטורה טכנית" : "Technical Architecture" },
+    { id: "metrics", title: language === "ru" ? "Успешность метрик" : language === "he" ? "מדדי הצלחה" : "Success Metrics" },
   ];
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
+    <div className="mx-auto grid max-w-7xl gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 text-start">
       <Card className="h-fit">
-        <CardHeader className="p-4 lg:p-6">
+        <CardHeader className="p-4 lg:p-6 text-start">
           <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
             <FileText className="h-4 w-4 lg:h-5 lg:w-5" />
-            PRD Generator
+            {t.title}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            Generate comprehensive Product Requirements Document from your idea
+            {t.description}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 lg:space-y-4 p-4 lg:p-6 pt-0 lg:pt-0">
-          <div className="space-y-2">
-            <label className="text-xs lg:text-sm font-medium">AI Provider</label>
+          <div className="space-y-2 text-start">
+            <label className="text-xs lg:text-sm font-medium">{common.aiProvider}</label>
             <div className="flex flex-wrap gap-1.5 lg:gap-2">
               {(["qwen", "ollama", "zai"] as const).map((provider) => (
                 <Button
@@ -169,8 +174,8 @@ export default function PRDGenerator() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs lg:text-sm font-medium">Model</label>
+          <div className="space-y-2 text-start">
+            <label className="text-xs lg:text-sm font-medium">{common.model}</label>
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
@@ -185,12 +190,11 @@ export default function PRDGenerator() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs lg:text-sm font-medium">Your Idea</label>
             <Textarea
-              placeholder="e.g., A task management app with real-time collaboration features"
+              placeholder={t.placeholder}
               value={currentPrompt}
               onChange={(e) => setCurrentPrompt(e.target.value)}
-              className="min-h-[150px] lg:min-h-[200px] resize-y text-sm"
+              className="min-h-[150px] lg:min-h-[200px] resize-y text-sm lg:text-base p-3 lg:p-4"
             />
           </div>
 
@@ -200,7 +204,7 @@ export default function PRDGenerator() {
               {!apiKeys[selectedProvider] && (
                 <div className="mt-1.5 lg:mt-2 flex items-center gap-2">
                   <Settings className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                  <span className="text-[10px] lg:text-xs">Configure API key in Settings</span>
+                  <span className="text-[10px] lg:text-xs">{common.configApiKey}</span>
                 </div>
               )}
             </div>
@@ -210,12 +214,12 @@ export default function PRDGenerator() {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4 animate-spin" />
-                Generating PRD...
+                {common.generating}
               </>
             ) : (
               <>
                 <FileText className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                Generate PRD
+                {common.generate}
               </>
             )}
           </Button>
@@ -223,11 +227,11 @@ export default function PRDGenerator() {
       </Card>
 
       <Card className={cn(!prd && "opacity-50")}>
-        <CardHeader className="p-4 lg:p-6">
+        <CardHeader className="p-4 lg:p-6 text-start">
           <CardTitle className="flex items-center justify-between text-base lg:text-lg">
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 text-green-500" />
-              Generated PRD
+              {t.generatedTitle}
             </span>
             {prd && (
               <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8 lg:h-9 lg:w-9">
@@ -240,7 +244,7 @@ export default function PRDGenerator() {
             )}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            Structured requirements document ready for development
+            {language === "ru" ? "Структурированный документ требований готов к разработке" : language === "he" ? "מסמך דרישות מובנה מוכן לפיתוח" : "Structured requirements document ready for development"}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
@@ -269,7 +273,7 @@ export default function PRDGenerator() {
             </div>
           ) : (
             <div className="flex h-[200px] lg:h-[300px] items-center justify-center text-center text-xs lg:text-sm text-muted-foreground">
-              PRD will appear here
+              {language === "ru" ? "Здесь появится созданный PRD" : language === "he" ? "PRD שחולל יופיע כאן" : "Generated PRD will appear here"}
             </div>
           )}
         </CardContent>

@@ -526,6 +526,72 @@ Generate complete Google Ads package with keywords, ad copy, campaigns, and impl
 
     return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
   }
+
+  async generateMagicWand(
+    websiteUrl: string,
+    product: string,
+    budget: number,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const systemMessage: ChatMessage = {
+      role: "system",
+      content: `You are a WORLD-CLASS marketing strategist with 20+ years of experience in competitive intelligence, market research, and Google Ads campaign strategy. 
+
+OUTPUT FORMAT - Return ONLY valid JSON with this EXACT structure:
+\`\`\`json
+{
+  "marketAnalysis": {
+    "industrySize": "Estimated market size",
+    "growthRate": "Annual growth percentage",
+    "topCompetitors": ["Competitor 1", "Competitor 2", "Competitor 3"],
+    "marketTrends": ["Trend 1", "Trend 2", "Trend 3"]
+  },
+  "competitorInsights": [
+    {
+      "competitor": "Competitor Name",
+      "strengths": ["Strength 1", "Strength 2"],
+      "weaknesses": ["Weakness 1", "Weakness 2"],
+      "adStrategy": "Their current advertising approach"
+    }
+  ],
+  "strategies": [
+    {
+      "id": "strategy-1",
+      "direction": "Strategic Direction Name",
+      "rationale": "Why this strategy works for this product/market",
+      "targetAudience": "Specific audience segment",
+      "competitiveAdvantage": "How this beats competitors",
+      "keyMessages": ["Message 1", "Message 2", "Message 3"],
+      "recommendedChannels": ["Google Search", "Display", "YouTube"],
+      "estimatedBudgetAllocation": { "search": 40, "display": 30, "video": 20, "social": 10 },
+      "expectedROI": "150-200%",
+      "riskLevel": "low",
+      "timeToResults": "2-3 months"
+    }
+  ]
+}
+\`\`\`
+
+CRITICAL REQUIREMENTS:
+- Provide 5-7 DISTINCT strategic directions
+- Each strategy must be ACTIONABLE and SPECIFIC
+- Include REAL competitive insights based on industry knowledge
+- Risk levels: "low", "medium", or "high"`,
+    };
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: `🔮 MAGIC WAND ANALYSIS REQUEST 🔮
+
+WEBSITE: ${websiteUrl}
+PRODUCT/SERVICE: ${product}
+MONTHLY BUDGET: $${budget}
+
+Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategic campaign directions.`,
+    };
+
+    return this.chatCompletion([systemMessage, userMessage], model || "gpt-oss:120b");
+  }
 }
 
 export default OllamaCloudService;

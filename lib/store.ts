@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult } from "@/types";
+import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult } from "@/types";
 
 interface AppState {
   currentPrompt: string;
@@ -8,6 +8,8 @@ interface AppState {
   actionPlan: ActionPlan | null;
   slidesPresentation: SlidesPresentation | null;
   googleAdsResult: GoogleAdsResult | null;
+  magicWandResult: MagicWandResult | null;
+  language: "en" | "ru" | "he";
   selectedProvider: ModelProvider;
   selectedModels: Record<ModelProvider, string>;
   availableModels: Record<ModelProvider, string[]>;
@@ -31,6 +33,8 @@ interface AppState {
   setActionPlan: (plan: ActionPlan) => void;
   setSlidesPresentation: (slides: SlidesPresentation | null) => void;
   setGoogleAdsResult: (result: GoogleAdsResult | null) => void;
+  setMagicWandResult: (result: MagicWandResult | null) => void;
+  setLanguage: (lang: "en" | "ru" | "he") => void;
   setSelectedProvider: (provider: ModelProvider) => void;
   setSelectedModel: (provider: ModelProvider, model: string) => void;
   setAvailableModels: (provider: ModelProvider, models: string[]) => void;
@@ -50,6 +54,8 @@ const useStore = create<AppState>((set) => ({
   actionPlan: null,
   slidesPresentation: null,
   googleAdsResult: null,
+  magicWandResult: null,
+  language: "en",
   selectedProvider: "qwen",
   selectedModels: {
     qwen: "coder-model",
@@ -76,6 +82,8 @@ const useStore = create<AppState>((set) => ({
   setActionPlan: (plan) => set({ actionPlan: plan }),
   setSlidesPresentation: (slides) => set({ slidesPresentation: slides }),
   setGoogleAdsResult: (result) => set({ googleAdsResult: result }),
+  setMagicWandResult: (result) => set({ magicWandResult: result }),
+  setLanguage: (lang) => set({ language: lang }),
   setSelectedProvider: (provider) => set({ selectedProvider: provider }),
   setSelectedModel: (provider, model) =>
     set((state) => ({
@@ -112,6 +120,7 @@ const useStore = create<AppState>((set) => ({
       actionPlan: null,
       slidesPresentation: null,
       googleAdsResult: null,
+      magicWandResult: null,
       error: null,
     }),
 }));

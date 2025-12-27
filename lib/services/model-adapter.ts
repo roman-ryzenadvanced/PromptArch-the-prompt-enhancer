@@ -226,6 +226,19 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateGoogleAds(websiteUrl, options, model), providers);
   }
 
+  async generateMagicWand(
+    websiteUrl: string,
+    product: string,
+    budget: number,
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<string>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+    return this.callWithFallback((service) => service.generateMagicWand(websiteUrl, product, budget, model), providers);
+  }
+
+
   async chatCompletion(
     messages: ChatMessage[],
     model: string,

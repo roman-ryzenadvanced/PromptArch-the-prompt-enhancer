@@ -202,3 +202,52 @@ export interface GoogleAdsResult {
   rawContent: string;
 }
 
+export interface MagicWandStrategy {
+  id: string;
+  direction: string;
+  rationale: string;
+  targetAudience: string;
+  competitiveAdvantage: string;
+  keyMessages: string[];
+  recommendedChannels: string[];
+  estimatedBudgetAllocation: {
+    search?: number;
+    display?: number;
+    video?: number;
+    social?: number;
+  };
+  expectedROI: string;
+  riskLevel: "low" | "medium" | "high";
+  timeToResults: string;
+}
+
+export interface MagicWandResult {
+  id: string;
+  websiteUrl: string;
+  product: string;
+  budget: number;
+  generatedAt: Date;
+
+  // Market Intelligence
+  marketAnalysis: {
+    industrySize: string;
+    growthRate: string;
+    topCompetitors: string[];
+    marketTrends: string[];
+  };
+
+  // Competitive Intelligence
+  competitorInsights: {
+    competitor: string;
+    strengths: string[];
+    weaknesses: string[];
+    adStrategy: string;
+  }[];
+
+  // Strategic Directions
+  strategies: MagicWandStrategy[];
+
+  rawContent: string;
+}
+
+

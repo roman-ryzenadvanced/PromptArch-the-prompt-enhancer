@@ -4,16 +4,20 @@ import useStore from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Trash2, RotateCcw } from "lucide-react";
+import { translations } from "@/lib/i18n/translations";
 
 export default function HistoryPanel() {
-  const { history, setCurrentPrompt, clearHistory } = useStore();
+  const { language, history, setCurrentPrompt, clearHistory } = useStore();
+  const t = translations[language].history;
+  const common = translations[language].common;
 
   const handleRestore = (prompt: string) => {
     setCurrentPrompt(prompt);
   };
 
   const handleClear = () => {
-    if (confirm("Are you sure you want to clear all history?")) {
+    const message = language === "ru" ? "Вы уверены, что хотите очистить всю историю?" : language === "he" ? "האם אתה בטוח שברצונך למחוק את כל ההיסטוריה?" : "Are you sure you want to clear all history?";
+    if (confirm(message)) {
       clearHistory();
     }
   };
@@ -21,12 +25,12 @@ export default function HistoryPanel() {
   if (history.length === 0) {
     return (
       <Card>
-        <CardContent className="flex h-[300px] lg:h-[400px] items-center justify-center p-4 lg:p-6">
-          <div className="text-center">
+        <CardContent className="flex h-[300px] lg:h-[400px] items-center justify-center p-4 lg:p-6 text-center">
+          <div>
             <Clock className="mx-auto h-10 w-10 lg:h-12 lg:w-12 text-muted-foreground/50" />
-            <p className="mt-3 lg:mt-4 text-sm lg:text-base text-muted-foreground">No history yet</p>
+            <p className="mt-3 lg:mt-4 text-sm lg:text-base text-muted-foreground font-medium">{t.empty}</p>
             <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm text-muted-foreground">
-              Start enhancing prompts to see them here
+              {language === "ru" ? "Начните использовать инструменты, чтобы увидеть историю здесь" : language === "he" ? "התחל להשתמש בכלים כדי לראות אותם כאן" : "Start using tools to see them here"}
             </p>
           </div>
         </CardContent>
@@ -36,12 +40,14 @@ export default function HistoryPanel() {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between p-4 lg:p-6">
+      <CardHeader className="flex-row items-center justify-between p-4 lg:p-6 text-start">
         <div>
-          <CardTitle className="text-base lg:text-lg">History</CardTitle>
-          <CardDescription className="text-xs lg:text-sm">{history.length} items</CardDescription>
+          <CardTitle className="text-base lg:text-lg">{t.title}</CardTitle>
+          <CardDescription className="text-xs lg:text-sm">
+            {history.length} {language === "ru" ? "элем." : language === "he" ? "פריטים" : "items"}
+          </CardDescription>
         </div>
-        <Button variant="outline" size="icon" onClick={handleClear} className="h-8 w-8 lg:h-9 lg:w-9">
+        <Button variant="outline" size="icon" onClick={handleClear} className="h-8 w-8 lg:h-9 lg:w-9" title={t.clear}>
           <Trash2 className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
         </Button>
       </CardHeader>

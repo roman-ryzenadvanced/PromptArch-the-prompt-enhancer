@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
+import LocaleProvider from "@/components/LocaleProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,7 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={roboto.className}>{children}</body>
+      <body className={roboto.className}>
+        <LocaleProvider>
+          {children}
+        </LocaleProvider>
+      </body>
     </html>
   );
 }
