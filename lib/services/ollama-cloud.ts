@@ -562,6 +562,12 @@ OUTPUT FORMAT - Return ONLY valid JSON with this EXACT structure:
       "targetAudience": "Specific audience segment",
       "competitiveAdvantage": "How this beats competitors",
       "keyMessages": ["Message 1", "Message 2", "Message 3"],
+      "adCopyGuide": {
+        "headlines": ["Headline 1 (max 30 symbols)", "Headline 2", "Headline 3"],
+        "descriptions": ["Description 1 (max 90 symbols)", "Description 2"],
+        "keywords": ["keyword 1", "keyword 2", "keyword 3"],
+        "setupGuide": "Friendly step-by-step for a beginner on where exactly to paste these in Google Ads Manager"
+      },
       "recommendedChannels": ["Google Search", "Display", "YouTube"],
       "estimatedBudgetAllocation": { "search": 40, "display": 30, "video": 20, "social": 10 },
       "expectedROI": "150-200%",
@@ -576,7 +582,10 @@ CRITICAL REQUIREMENTS:
 - Provide 5-7 DISTINCT strategic directions
 - Each strategy must be ACTIONABLE and SPECIFIC
 - Include REAL competitive insights based on industry knowledge
-- Risk levels: "low", "medium", or "high"`,
+- Risk levels: "low", "medium", or "high"
+- AD COPY GUIDE must be incredibly "noob-friendly" - explain exactly where to paste each field in Google Ads Manager
+- Headlines MUST be under 30 characters
+- Descriptions MUST be under 90 characters`,
     };
 
     const userMessage: ChatMessage = {

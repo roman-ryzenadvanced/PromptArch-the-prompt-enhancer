@@ -668,6 +668,74 @@ export default function GoogleAdsGenerator() {
                                         </div>
                                     </div>
 
+                                    {/* BEGINNER-FRIENDLY AD MANAGER GUIDE */}
+                                    {strat.adCopyGuide && (
+                                        <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg space-y-4 border border-slate-700">
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Google Ads Setup Guide</div>
+                                                <div className="flex gap-1">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                    <span className="text-[9px] text-emerald-400 font-bold uppercase">Ready to Paste</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                                                    <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
+                                                        <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">1</span>
+                                                        Paste into Headlines (max 30 symbols)
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        {strat.adCopyGuide.headlines.map((h, j) => (
+                                                            <div key={j} className="text-xs font-bold text-indigo-300 flex justify-between group cursor-pointer" onClick={() => navigator.clipboard.writeText(h)}>
+                                                                <span className="truncate">{h}</span>
+                                                                <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                                                    <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
+                                                        <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">2</span>
+                                                        Paste into Descriptions (max 90 symbols)
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {strat.adCopyGuide.descriptions.map((d, j) => (
+                                                            <div key={j} className="text-[11px] font-medium text-slate-300 leading-tight italic border-l border-indigo-500/50 pl-2 py-1 group cursor-pointer" onClick={() => navigator.clipboard.writeText(d)}>
+                                                                "{d}"
+                                                                <Copy className="h-3 w-3 inline ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                                                    <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
+                                                        <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">3</span>
+                                                        Paste into Keywords Section
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {strat.adCopyGuide.keywords.map((k, j) => (
+                                                            <span key={j} className="text-[9px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-slate-300 border border-white/5">
+                                                                {k}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                                                    <div className="text-[9px] font-black text-indigo-300 uppercase mb-1 flex items-center gap-1.5">
+                                                        <Rocket className="h-3 w-3" /> Quick Implementation Tip
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-300 font-medium leading-relaxed italic">
+                                                        "{strat.adCopyGuide.setupGuide}"
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-4 items-center">
                                         <div className="space-y-1">
                                             <div className="text-[9px] font-black text-slate-400 uppercase">Channel Mix</div>

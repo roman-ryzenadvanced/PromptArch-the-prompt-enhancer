@@ -209,6 +209,12 @@ export interface MagicWandStrategy {
   targetAudience: string;
   competitiveAdvantage: string;
   keyMessages: string[];
+  adCopyGuide: {
+    headlines: string[];
+    descriptions: string[];
+    keywords: string[];
+    setupGuide: string;
+  };
   recommendedChannels: string[];
   estimatedBudgetAllocation: {
     search?: number;
