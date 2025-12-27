@@ -343,25 +343,34 @@ export default function GoogleAdsGenerator() {
         switch (sectionId) {
             case "keywords":
                 return (
-                    <div className="space-y-3">
+                    <div className="space-y-6 p-1">
                         {googleAdsResult.keywords?.primary?.length > 0 && (
-                            <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Primary Keywords</h4>
-                                <div className="flex flex-wrap gap-1.5">
+                            <div className="p-4 rounded-xl bg-indigo-50/30 border border-indigo-100/50 shadow-sm">
+                                <h4 className="text-[10px] font-black tracking-widest text-indigo-600 uppercase mb-3 flex items-center gap-2">
+                                    <Target className="h-3 w-3" /> Primary High-Intent Keywords
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
                                     {googleAdsResult.keywords.primary.map((k, i) => (
-                                        <span key={i} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
-                                            {k.keyword} {k.cpc && <span className="opacity-60">({k.cpc})</span>}
-                                        </span>
+                                        <div key={i} className="group flex items-center gap-2 bg-white border border-indigo-100 px-3 py-1.5 rounded-lg shadow-sm hover:border-indigo-500 transition-all cursor-default">
+                                            <span className="text-xs font-black text-slate-800">{k.keyword}</span>
+                                            {k.cpc && (
+                                                <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded leading-none">
+                                                    {k.cpc}
+                                                </span>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         )}
                         {googleAdsResult.keywords?.longTail?.length > 0 && (
-                            <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Long-Tail Keywords</h4>
-                                <div className="flex flex-wrap gap-1.5">
+                            <div className="p-4 rounded-xl bg-emerald-50/30 border border-emerald-100/50 shadow-sm">
+                                <h4 className="text-[10px] font-black tracking-widest text-emerald-600 uppercase mb-3 flex items-center gap-2">
+                                    <TrendingUp className="h-3 w-3" /> Long-Tail Opportunities
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
                                     {googleAdsResult.keywords.longTail.map((k, i) => (
-                                        <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md">
+                                        <span key={i} className="text-xs font-bold bg-white border border-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg shadow-sm">
                                             {k.keyword}
                                         </span>
                                     ))}
@@ -369,11 +378,13 @@ export default function GoogleAdsGenerator() {
                             </div>
                         )}
                         {googleAdsResult.keywords?.negative?.length > 0 && (
-                            <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Negative Keywords</h4>
+                            <div className="p-4 rounded-xl bg-rose-50/30 border border-rose-100/50 shadow-sm">
+                                <h4 className="text-[10px] font-black tracking-widest text-rose-600 uppercase mb-3 flex items-center gap-2">
+                                    <ShieldAlert className="h-3 w-3" /> Negative Keywords (Exclude)
+                                </h4>
                                 <div className="flex flex-wrap gap-1.5">
                                     {googleAdsResult.keywords.negative.map((k, i) => (
-                                        <span key={i} className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-md line-through">
+                                        <span key={i} className="text-[10px] font-bold bg-white/50 text-rose-400 border border-rose-100 px-2 py-1 rounded-md line-through opacity-70">
                                             {k.keyword}
                                         </span>
                                     ))}
@@ -384,18 +395,30 @@ export default function GoogleAdsGenerator() {
                 );
             case "adcopies":
                 return (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {googleAdsResult.adCopies?.map((ad, i) => (
-                            <div key={i} className="p-3 rounded-md border bg-muted/20">
-                                <div className="text-[10px] uppercase text-muted-foreground mb-2">Ad Variation {i + 1}</div>
-                                <div className="space-y-1 mb-2">
+                            <div key={i} className="relative group p-5 rounded-2xl border bg-white shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                                <div className="absolute top-0 left-0 h-full w-1.5 bg-indigo-500 rounded-l-2xl" />
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-[10px] font-black uppercase tracking-tighter text-indigo-500">Google Search Preview • Ad Variation {i + 1}</div>
+                                    <div className="flex gap-1">
+                                        <span className="h-2 w-2 rounded-full bg-slate-100 shadow-inner" />
+                                        <span className="h-2 w-2 rounded-full bg-slate-100 shadow-inner" />
+                                        <span className="h-2 w-2 rounded-full bg-slate-100 shadow-inner" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5 mb-4 border-b border-slate-50 pb-4">
                                     {ad.headlines?.map((h, j) => (
-                                        <div key={j} className="text-sm font-medium text-blue-600">{h}</div>
+                                        <div key={j} className="text-base font-black text-indigo-600 hover:underline cursor-pointer tracking-tight underline-offset-2 leading-tight">
+                                            {h}
+                                        </div>
                                     ))}
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-2">
                                     {ad.descriptions?.map((d, j) => (
-                                        <p key={j} className="text-xs text-muted-foreground">{d}</p>
+                                        <p key={j} className="text-xs font-medium text-slate-500 leading-relaxed italic border-l-2 border-indigo-100 pl-3">
+                                            "{d}"
+                                        </p>
                                     ))}
                                 </div>
                             </div>
@@ -404,27 +427,34 @@ export default function GoogleAdsGenerator() {
                 );
             case "campaigns":
                 return (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {googleAdsResult.campaigns?.map((camp, i) => (
-                            <div key={i} className="p-3 rounded-md border">
-                                <div className="flex justify-between items-start mb-2">
+                            <div key={i} className="relative p-6 rounded-2xl border bg-slate-900 text-white shadow-xl group overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Rocket className="h-24 w-24" />
+                                </div>
+                                <div className="flex justify-between items-start mb-6">
                                     <div>
-                                        <div className="font-medium text-sm">{camp.name}</div>
-                                        <div className="text-[10px] text-muted-foreground uppercase">{camp.type}</div>
+                                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{camp.type} Strategy</div>
+                                        <h4 className="text-lg font-black tracking-tight">{camp.name}</h4>
                                     </div>
                                     {camp.budget && (
-                                        <div className="text-right text-xs">
-                                            <div className="font-semibold">${camp.budget.monthly}/mo</div>
-                                            <div className="text-muted-foreground">${camp.budget.daily}/day</div>
+                                        <div className="text-right p-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10">
+                                            <div className="text-base lg:text-lg font-black text-indigo-400">${camp.budget.monthly}</div>
+                                            <div className="text-[9px] font-black text-white/40 uppercase tracking-tighter">Budget / Month</div>
                                         </div>
                                     )}
                                 </div>
                                 {camp.adGroups?.length > 0 && (
-                                    <div className="mt-2 pt-2 border-t">
-                                        <div className="text-[10px] uppercase text-muted-foreground mb-1">Ad Groups</div>
-                                        <div className="flex flex-wrap gap-1">
+                                    <div className="space-y-3">
+                                        <div className="text-[10px] uppercase font-black text-white/30 tracking-widest flex items-center gap-2">
+                                            <div className="h-px flex-1 bg-white/10" /> Target Ad Groups <div className="h-px flex-1 bg-white/10" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
                                             {camp.adGroups.map((g, j) => (
-                                                <span key={j} className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{g.name}</span>
+                                                <div key={j} className="text-[10px] font-bold bg-white/5 border border-white/10 px-3 py-2 rounded-lg text-white group-hover:bg-white/10 transition-all">
+                                                    {g.name}
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -435,23 +465,37 @@ export default function GoogleAdsGenerator() {
                 );
             case "implementation":
                 return (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {googleAdsResult.implementation?.setupSteps?.length > 0 && (
-                            <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Setup Steps</h4>
-                                <ol className="list-decimal list-inside space-y-1 text-xs">
+                            <div className="p-5 rounded-2xl border bg-indigo-50/20">
+                                <h4 className="text-[10px] font-black tracking-widest text-indigo-600 uppercase mb-4 flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-[10px]">1</div>
+                                    Step-by-Step Configuration
+                                </h4>
+                                <ol className="space-y-3">
                                     {googleAdsResult.implementation.setupSteps.map((step, i) => (
-                                        <li key={i}>{step}</li>
+                                        <li key={i} className="flex gap-4 items-start group">
+                                            <span className="text-xs font-black text-indigo-300 pt-0.5 group-hover:text-indigo-500 transition-colors">
+                                                {String(i + 1).padStart(2, '0')}
+                                            </span>
+                                            <p className="text-xs font-bold text-slate-700 leading-relaxed">{step}</p>
+                                        </li>
                                     ))}
                                 </ol>
                             </div>
                         )}
                         {googleAdsResult.implementation?.qualityScoreTips?.length > 0 && (
-                            <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Quality Score Tips</h4>
-                                <ul className="list-disc list-inside space-y-1 text-xs">
+                            <div className="p-5 rounded-2xl border bg-emerald-50/20">
+                                <h4 className="text-[10px] font-black tracking-widest text-emerald-600 uppercase mb-4 flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-[10px]">2</div>
+                                    Quality Score Optimization
+                                </h4>
+                                <ul className="space-y-3">
                                     {googleAdsResult.implementation.qualityScoreTips.map((tip, i) => (
-                                        <li key={i}>{tip}</li>
+                                        <li key={i} className="flex items-start gap-4 p-3 bg-white rounded-xl shadow-sm border border-emerald-100 hover:shadow-md transition-shadow">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                            <p className="text-xs font-bold text-slate-700">{tip}</p>
+                                        </li>
                                     ))}
                                 </ul>
                             </div>
@@ -459,7 +503,7 @@ export default function GoogleAdsGenerator() {
                     </div>
                 );
             default:
-                return <pre className="whitespace-pre-wrap text-xs">{googleAdsResult.rawContent}</pre>;
+                return <pre className="whitespace-pre-wrap text-sm font-mono p-4 bg-slate-950 text-indigo-400 rounded-xl border border-indigo-500/30 overflow-x-auto shadow-2xl">{googleAdsResult.rawContent}</pre>;
         }
     };
 
@@ -469,40 +513,50 @@ export default function GoogleAdsGenerator() {
         switch (sectionId) {
             case "market":
                 return (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 rounded-md bg-indigo-50/50 border border-indigo-100">
-                                <div className="text-[10px] uppercase font-bold text-indigo-600 mb-1 flex items-center gap-1">
+                            <div className="group relative p-4 rounded-xl bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-100/50 hover:border-indigo-500/30 transition-all overflow-hidden">
+                                <div className="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <BarChart3 className="h-12 w-12" />
+                                </div>
+                                <div className="text-[10px] uppercase font-black text-indigo-600/70 mb-1.5 flex items-center gap-1.5 tracking-wider">
                                     <BarChart3 className="h-3 w-3" /> Industry Size
                                 </div>
-                                <div className="text-sm font-semibold">{magicWandResult.marketAnalysis.industrySize}</div>
+                                <div className="text-base lg:text-lg font-black text-slate-800 tracking-tight leading-none">{magicWandResult.marketAnalysis.industrySize}</div>
                             </div>
-                            <div className="p-3 rounded-md bg-emerald-50/50 border border-emerald-100">
-                                <div className="text-[10px] uppercase font-bold text-emerald-600 mb-1 flex items-center gap-1">
+                            <div className="group relative p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border border-emerald-100/50 hover:border-emerald-500/30 transition-all overflow-hidden">
+                                <div className="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <TrendingUp className="h-12 w-12" />
+                                </div>
+                                <div className="text-[10px] uppercase font-black text-emerald-600/70 mb-1.5 flex items-center gap-1.5 tracking-wider">
                                     <TrendingUp className="h-3 w-3" /> Growth Rate
                                 </div>
-                                <div className="text-sm font-semibold">{magicWandResult.marketAnalysis.growthRate}</div>
+                                <div className="text-base lg:text-lg font-black text-slate-800 tracking-tight leading-none">{magicWandResult.marketAnalysis.growthRate}</div>
                             </div>
                         </div>
-                        <div className="space-y-3">
-                            <div>
-                                <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                                    <Users className="h-3.5 w-3.5" /> Market Leaders
+                        <div className="space-y-5">
+                            <div className="p-4 rounded-xl border bg-slate-50/30">
+                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-indigo-500" /> Market Leaders
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {magicWandResult.marketAnalysis.topCompetitors.map((c, i) => (
-                                        <span key={i} className="text-xs px-2 py-1 bg-slate-100 text-slate-700 rounded-md border border-slate-200">{c}</span>
+                                        <span key={i} className="text-xs font-bold px-3 py-1.5 bg-white text-slate-700 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-default">
+                                            {c}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                                    <Rocket className="h-3.5 w-3.5" /> Emerging Trends
+                            <div className="p-4 rounded-xl border bg-slate-50/30">
+                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Rocket className="h-4 w-4 text-purple-500" /> Emerging Trends
                                 </h4>
-                                <ul className="space-y-1">
+                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {magicWandResult.marketAnalysis.marketTrends.map((t, i) => (
-                                        <li key={i} className="text-xs text-slate-600 flex items-start gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1 shrink-0" />
+                                        <li key={i} className="text-xs font-medium text-slate-600 flex items-start gap-3 p-2 bg-white/50 rounded-lg border border-slate-100">
+                                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-500">
+                                                {i + 1}
+                                            </span>
                                             {t}
                                         </li>
                                     ))}
@@ -513,37 +567,61 @@ export default function GoogleAdsGenerator() {
                 );
             case "competitors":
                 return (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {magicWandResult.competitorInsights.map((comp, i) => (
-                            <div key={i} className="p-4 rounded-xl border bg-white/50 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-slate-900">{comp.competitor}</h4>
-                                    <ShieldAlert className="h-4 w-4 text-amber-500" />
+                            <div key={i} className="group relative p-5 rounded-2xl border bg-white/40 backdrop-blur-sm shadow-sm hover:shadow-xl transition-all duration-300">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                                            {comp.competitor.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-slate-900 tracking-tight leading-none">{comp.competitor}</h4>
+                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Competitor Intel</span>
+                                        </div>
+                                    </div>
+                                    <ShieldAlert className="h-5 w-5 text-amber-500 group-hover:rotate-12 transition-transform" />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <div className="text-[10px] font-black uppercase text-emerald-600">Strengths</div>
-                                        <ul className="space-y-1">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1.5 mb-2">
+                                            <span className="h-1 w-4 bg-emerald-500 rounded-full" /> Strengths
+                                        </div>
+                                        <ul className="space-y-2">
                                             {comp.strengths.map((s, j) => (
-                                                <li key={j} className="text-xs text-slate-600 flex gap-1.5">
-                                                    <span className="text-emerald-500">✓</span> {s}
+                                                <li key={j} className="text-xs font-semibold text-slate-600 flex gap-2.5 items-start">
+                                                    <div className="h-4 w-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                                                        <span className="text-[10px] text-emerald-600">✓</span>
+                                                    </div>
+                                                    {s}
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <div className="text-[10px] font-black uppercase text-rose-600">Weaknesses</div>
-                                        <ul className="space-y-1">
+                                    <div className="space-y-2">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center gap-1.5 mb-2">
+                                            <span className="h-1 w-4 bg-rose-500 rounded-full" /> Weaknesses
+                                        </div>
+                                        <ul className="space-y-2">
                                             {comp.weaknesses.map((w, j) => (
-                                                <li key={j} className="text-xs text-slate-600 flex gap-1.5">
-                                                    <span className="text-rose-500">✗</span> {w}
+                                                <li key={j} className="text-xs font-semibold text-slate-600 flex gap-2.5 items-start">
+                                                    <div className="h-4 w-4 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                                                        <span className="text-[10px] text-rose-600">!</span>
+                                                    </div>
+                                                    {w}
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
                                 </div>
-                                <div className="pt-2 border-t border-slate-100 italic text-xs text-slate-500">
-                                    <span className="font-bold text-slate-700 not-italic uppercase text-[9px]">Spy Report:</span> {comp.adStrategy}
+                                <div className="mt-4 pt-4 border-t border-slate-100">
+                                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/50">
+                                        <div className="h-7 w-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0 font-black text-[10px]">SPY</div>
+                                        <p className="text-[11px] font-medium text-slate-600 italic leading-relaxed">
+                                            <span className="font-black text-indigo-600 not-italic mr-1.5 uppercase leading-none">Intelligence:</span>
+                                            "{comp.adStrategy}"
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -828,8 +906,12 @@ export default function GoogleAdsGenerator() {
                 </CardContent>
             </Card>
 
-            <Card className={cn(!googleAdsResult && "opacity-50")}>
-                <CardHeader className="p-4 lg:p-6">
+            <Card className={cn(
+                "transition-all duration-500 border-t-4",
+                !(googleAdsResult || magicWandResult) ? "opacity-50 grayscale select-none pointer-events-none" : "opacity-100 shadow-2xl shadow-indigo-500/10 border-t-indigo-500 bg-card/80 backdrop-blur-md",
+                magicWandResult ? "border-t-indigo-500" : "border-t-green-500"
+            )}>
+                <CardHeader className="p-4 lg:p-6 pb-2 lg:pb-3">
                     <CardTitle className="flex items-center justify-between text-base lg:text-lg">
                         <span className="flex items-center gap-2">
                             {magicWandResult ? (
