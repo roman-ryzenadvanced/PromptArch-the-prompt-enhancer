@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRAE Aurora | Crystalline Christmas</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Grotesk:wght@300;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Floating Back Button -->
+    <a href="/tools/"
+        style="position:fixed;top:20px;left:20px;z-index:9999;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);color:white;text-decoration:none;padding:10px 20px;border-radius:20px;font-family:'Space Grotesk',sans-serif;font-size:14px;border:1px solid rgba(255,255,255,0.2);transition:all 0.3s;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);"
+        onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Tools
+    </a>
+
+    <!-- Background Canvas for Aurora/Snow -->
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="logo">TRAE <span>AURORA</span></div>
+            <ul class="nav-links">
+                <li><a href="#hero">Home</a></li>
+                <li><a href="#registration">Register</a></li>
+                <li><a href="#game">Gift Catcher</a></li>
+                <li><a href="#traoom">Traoom</a></li>
+                <li><a href="#neonpuzzle">Puzzle</a></li>
+                <li><a href="#rhythm">Rhythm</a></li>
+                <li><a href="#arena">Arena</a></li>
+                <li><a href="#tetris">Tetris</a></li>
+                <li><a href="#platformer">Jumper</a></li>
+                <li><a href="#forge">Forge</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero Section -->
+        <section id="hero" class="hero">
+            <div class="hero-content">
+                <h1 class="glitch-text" data-text="TRAE CHRISTMAS">TRAE CHRISTMAS</h1>
+                <p class="subtitle">Built using <strong>TRAE.AI IDE</strong>, <a
+                        href="https://z.ai/subscribe?ic=R0K78RJKNW" target="_blank" class="glm-link">GLM 4.7</a>, and
+                    <strong>Google Gemini 3 Flash</strong>.
+                </p>
+
+                <a href="#game" class="play-banner">
+                    <div class="banner-inner">
+                        <span class="banner-tag">LIVE NOW</span>
+                        <h2 class="banner-title">PLAY TRAE AURORA</h2>
+                        <p class="banner-subtitle">Experience the full crystalline adventure</p>
+                        <div class="banner-glow"></div>
+                    </div>
+                </a>
+
+                <div id="countdown" class="countdown-container">
+                    <div class="time-block">
+                        <span id="days">00</span>
+                        <label>Days</label>
+                    </div>
+                    <div class="time-block">
+                        <span id="hours">00</span>
+                        <label>Hours</label>
+                    </div>
+                    <div class="time-block">
+                        <span id="minutes">00</span>
+                        <label>Mins</label>
+                    </div>
+                    <div class="time-block">
+                        <span id="seconds">00</span>
+                        <label>Secs</label>
+                    </div>
+                </div>
+
+                <div class="app-icons">
+                    <div class="app-icon" onclick="scrollToSection('game')">
+                        <div class="app-icon-inner gift-icon">
+                            <span class="app-icon-emoji">🎁</span>
+                        </div>
+                        <span class="app-label">Gift Catcher</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('traoom')">
+                        <div class="app-icon-inner traoom-icon">
+                            <span class="app-icon-emoji">🐛</span>
+                        </div>
+                        <span class="app-label">Traoom</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('neonpuzzle')">
+                        <div class="app-icon-inner neonpuzzle-icon">
+                            <span class="app-icon-emoji">🧩</span>
+                        </div>
+                        <span class="app-label">Neon Puzzle</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('rhythm')">
+                        <div class="app-icon-inner rhythm-icon">
+                            <span class="app-icon-emoji">🎵</span>
+                        </div>
+                        <span class="app-label">Rhythm Beat</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('arena')">
+                        <div class="app-icon-inner arena-icon">
+                            <span class="app-icon-emoji">⚔️</span>
+                        </div>
+                        <span class="app-label">Cosmic Arena</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('tetris')">
+                        <div class="app-icon-inner tetris-icon">
+                            <span class="app-icon-emoji">💎</span>
+                        </div>
+                        <span class="app-label">Crystal Tetris</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('platformer')">
+                        <div class="app-icon-inner platformer-icon">
+                            <span class="app-icon-emoji">🏃</span>
+                        </div>
+                        <span class="app-label">Aurora Jumper</span>
+                    </div>
+                    <div class="app-icon" onclick="scrollToSection('forge')">
+                        <div class="app-icon-inner forge-icon">
+                            <span class="app-icon-emoji">✨</span>
+                        </div>
+                        <span class="app-label">Message Forge</span>
+                    </div>
+                </div>
+
+                <div class="hero-buttons">
+                    <button onclick="scrollToSection('forge')" class="btn-primary">Forge a Message</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Message Forge Section -->
+        <section id="forge" class="forge-section">
+            <div class="section-card glass">
+                <h2>Magical Message Forge</h2>
+                <p>Cast your festive wishes into the crystalline grid.</p>
+                <div class="forge-input-group">
+                    <input type="text" id="messageInput" placeholder="Type your festive message..." maxlength="50">
+                    <button id="forgeBtn" class="btn-primary">Crystalize</button>
+                </div>
+                <div id="crystalDisplay" class="crystal-display">
+                    <p id="outputMessage"></p>
+                    <canvas id="snowflakeCanvas"></canvas>
+                </div>
+                <div id="messageCloud" class="message-cloud glass">
+                    <h3>Community Cloud</h3>
+                    <div id="cloudContainer"></div>
+                    <div class="export-buttons">
+                        <button class="export-btn" onclick="exportMessages()">Download Messages</button>
+                        <button class="export-btn"
+                            onclick="document.getElementById('importMessagesFile').click()">Import Messages</button>
+                        <input type="file" id="importMessagesFile" accept=".json" style="display:none"
+                            onchange="importMessages(event)">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Section -->
+        <section id="registration" class="glass-section">
+            <div class="section-card glass">
+                <h2>🎮 Player Registration</h2>
+                <p>Register once to save your scores across all games</p>
+                <div class="input-group" style="justify-content: center; max-width: 400px; margin: 0 auto;">
+                    <input type="text" id="regUsername" placeholder="Username" maxlength="15" style="flex: 1;">
+                    <button id="registerBtn" class="btn-primary">Register</button>
+                </div>
+                <p id="regStatus" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
+                <div id="currentUserInfo" class="user-info"
+                    style="display: none; text-align: center; margin-top: 15px;">
+                    <p>🎉 Your Name: <strong id="currentUserDisplay"></strong></p>
+                    <p style="font-size: 0.8rem; color: #888;">Your PIN: <strong id="currentUserPin"></strong></p>
+                    <p style="font-size: 0.7rem; color: #666; margin-top: 5px;">Use this Name + PIN for all games</p>
+                    <button onclick="logoutUser()" class="btn-secondary"
+                        style="margin-top: 10px; background: #ff4444;">Logout</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Section -->
+        <section id="game" class="game-section">
+            <div class="section-card glass">
+                <h2>Gift Catcher</h2>
+                <p>Catch the falling TRAE gifts to power the Aurora.</p>
+                <div class="game-container" id="gameContainer">
+                    <div id="gameUI">
+                        <div class="score">Score: <span id="scoreVal">0</span></div>
+                        <div class="time-selector">
+                            <span class="selector-label">Challenge:</span>
+                            <button class="time-btn active" data-time="15">15s</button>
+                            <button class="time-btn" data-time="30">30s</button>
+                            <button class="time-btn" data-time="60">60s</button>
+                        </div>
+                        <div id="gameOverlay" class="game-overlay hidden">
+                            <h3 id="overlayTitle">GAME OVER</h3>
+                            <p id="finalScore">Final Score: <span id="gameFinalScore">0</span></p>
+                            <div id="saveScoreButtons" class="input-group">
+                                <button id="saveScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="loginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startGameBtn" class="btn-primary">Start Mission</button>
+                    </div>
+                    <div class="game-timer">
+                        <span id="timerDisplay">60s</span>
+                    </div>
+                    <canvas id="gameCanvas"></canvas>
+                </div>
+                <div class="leaderboard glass">
+                    <div class="leaderboard-header">
+                        <h3>Global Leaderboard</h3>
+                        <button class="tab-btn active" data-tab="total">Total</button>
+                        <button class="tab-btn" data-tab="gift">Gift Catcher</button>
+                        <button class="tab-btn" data-tab="traoom">Traoom</button>
+                        <button class="tab-btn" data-tab="neonpuzzle">Neon Puzzle</button>
+                        <button class="tab-btn" data-tab="rhythm">Rhythm Beat</button>
+                        <button class="tab-btn" data-tab="arena">Cosmic Arena</button>
+                        <button class="tab-btn" data-tab="tetris">Crystal Tetris</button>
+                        <button class="tab-btn" data-tab="platformer">Aurora Jumper</button>
+                    </div>
+                    <div id="leaderboardList"></div>
+                    <div class="export-buttons">
+                        <button class="export-btn" onclick="exportLeaderboard()">Download Scores</button>
+                        <button class="export-btn" onclick="document.getElementById('importFile').click()">Import
+                            Scores</button>
+                        <input type="file" id="importFile" accept=".json" style="display:none"
+                            onchange="importLeaderboard(event)">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Traoom Section - Bug Hunter -->
+        <section id="traoom" class="game-section">
+            <div class="section-card glass">
+                <h2>Traoom</h2>
+                <p>Fight against code bugs! Use WASD/Arrows to move, Click to shoot.</p>
+                <div class="traoom-container" id="traoomContainer">
+                    <div id="traoomUI">
+                        <div class="traoom-stats">
+                            <div class="traoom-stat">Kills: <span id="killVal">0</span></div>
+                            <div class="traoom-stat">Time: <span id="traoomTime">0:00</span></div>
+                            <div class="traoom-stat">Wave: <span id="waveVal">1</span></div>
+                        </div>
+                        <div id="traoomOverlay" class="game-overlay hidden">
+                            <h3 id="traoomOverlayTitle">GAME OVER</h3>
+                            <p id="traoomOverlayScore">Bugs Fixed: <span id="finalKills">0</span></p>
+                            <p id="traoomOverlayTime">Time Survived: <span id="finalTime">0:00</span></p>
+                            <div class="input-group">
+                                <button id="saveTraoomScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playTraoomAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="traoomLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startTraoomBtn" class="btn-primary">Start Bug Hunt</button>
+                    </div>
+                    <canvas id="traoomCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> WASD/Arrows to move | Click to shoot | Space to dash</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Neon Puzzle Section -->
+        <section id="neonpuzzle" class="game-section">
+            <div class="section-card glass">
+                <h2>Neon Puzzle</h2>
+                <p>Connect neon paths to complete circuits! Click nodes to rotate.</p>
+                <div class="neonpuzzle-container" id="neonpuzzleContainer">
+                    <div id="neonpuzzleUI">
+                        <div class="neonpuzzle-stats">
+                            <div class="neonpuzzle-stat">Level: <span id="puzzleLevel">1</span></div>
+                            <div class="neonpuzzle-stat">Moves: <span id="puzzleMoves">0</span></div>
+                        </div>
+                        <div id="neonpuzzleOverlay" class="game-overlay hidden">
+                            <h3 id="puzzleOverlayTitle">LEVEL COMPLETE</h3>
+                            <p id="puzzleOverlayScore">Moves: <span id="finalMoves">0</span></p>
+                            <div class="input-group">
+                                <button id="savePuzzleScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playPuzzleAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="puzzleLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startPuzzleBtn" class="btn-primary">Start Puzzle</button>
+                    </div>
+                    <canvas id="neonpuzzleCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> Click nodes to rotate paths | Complete all connections</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rhythm Beat Section -->
+        <section id="rhythm" class="game-section">
+            <div class="section-card glass">
+                <h2>Rhythm Beat</h2>
+                <p>Hit the beats in sync with the aurora rhythm!</p>
+                <div class="rhythm-container" id="rhythmContainer">
+                    <div id="rhythmUI">
+                        <div class="rhythm-stats">
+                            <div class="rhythm-stat">Score: <span id="rhythmScore">0</span></div>
+                            <div class="rhythm-stat">Combo: <span id="rhythmCombo">0</span></div>
+                            <div class="rhythm-stat">Streak: <span id="rhythmStreak">0</span></div>
+                        </div>
+                        <div id="rhythmOverlay" class="game-overlay hidden">
+                            <h3 id="rhythmOverlayTitle">BEAT OVER</h3>
+                            <p id="rhythmOverlayScore">Final Score: <span id="finalRhythmScore">0</span></p>
+                            <div class="input-group">
+                                <button id="saveRhythmScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playRhythmAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="rhythmLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startRhythmBtn" class="btn-primary">Start Rhythm</button>
+                    </div>
+                    <canvas id="rhythmCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> Press keys when beats reach center | Perfect timing = more points</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cosmic Arena Section -->
+        <section id="arena" class="game-section">
+            <div class="section-card glass">
+                <h2>Cosmic Arena</h2>
+                <p>Duel in the cosmic void! Defeat opponents to survive.</p>
+                <div class="arena-container" id="arenaContainer">
+                    <div id="arenaUI">
+                        <div class="arena-stats">
+                            <div class="arena-stat">HP: <span id="arenaHP">100</span></div>
+                            <div class="arena-stat">Kills: <span id="arenaKills">0</span></div>
+                            <div class="arena-stat">Wave: <span id="arenaWave">1</span></div>
+                        </div>
+                        <div id="arenaOverlay" class="game-overlay hidden">
+                            <h3 id="arenaOverlayTitle">GAME OVER</h3>
+                            <p id="arenaOverlayScore">Enemies Defeated: <span id="finalArenaKills">0</span></p>
+                            <div class="input-group">
+                                <button id="saveArenaScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playArenaAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="arenaLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startArenaBtn" class="btn-primary">Enter Arena</button>
+                    </div>
+                    <canvas id="arenaCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> WASD/Arrows move | Click to attack | Dodge and counter</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tetris Section -->
+        <section id="tetris" class="game-section">
+            <div class="section-card glass">
+                <h2>Crystal Tetris</h2>
+                <p>Stack crystals in TRAE aurora style!</p>
+                <div class="neonpuzzle-container" id="tetrisContainer">
+                    <div id="tetrisUI">
+                        <div class="neonpuzzle-stats">
+                            <div class="neonpuzzle-stat">Score: <span id="tetrisScore">0</span></div>
+                            <div class="neonpuzzle-stat">Lines: <span id="tetrisLines">0</span></div>
+                            <div class="neonpuzzle-stat">Level: <span id="tetrisLevel">1</span></div>
+                        </div>
+                        <div id="tetrisOverlay" class="game-overlay hidden">
+                            <h3 id="tetrisOverlayTitle">GAME OVER</h3>
+                            <p id="tetrisOverlayScore">Final Score: <span id="finalTetrisScore">0</span></p>
+                            <div class="input-group">
+                                <button id="saveTetrisScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playTetrisAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="tetrisLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startTetrisBtn" class="btn-primary">Start Game</button>
+                    </div>
+                    <canvas id="tetrisCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> Arrow keys to move/rotate | Space to drop | Complete lines</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mario Platformer Section -->
+        <section id="platformer" class="game-section">
+            <div class="section-card glass">
+                <h2>Aurora Jumper</h2>
+                <p>Jump through crystalline platforms to reach the aurora!</p>
+                <div class="rhythm-container" id="platformerContainer">
+                    <div id="platformerUI">
+                        <div class="rhythm-stats">
+                            <div class="rhythm-stat">Coins: <span id="coinsVal">0</span></div>
+                            <div class="rhythm-stat">Time: <span id="platformerTime">0:00</span></div>
+                        </div>
+                        <div id="platformerOverlay" class="game-overlay hidden">
+                            <h3 id="platformerOverlayTitle">LEVEL COMPLETE</h3>
+                            <p id="platformerOverlayScore">Coins: <span id="finalCoins">0</span></p>
+                            <p id="platformerOverlayTime">Time: <span id="finalPlatformerTime">0:00</span></p>
+                            <div class="input-group">
+                                <button id="savePlatformerScoreBtn" class="btn-primary">Save Score</button>
+                                <button id="playPlatformerAgainBtn" class="btn-secondary"
+                                    style="background: var(--trae-green);">Play Again</button>
+                            </div>
+                            <p id="platformerLoginPrompt" style="display: none; text-align: center; color: #ff6b6b;">
+                                <a href="#registration" style="color: var(--trae-cyan);">Register first</a> to save
+                                scores
+                            </p>
+                        </div>
+                        <button id="startPlatformerBtn" class="btn-primary">Start Game</button>
+                    </div>
+                    <canvas id="platformerCanvas"></canvas>
+                </div>
+                <div class="traoom-controls">
+                    <p><strong>Controls:</strong> WASD/Arrows move | Space to jump | Collect coins</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="glass-footer">
+            <p>MADE BY <a href="https://github.rommark.dev/admin/chrismas_trae_game" target="_blank"
+                    class="author-link">Roman | RyzenAdvanced</a> using <span>TRAE.AI</span>, <a
+                    href="https://z.ai/subscribe?ic=R0K78RJKNW" target="_blank" class="glm-link">GLM 4.7</a> & <span
+                    class="gemini-link">Gemini 3 Flash</span></p>
+            <p class="copyright">&copy; 2025 Coded with Crystalline Precision.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
