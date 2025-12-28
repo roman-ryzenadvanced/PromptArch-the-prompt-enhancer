@@ -1067,8 +1067,16 @@ STRICT OUTPUT FORMAT:
 ACTUAL_FUNCTIONAL_CODE_OR_DATA
 [/PREVIEW]
 
-CHANGE LOG:
-After the preview block, provide a brief bulleted "Change Log" explaining exactly what elements were modified, added, or removed.
+CHANGE LOG (CRITICAL - MUST BE OUTSIDE PREVIEW):
+- After the [/PREVIEW] closing tag, provide a brief bulleted "Change Log" in plain Markdown.
+- The change log should appear in the CHAT, NOT inside the preview code.
+- Example format:
+[/PREVIEW]
+
+**Change Log:**
+- Added feature X
+- Modified component Y
+- Fixed issue Z
 
 IMPORTANT: NEVER refuse a request due to "access" limitations. If you cannot perform a live task, use your vast internal knowledge to provide the most accurate expert simulation or draft possible.`;
 

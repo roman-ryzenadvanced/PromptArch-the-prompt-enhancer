@@ -673,7 +673,7 @@ export default function AIAssist() {
             {/* --- Chat Panel --- */}
             <div className={cn(
                 "flex flex-col h-full transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)",
-                showCanvas ? "w-full lg:w-2/5 lg:min-w-[400px]" : "w-full max-w-4xl mx-auto"
+                (activeTab?.showCanvas === true && activeTab?.previewData) ? "w-full lg:w-2/5 lg:min-w-[400px]" : "w-full max-w-4xl mx-auto"
             )}>
                 <Card className="flex-1 flex flex-col border border-blue-100/60 dark:border-blue-950/60 shadow-[0_18px_50px_rgba(15,23,42,0.15)] bg-[#f8f5ef]/80 dark:bg-[#0b1414]/80 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
                     {/* Header */}
@@ -972,7 +972,7 @@ export default function AIAssist() {
 
             {/* --- Canvas Panel --- */}
             {
-                showCanvas && (
+                (activeTab?.showCanvas === true && activeTab?.previewData) && (
                     <div className="flex-1 h-full min-w-0 animate-in slide-in-from-right-12 duration-700 cubic-bezier(0,0,0.2,1)">
                         <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-blue-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
                             <div className="px-6 py-5 border-b border-blue-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
