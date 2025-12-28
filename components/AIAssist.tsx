@@ -418,6 +418,7 @@ export default function AIAssist() {
         addAIAssistTab,
         removeAIAssistTab,
         updateActiveTab,
+        updateTabById,
         selectedProvider,
         selectedModels,
         setSelectedModel
@@ -515,6 +516,10 @@ export default function AIAssist() {
         const finalInput = forcedPrompt || input;
         if (!finalInput.trim() || isProcessing) return;
 
+        // CRITICAL: Capture the tab ID at the start of this request
+        const requestTabId = activeTabId;
+        if (!requestTabId) return;
+
         const controller = new AbortController();
         setAbortController(controller);
 
@@ -526,7 +531,7 @@ export default function AIAssist() {
                 timestamp: new Date(),
             };
             const newHistory = [...aiAssistHistory, userMsg];
-            updateActiveTab({ history: newHistory });
+            updateTabById(requestTabId, { history: newHistory });
             setInput("");
         }
 
@@ -540,9 +545,10 @@ export default function AIAssist() {
             timestamp: new Date()
         };
 
-        // Update history in active tab
-        const updatedHistory = [...aiAssistHistory, assistantMsg];
-        updateActiveTab({ history: updatedHistory });
+        // Update history in the REQUEST's tab (not current active tab)
+        const startingHistory = [...aiAssistHistory, { role: "user" as const, content: finalInput, timestamp: new Date() }];
+        const updatedHistory = [...startingHistory, assistantMsg];
+        updateTabById(requestTabId, { history: updatedHistory });
 
         try {
             let accumulated = "";
@@ -571,22 +577,21 @@ export default function AIAssist() {
 
                         if (streamStatus) setStatus(streamStatus);
 
-                        if (preview && JSON.stringify(preview) !== JSON.stringify(lastParsedPreview)) {
-                            setPreviewData(preview);
-                            lastParsedPreview = preview;
-                            setShowCanvas(true);
-                            if (isPreviewRenderable(preview)) setViewMode("preview");
+                        // Only update local state if we're still on the same tab
+                        if (activeTabId === requestTabId) {
+                            if (preview && JSON.stringify(preview) !== JSON.stringify(lastParsedPreview)) {
+                                setPreviewData(preview);
+                                lastParsedPreview = preview;
+                                setShowCanvas(true);
+                                if (isPreviewRenderable(preview)) setViewMode("preview");
+                            }
 
-                            // Save preview data to tab
-                            updateActiveTab({ previewData: preview });
+                            if (agent !== currentAgent) {
+                                setCurrentAgent(agent);
+                            }
                         }
 
-                        if (agent !== currentAgent) {
-                            setCurrentAgent(agent);
-                            updateActiveTab({ currentAgent: agent });
-                        }
-
-                        // Stream updates to current tab history
+                        // Always update the REQUEST's tab (by ID), not the active tab
                         const lastMsg = {
                             role: "assistant" as const,
                             content: accumulated,
@@ -595,8 +600,10 @@ export default function AIAssist() {
                             timestamp: new Date()
                         };
 
-                        updateActiveTab({
-                            history: [...updatedHistory.slice(0, -1), lastMsg]
+                        updateTabById(requestTabId, {
+                            history: [...updatedHistory.slice(0, -1), lastMsg],
+                            previewData: preview || undefined,
+                            currentAgent: agent
                         });
                     },
                     signal: controller.signal
@@ -617,7 +624,7 @@ export default function AIAssist() {
             console.error("Assist error:", error);
             const message = error instanceof Error ? error.message : "AI Assist failed";
             const errorMsg: AIAssistMessage = { role: "assistant", content: message, timestamp: new Date() };
-            updateActiveTab({ history: [...aiAssistHistory, errorMsg] });
+            updateTabById(requestTabId, { history: [...aiAssistHistory, errorMsg] });
         } finally {
             setIsProcessing(false);
             setAbortController(null);

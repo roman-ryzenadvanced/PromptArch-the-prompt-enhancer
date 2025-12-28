@@ -56,6 +56,7 @@ interface AppState {
   addAIAssistTab: (agent?: string) => void;
   removeAIAssistTab: (id: string) => void;
   updateActiveTab: (updates: Partial<AIAssistTab>) => void;
+  updateTabById: (tabId: string, updates: Partial<AIAssistTab>) => void;
 
   setLanguage: (lang: "en" | "ru" | "he") => void;
   setSelectedProvider: (provider: ModelProvider) => void;
@@ -147,6 +148,11 @@ const useStore = create<AppState>((set) => ({
   updateActiveTab: (updates) => set((state) => ({
     aiAssistTabs: state.aiAssistTabs.map(t =>
       t.id === state.activeTabId ? { ...t, ...updates } : t
+    )
+  })),
+  updateTabById: (tabId, updates) => set((state) => ({
+    aiAssistTabs: state.aiAssistTabs.map(t =>
+      t.id === tabId ? { ...t, ...updates } : t
     )
   })),
 
