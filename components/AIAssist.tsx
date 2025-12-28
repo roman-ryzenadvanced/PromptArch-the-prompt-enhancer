@@ -186,7 +186,8 @@ function parseStreamingContent(text: string, currentAgent: string) {
             isStreaming: !text.includes("[/PREVIEW]")
         };
         if (preview.isStreaming) {
-            status = `Generating ${preview.type} artifact...`;
+            const isUpdate = text.toLowerCase().includes("update") || text.toLowerCase().includes("fix") || text.toLowerCase().includes("change");
+            status = isUpdate ? `Applying surgical edits to ${preview.type}...` : `Generating ${preview.type} artifact...`;
         }
     }
 
@@ -379,7 +380,7 @@ export default function AIAssist() {
                             if (last && last.role === "assistant") {
                                 return [...prev.slice(0, -1), {
                                     ...last,
-                                    content: chatDisplay || accumulated,
+                                    content: accumulated, // Keep raw for AI context
                                     agent,
                                     preview: preview ? { type: preview.type, data: preview.data, language: preview.language } : undefined
                                 } as AIAssistMessage];
@@ -571,7 +572,7 @@ export default function AIAssist() {
 
                                     <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed font-medium">
                                         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                                            {msg.content || (msg.role === "assistant" ? "..." : "")}
+                                            {parseStreamingContent(msg.content, msg.agent || "general").chatDisplay || (msg.role === "assistant" ? "..." : "")}
                                         </ReactMarkdown>
                                     </div>
 
