@@ -38,11 +38,10 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
-        if (!iframeRef.current) return;
+        if (!iframeRef.current || !data) return;
 
-        const isHtml = data.includes("<") && data.includes(">");
+        // Decode HTML entities if present
         const isEncodedHtml = data.includes("&lt;") && data.includes("&gt;");
-        const shouldRender = isHtml || isEncodedHtml || ["web", "app", "design", "html", "ui"].includes(type);
         const normalized = isEncodedHtml
             ? data
                 .replace(/&lt;/g, "<")
@@ -51,8 +50,20 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                 .replace(/&quot;/g, "\"")
                 .replace(/&#39;/g, "'")
             : data;
-        if (shouldRender) {
-            const doc = `
+
+        // Check if the content is a full HTML document or a fragment
+        const isFullDocument = normalized.trim().startsWith("<!DOCTYPE") || normalized.trim().startsWith("<html");
+
+        let doc: string;
+        if (isFullDocument) {
+            // If it's a full document, inject Tailwind CSS but keep the structure
+            doc = normalized.replace(/<head>/i, `<head>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+            `);
+        } else {
+            // Wrap fragments in a styled container
+            doc = `
                 <!DOCTYPE html>
                 <html class="dark">
                   <head>
@@ -81,19 +92,20 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                         margin: 0; 
                         padding: 24px; 
                         font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
-                        background: #0b1414; 
-                        color: #ecfdf3;
+                        background: #f8fafc; 
+                        color: #1e293b;
                         min-height: 100vh;
                       }
                     </style>
                   </head>
-                  <body class="bg-[#0b1414] text-emerald-50">
+                  <body>
                     ${normalized}
                   </body>
                 </html>
             `;
-            iframeRef.current.srcdoc = doc;
         }
+
+        iframeRef.current.srcdoc = doc;
     }, [data, type]);
 
     return (
@@ -624,7 +636,7 @@ export default function AIAssist() {
                         </div>
 
                         <div className="flex-1 overflow-hidden relative">
-                            {viewMode === "preview" && previewData && canRenderPreview ? (
+                            {viewMode === "preview" && previewData ? (
                                 <LiveCanvas
                                     data={previewData.data}
                                     type={previewData.type}
