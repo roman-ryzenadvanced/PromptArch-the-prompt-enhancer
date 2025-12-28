@@ -98,6 +98,19 @@ export class ModelAdapter {
     });
   }
 
+  private getService(provider: ModelProvider): any {
+    switch (provider) {
+      case "qwen":
+        return this.qwenService;
+      case "ollama":
+        return this.ollamaService;
+      case "zai":
+        return this.zaiService;
+      default:
+        return null;
+    }
+  }
+
   private async callWithFallback<T>(
     operation: (service: any) => Promise<APIResponse<T>>,
     providers: ModelProvider[]
@@ -282,14 +295,15 @@ export class ModelAdapter {
     const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
     const providers: ModelProvider[] = provider ? [provider] : fallback;
 
-    // For now we don't handle fallback for streaming strictly, just use first available
-    const activeProvider = providers[0];
-    let service: any;
-    switch (activeProvider) {
-      case "qwen": service = this.qwenService; break;
-      case "ollama": service = this.ollamaService; break;
-      case "zai": service = this.zaiService; break;
+    const activeProvider = providers.find((candidate) => {
+      const service = this.getService(candidate);
+      return this.isProviderAuthenticated(candidate) && !!service?.generateAIAssistStream;
+    });
+    if (!activeProvider) {
+      return { success: false, error: "No authenticated providers available for streaming" };
     }
+
+    const service = this.getService(activeProvider);
 
     if (!service || !service.generateAIAssistStream) {
       return { success: false, error: "Streaming not supported for this provider" };
