@@ -174,16 +174,18 @@ function parseStreamingContent(text: string, currentAgent: string) {
         return fenced ? fenced[1].trim() : value.trim();
     };
 
-    const agentMatch = text.match(/\[AGENT:([\w-]+)\]/);
-    if (agentMatch) agent = agentMatch[1];
+    // 1. Detect Agent (be flexible with brackets and keywords like APP/WEB/SEO)
+    const agentMatch = text.match(/\[+(?:AGENT|content|seo|smm|pm|code|design|web|app):([\w-]+)\]+/i);
+    if (agentMatch) agent = agentMatch[1].toLowerCase();
 
-    const previewMatch = text.match(/\[PREVIEW:([\w-]+):?([\w-]+)?\]([\s\S]*?)(?:\[\/PREVIEW\]|$)/);
+    // 2. Detect Preview (flexible brackets)
+    const previewMatch = text.match(/\[+PREVIEW:([\w-]+):?([\w-]+)?\]+([\s\S]*?)(?:\[\/(?:PREVIEW|APP|WEB|SEO|CODE|DESIGN|SMM|PM|CONTENT)\]+|$)/i);
     if (previewMatch) {
         preview = {
             type: previewMatch[1],
             language: previewMatch[2] || "text",
             data: previewMatch[3].trim(),
-            isStreaming: !text.includes("[/PREVIEW]")
+            isStreaming: !/\[\/(?:PREVIEW|APP|WEB|SEO|CODE|DESIGN|SMM|PM|CONTENT)\]+/i.test(text)
         };
         if (preview.isStreaming) {
             const isUpdate = text.toLowerCase().includes("update") || text.toLowerCase().includes("fix") || text.toLowerCase().includes("change");
@@ -191,11 +193,16 @@ function parseStreamingContent(text: string, currentAgent: string) {
         }
     }
 
-    // Hide tags and partial tags from display
+    // 3. Clean display text - hide all tag-like sequences and their partials
     chatDisplay = text
-        .replace(/\[AGENT:[\w-]+\]/g, "")
-        .replace(/\[PREVIEW:[\w-]+:?[\w-]+?\][\s\S]*?(?:\[\/PREVIEW\]|$)/g, "")
-        .replace(/\[(AGENT|PREVIEW)?(?::[\w-]*)?$/g, "") // Hide partial tags at the end
+        // Hide complete tags (flexible brackets)
+        .replace(/\[+(?:AGENT|content|seo|smm|pm|code|design|web|app|PREVIEW|APP|WEB|SEO|CODE|DESIGN|SMM|PM|CONTENT|PREV):?[\w-]*:?[\w-]*\]+/gi, "")
+        // Hide content inside preview block (cleanly)
+        .replace(/\[+PREVIEW:[\w-]+:?[\w-]+?\]+[\s\S]*?(?:\[\/(?:PREVIEW|APP|WEB|SEO|CODE|DESIGN|SMM|PM|CONTENT)\]+|$)/gi, "")
+        // Hide closing tags
+        .replace(/\[\/(?:PREVIEW|APP|WEB|SEO|CODE|DESIGN|SMM|PM|CONTENT)\]+/gi, "")
+        // Hide ANY partial tag sequence at the very end (greedy)
+        .replace(/\[+[^\]]*$/g, "")
         .trim();
 
     if (!preview) {
@@ -222,7 +229,7 @@ function parseStreamingContent(text: string, currentAgent: string) {
         }
     }
 
-    if (!preview) {
+    if (!preview && !text.includes("[PREVIEW")) {
         const htmlDoc = text.match(/<!doctype\s+html[\s\S]*$/i) || text.match(/<html[\s\S]*$/i);
         if (htmlDoc) {
             preview = {
@@ -346,9 +353,22 @@ export default function AIAssist() {
             let accumulated = "";
             let lastParsedPreview: PreviewData | null = null;
 
+            // Format history to remove internal tags and provide clear context for surgical edits
+            const formattedHistory = aiAssistHistory.map(m => {
+                if (m.role === "assistant") {
+                    const { chatDisplay, preview } = parseStreamingContent(m.content, m.agent || "general");
+                    let contextContent = chatDisplay;
+                    if (preview && preview.data) {
+                        contextContent += `\n\n--- CURRENT ARTIFACT (Surgical Context) ---\nType: ${preview.type}\nLanguage: ${preview.language}\n\`\`\`${preview.language || preview.type}\n${preview.data}\n\`\`\``;
+                    }
+                    return { ...m, content: contextContent };
+                }
+                return m;
+            });
+
             const response = await modelAdapter.generateAIAssistStream(
                 {
-                    messages: [...aiAssistHistory, { role: "user" as const, content: finalInput, timestamp: new Date() }],
+                    messages: [...formattedHistory, { role: "user" as const, content: finalInput, timestamp: new Date() }],
                     currentAgent,
                     onChunk: (chunk) => {
                         accumulated += chunk;
