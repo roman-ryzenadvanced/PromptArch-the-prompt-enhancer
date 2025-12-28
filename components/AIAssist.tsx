@@ -41,7 +41,16 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
         if (!iframeRef.current) return;
 
         const isHtml = data.includes("<") && data.includes(">");
-        const shouldRender = isHtml || ["web", "app", "design", "html", "ui"].includes(type);
+        const isEncodedHtml = data.includes("&lt;") && data.includes("&gt;");
+        const shouldRender = isHtml || isEncodedHtml || ["web", "app", "design", "html", "ui"].includes(type);
+        const normalized = isEncodedHtml
+            ? data
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&")
+                .replace(/&quot;/g, "\"")
+                .replace(/&#39;/g, "'")
+            : data;
         if (shouldRender) {
             const doc = `
                 <!DOCTYPE html>
@@ -79,7 +88,7 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                     </style>
                   </head>
                   <body class="bg-[#0b1414] text-emerald-50">
-                    ${data}
+                    ${normalized}
                   </body>
                 </html>
             `;
@@ -118,6 +127,16 @@ function parseStreamingContent(text: string) {
     let agent = "general";
     let preview: PreviewData | null = null;
     let chatDisplay = text.trim();
+    const decodeHtml = (value: string) => value
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#39;/g, "'");
+    const stripFences = (value: string) => {
+        const fenced = value.match(/```(?:html|css|javascript|tsx|jsx|md|markdown)?\s*([\s\S]*?)```/i);
+        return fenced ? fenced[1].trim() : value.trim();
+    };
 
     const jsonCandidate = text.trim();
     if (jsonCandidate.startsWith("{") && jsonCandidate.endsWith("}")) {
@@ -173,6 +192,13 @@ function parseStreamingContent(text: string) {
         }
     }
 
+    if (preview) {
+        const isHtmlLike = ["web", "app", "design", "html", "ui"].includes(preview.type) || preview.language === "html";
+        if (isHtmlLike) {
+            preview.data = decodeHtml(stripFences(preview.data));
+        }
+    }
+
     if (!chatDisplay && preview) {
         chatDisplay = `Rendering live artifact...`;
     }
@@ -204,7 +230,10 @@ export default function AIAssist() {
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const canRenderPreview = previewData
-        ? ["web", "app", "design", "html", "ui"].includes(previewData.type) || previewData.data.includes("<")
+        ? ["web", "app", "design", "html", "ui"].includes(previewData.type)
+        || previewData.data.includes("<")
+        || previewData.language === "html"
+        || (previewData.data.includes("&lt;") && previewData.data.includes("&gt;"))
         : false;
 
     // Auto-scroll logic
@@ -219,9 +248,9 @@ export default function AIAssist() {
 
     useEffect(() => {
         if (previewData?.data) {
-            setViewMode("preview");
+            setViewMode(canRenderPreview ? "preview" : "code");
         }
-    }, [previewData?.data]);
+    }, [previewData?.data, canRenderPreview]);
 
     // Load available models
     useEffect(() => {
@@ -478,7 +507,13 @@ export default function AIAssist() {
                                             size="sm"
                                             className="mt-5 w-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200/60 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-black uppercase tracking-[0.1em] text-[10px] rounded-2xl h-11 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                             onClick={() => {
-                                                setPreviewData({ ...msg.preview!, isStreaming: false });
+                                                const nextPreview = { ...msg.preview!, isStreaming: false };
+                                                setPreviewData(nextPreview);
+                                                const nextCanRender = ["web", "app", "design", "html", "ui"].includes(nextPreview.type)
+                                                    || nextPreview.data.includes("<")
+                                                    || nextPreview.language === "html"
+                                                    || (nextPreview.data.includes("&lt;") && nextPreview.data.includes("&gt;"));
+                                                setViewMode(nextCanRender ? "preview" : "code");
                                                 setShowCanvas(true);
                                             }}
                                         >
