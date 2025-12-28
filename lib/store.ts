@@ -64,12 +64,12 @@ const useStore = create<AppState>((set) => ({
   language: "en",
   selectedProvider: "qwen",
   selectedModels: {
-    qwen: "coder-model",
+    qwen: "qwen-coder-plus",
     ollama: "gpt-oss:120b",
     zai: "glm-4.7",
   },
   availableModels: {
-    qwen: ["coder-model"],
+    qwen: ["qwen-coder-plus", "qwen-plus", "qwen-turbo", "qwen-max", "qwen-coder-turbo"],
     ollama: ["gpt-oss:120b", "llama3.1", "gemma3", "deepseek-r1", "qwen3"],
     zai: ["glm-4.7", "glm-4.6", "glm-4.5", "glm-4.5-air", "glm-4-flash", "glm-4-flashx"],
   },

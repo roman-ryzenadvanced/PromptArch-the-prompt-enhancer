@@ -1116,7 +1116,11 @@ Perform analysis based on provided instructions.`,
 
   getAvailableModels(): string[] {
     return [
-      "coder-model",
+      "qwen-coder-plus",
+      "qwen-plus",
+      "qwen-turbo",
+      "qwen-max",
+      "qwen-coder-turbo",
     ];
   }
 }

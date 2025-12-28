@@ -645,7 +645,7 @@ export default function AIAssist() {
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder={t.placeholder}
                                 disabled={isProcessing}
-                                className="relative pr-24 py-7 rounded-[1.5rem] bg-white/90 dark:bg-[#0f1a1a]/70 border-blue-200/80 dark:border-blue-900/80 shadow-lg shadow-blue-500/5 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-base h-16 outline-none"
+                                className="relative pr-24 py-7 rounded-[1.5rem] bg-white/90 dark:bg-[#0f1a1a]/70 border-blue-200/80 dark:border-blue-900/80 shadow-lg shadow-blue-500/5 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-base h-16 outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                 {isProcessing ? (
