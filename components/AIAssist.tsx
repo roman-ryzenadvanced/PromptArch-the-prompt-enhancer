@@ -431,22 +431,28 @@ export default function AIAssist() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentAgent, setCurrentAgent] = useState(activeTab?.currentAgent || "general");
     const [previewData, setPreviewData] = useState<PreviewData | null>(activeTab?.previewData || null);
-
-    // Sync local state when tab changes
-    useEffect(() => {
-        if (activeTab) {
-            setCurrentAgent(activeTab.currentAgent || "general");
-            setPreviewData(activeTab.previewData || null);
-        }
-    }, [activeTabId, activeTab]);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
-    const [showCanvas, setShowCanvas] = useState(false);
+    const [showCanvas, setShowCanvas] = useState(!!activeTab?.previewData);
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
     const [abortController, setAbortController] = useState<AbortController | null>(null);
 
     // Agentic States
     const [assistStep, setAssistStep] = useState<"idle" | "plan" | "generating" | "preview">("idle");
     const [aiPlan, setAiPlan] = useState<any>(null);
+
+    // Sync local state when tab changes - FULL ISOLATION
+    useEffect(() => {
+        if (activeTab) {
+            setCurrentAgent(activeTab.currentAgent || "general");
+            setPreviewData(activeTab.previewData || null);
+            setShowCanvas(!!activeTab.previewData);
+            setViewMode("preview");
+            setAssistStep("idle");
+            setAiPlan(null);
+            setInput("");
+            setIsProcessing(false);
+        }
+    }, [activeTabId]);
 
     const [status, setStatus] = useState<string | null>(null);
 
