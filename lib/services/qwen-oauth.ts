@@ -1039,23 +1039,22 @@ Perform analysis based on provided instructions.`,
         }))
       ];
 
-      // Get authorization headers
+      // Call our local proxy to avoid CORS
       const headers = await this.getRequestHeaders();
-      const endpoint = this.getEffectiveEndpoint();
-      const url = endpoint.endsWith("/chat/completions")
-        ? endpoint
-        : `${endpoint}/chat/completions`;
+      const baseUrl = this.getEffectiveEndpoint();
+      const url = `${this.oauthBaseUrl}/chat`;
 
-      console.log("[QwenOAuth] Stream request:", { url, model: model || this.getAvailableModels()[0], hasAuth: !!headers.Authorization });
+      console.log("[QwenOAuth] Stream request (via proxy):", { url, model: model || this.getAvailableModels()[0], hasAuth: !!headers.Authorization });
 
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...headers,
+          Authorization: headers.Authorization || "",
         },
         signal: options.signal,
         body: JSON.stringify({
+          endpoint: baseUrl,
           model: model || this.getAvailableModels()[0],
           messages,
           stream: true,
@@ -1064,7 +1063,7 @@ Perform analysis based on provided instructions.`,
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("[QwenOAuth] Stream request failed:", response.status, errorText);
+        console.error("[QwenOAuth] Stream proxy request failed:", response.status, errorText);
         throw new Error(`Stream request failed (${response.status}): ${errorText.slice(0, 200)}`);
       }
 
