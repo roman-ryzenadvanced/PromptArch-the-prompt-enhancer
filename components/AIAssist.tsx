@@ -260,9 +260,10 @@ export default function AIAssist() {
 
     useEffect(() => {
         if (previewData?.data) {
-            setViewMode(canRenderPreview ? "preview" : "code");
+            // Always default to preview mode - the LiveCanvas will render any content
+            setViewMode("preview");
         }
-    }, [previewData?.data, canRenderPreview]);
+    }, [previewData?.data]);
 
     // Load available models
     useEffect(() => {
@@ -521,11 +522,7 @@ export default function AIAssist() {
                                             onClick={() => {
                                                 const nextPreview = { ...msg.preview!, isStreaming: false };
                                                 setPreviewData(nextPreview);
-                                                const nextCanRender = ["web", "app", "design", "html", "ui"].includes(nextPreview.type)
-                                                    || nextPreview.data.includes("<")
-                                                    || nextPreview.language === "html"
-                                                    || (nextPreview.data.includes("&lt;") && nextPreview.data.includes("&gt;"));
-                                                setViewMode(nextCanRender ? "preview" : "code");
+                                                setViewMode("preview");
                                                 setShowCanvas(true);
                                             }}
                                         >
