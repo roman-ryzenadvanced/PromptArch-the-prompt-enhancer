@@ -55,23 +55,75 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
         const trimmed = normalized.trim();
         const isFullDocument = /^<!DOCTYPE/i.test(trimmed) || /^<html/i.test(trimmed);
         const hasHeadTag = /<head[\s>]/i.test(normalized);
+        const isReactLike = normalized.includes("import React") || normalized.includes("useState") || normalized.includes("useEffect") || /<[A-Z][\s\S]*>/.test(normalized);
 
         let doc: string;
         if (isFullDocument) {
-            // If it's a full document, inject Tailwind CSS but keep the structure
+            // ... same as before but add React support if needed ...
+            const reactScripts = isReactLike ? `
+                <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            ` : "";
+
             if (hasHeadTag) {
                 doc = normalized.replace(/<head>/i, `<head>
+                    ${reactScripts}
                     <script src="https://cdn.tailwindcss.com"></script>
                     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
                 `);
             } else {
                 doc = normalized.replace(/<html[^>]*>/i, (match) => `${match}
                     <head>
+                        ${reactScripts}
                         <script src="https://cdn.tailwindcss.com"></script>
                         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
                     </head>
                 `);
             }
+        } else if (isReactLike) {
+            // Specialized React Runner for fragments/components
+            const cleanedCode = normalized
+                .replace(/import\s+(?:React\s*,\s*)?{?([\s\S]*?)}?\s+from\s+['"]react['"];?/g, "const { $1 } = React;")
+                .replace(/import\s+React\s+from\s+['"]react['"];?/g, "/* React already global */")
+                .replace(/import\s+[\s\S]*?from\s+['"]lucide-react['"];?/g, "const { ...lucide } = window.lucide || {};")
+                .replace(/export\s+default\s+/g, "const MainComponent = ");
+
+            // Try to find the component name to render
+            const componentMatch = cleanedCode.match(/const\s+([A-Z]\w+)\s*=\s*\(\)\s*=>/);
+            const mainComponent = componentMatch ? componentMatch[1] : (cleanedCode.includes("MainComponent") ? "MainComponent" : null);
+
+            doc = `
+                <!DOCTYPE html>
+                <html class="dark">
+                  <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+                    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+                    <script src="https://unpkg.com/lucide@latest"></script>
+                    <style>
+                       body { margin: 0; padding: 20px; font-family: sans-serif; background: #0b1414; color: white; }
+                       #root { min-height: 100vh; }
+                    </style>
+                  </head>
+                  <body>
+                    <div id="root"></div>
+                    <script type="text/babel">
+                        ${cleanedCode}
+                        
+                        ${mainComponent ? `
+                        const root = ReactDOM.createRoot(document.getElementById('root'));
+                        root.render(React.createElement(${mainComponent}));
+                        ` : `
+                        // No clear component found to mount, executing raw code
+                        `}
+                    </script>
+                  </body>
+                </html>
+            `;
         } else {
             // Wrap fragments in a styled container
             doc = `
@@ -206,13 +258,16 @@ function parseStreamingContent(text: string, currentAgent: string) {
         .trim();
 
     if (!preview) {
-        const fenced = text.match(/```(html|css|javascript|tsx|jsx|md|markdown)\s*([\s\S]*?)```/i);
+        const fenced = text.match(/```(html|css|javascript|typescript|tsx|jsx|md|markdown)\s*([\s\S]*?)```/i);
         if (fenced) {
             const language = fenced[1].toLowerCase();
+            const data = fenced[2].trim();
+            const isReactLike = data.includes("import React") || data.includes("useState") || /<[A-Z][\s\S]*>/.test(data);
+
             preview = {
-                type: language === "html" ? "web" : "code",
+                type: (language === "html" || isReactLike) ? "app" : "code",
                 language,
-                data: fenced[2].trim(),
+                data,
                 isStreaming: false
             };
         }
@@ -391,6 +446,7 @@ export default function AIAssist() {
                             setPreviewData(preview);
                             lastParsedPreview = preview;
                             setShowCanvas(true);
+                            if (isPreviewRenderable(preview)) setViewMode("preview");
                         }
 
                         if (agent !== currentAgent) setCurrentAgent(agent);
