@@ -1016,7 +1016,6 @@ Perform analysis based on provided instructions.`,
     model?: string
   ): Promise<APIResponse<void>> {
     try {
-      // ... existing prompt logic ...
       const systemPrompt = `You are "AI Assist". 
       Your goal is to provide intelligent support with a "Canvas" experience.
       
@@ -1040,21 +1039,21 @@ Perform analysis based on provided instructions.`,
         }))
       ];
 
-      const endpoint = "/tools/promptarch/api/qwen/chat";
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      // Get authorization headers
+      const headers = await this.getRequestHeaders();
+      const endpoint = this.getEffectiveEndpoint();
+      const url = endpoint.endsWith("/chat/completions")
+        ? endpoint
+        : `${endpoint}/chat/completions`;
 
-      const tokenInfo = this.getTokenInfo();
-      if (tokenInfo?.accessToken) {
-        headers["Authorization"] = `Bearer ${tokenInfo.accessToken}`;
-      } else if (this.apiKey) {
-        headers["Authorization"] = `Bearer ${this.apiKey}`;
-      }
+      console.log("[QwenOAuth] Stream request:", { url, model: model || this.getAvailableModels()[0], hasAuth: !!headers.Authorization });
 
-      const response = await fetch(endpoint, {
+      const response = await fetch(url, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          ...headers,
+        },
         signal: options.signal,
         body: JSON.stringify({
           model: model || this.getAvailableModels()[0],
@@ -1064,11 +1063,13 @@ Perform analysis based on provided instructions.`,
       });
 
       if (!response.ok) {
-        throw new Error("Stream request failed");
+        const errorText = await response.text();
+        console.error("[QwenOAuth] Stream request failed:", response.status, errorText);
+        throw new Error(`Stream request failed (${response.status}): ${errorText.slice(0, 200)}`);
       }
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader");
+      if (!reader) throw new Error("No reader available");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -1103,15 +1104,13 @@ Perform analysis based on provided instructions.`,
 
       return { success: true, data: undefined };
     } catch (error) {
+      console.error("[QwenOAuth] Stream error:", error);
       return { success: false, error: error instanceof Error ? error.message : "Stream failed" };
     }
   }
 
   async listModels(): Promise<APIResponse<string[]>> {
-    const models = [
-      "coder-model",
-    ];
-    return { success: true, data: models };
+    return { success: true, data: this.getAvailableModels() };
   }
 
   getAvailableModels(): string[] {
