@@ -267,6 +267,10 @@ export default function AIAssist() {
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
     const [abortController, setAbortController] = useState<AbortController | null>(null);
 
+    // Agentic States
+    const [assistStep, setAssistStep] = useState<"idle" | "plan" | "generating" | "preview">("idle");
+    const [aiPlan, setAiPlan] = useState<any>(null);
+
     const scrollRef = useRef<HTMLDivElement>(null);
     const isPreviewRenderable = (preview?: PreviewData | null) => {
         if (!preview) return false;
@@ -309,23 +313,28 @@ export default function AIAssist() {
         loadModels();
     }, [selectedProvider, selectedModels, setSelectedModel]);
 
-    const handleSendMessage = async (e?: React.FormEvent) => {
+    const handleSendMessage = async (e?: React.FormEvent, forcedPrompt?: string) => {
         if (e) e.preventDefault();
-        if (!input.trim() || isProcessing) return;
+        const finalInput = forcedPrompt || input;
+        if (!finalInput.trim() || isProcessing) return;
 
         const controller = new AbortController();
         setAbortController(controller);
 
-        const userMsg: AIAssistMessage = {
-            role: "user",
-            content: input,
-            timestamp: new Date(),
-        };
+        // UI Update for user message
+        if (!forcedPrompt) {
+            const userMsg: AIAssistMessage = {
+                role: "user",
+                content: finalInput,
+                timestamp: new Date(),
+            };
+            const newHistory = [...aiAssistHistory, userMsg];
+            setAIAssistHistory(newHistory);
+            setInput("");
+        }
 
-        const newHistory = [...aiAssistHistory, userMsg];
-        setAIAssistHistory(newHistory);
-        setInput("");
         setIsProcessing(true);
+        if (assistStep === "idle") setAssistStep("plan");
 
         const assistantMsg: AIAssistMessage = {
             role: "assistant",
@@ -333,21 +342,42 @@ export default function AIAssist() {
             agent: currentAgent,
             timestamp: new Date()
         };
-        setAIAssistHistory([...newHistory, assistantMsg]);
+        setAIAssistHistory(prev => [...prev, assistantMsg]);
 
         try {
+            // First, get the plan orchestrator prompt from our new API
+            const apiRes = await fetch("/api/ai-assist", {
+                method: "POST",
+                body: JSON.stringify({
+                    request: finalInput,
+                    step: assistStep === "plan" ? "generate" : "plan",
+                    plan: aiPlan
+                }),
+            });
+            const { prompt } = await apiRes.json();
+
             let accumulated = "";
             let lastParsedPreview: PreviewData | null = null;
 
             const response = await modelAdapter.generateAIAssistStream(
                 {
-                    messages: newHistory,
+                    messages: [...aiAssistHistory, { role: "system", content: prompt } as any],
                     currentAgent,
                     onChunk: (chunk) => {
                         accumulated += chunk;
                         const { chatDisplay, preview, agent } = parseStreamingContent(accumulated);
 
-                        // Only update preview state if it actually changed to avoid iframe jitters
+                        // If we're in planning mode and see JSON, try to parse the plan
+                        if (assistStep === "plan" || assistStep === "idle") {
+                            const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                                try {
+                                    const parsed = JSON.parse(jsonMatch[0]);
+                                    if (parsed.summary && parsed.files) setAiPlan(parsed);
+                                } catch (e) { }
+                            }
+                        }
+
                         if (preview && JSON.stringify(preview) !== JSON.stringify(lastParsedPreview)) {
                             setPreviewData(preview);
                             lastParsedPreview = preview;
@@ -374,40 +404,17 @@ export default function AIAssist() {
                 selectedProvider,
                 selectedModels[selectedProvider]
             );
-            if (!response.success) {
-                throw new Error(response.error || "Streaming failed");
+
+            if (!response.success) throw new Error(response.error);
+
+            if (assistStep === "plan" || assistStep === "idle") {
+                setAssistStep("plan");
+            } else {
+                setAssistStep("preview");
             }
+
         } catch (error) {
             console.error("Assist error:", error);
-            try {
-                const fallback = await modelAdapter.generateAIAssist(
-                    { messages: newHistory, currentAgent }
-                );
-                if (fallback.success && fallback.data) {
-                    const { chatDisplay, preview, agent } = parseStreamingContent(fallback.data);
-                    if (preview) {
-                        setPreviewData(preview);
-                        setShowCanvas(true);
-                        setViewMode(isPreviewRenderable(preview) ? "preview" : "code");
-                    }
-                    setAIAssistHistory(prev => {
-                        const last = prev[prev.length - 1];
-                        const nextAgent = agent || currentAgent;
-                        if (last && last.role === "assistant") {
-                            return [...prev.slice(0, -1), {
-                                ...last,
-                                content: chatDisplay || fallback.data,
-                                agent: nextAgent,
-                                preview: preview ? { type: preview.type, data: preview.data, language: preview.language } : undefined
-                            } as AIAssistMessage];
-                        }
-                        return prev;
-                    });
-                    return;
-                }
-            } catch (fallbackError) {
-                console.error("Assist fallback error:", fallbackError);
-            }
             setAIAssistHistory(prev => {
                 const last = prev[prev.length - 1];
                 const message = error instanceof Error ? error.message : "AI Assist failed";
@@ -422,6 +429,11 @@ export default function AIAssist() {
         }
     };
 
+    const approveAndGenerate = () => {
+        setAssistStep("generating");
+        handleSendMessage(undefined, "Approved. Please generate the code according to the plan.");
+    };
+
     const stopGeneration = () => {
         if (abortController) {
             abortController.abort();
@@ -434,6 +446,8 @@ export default function AIAssist() {
         setAIAssistHistory([]);
         setPreviewData(null);
         setShowCanvas(false);
+        setAssistStep("idle");
+        setAiPlan(null);
     };
 
     return (
@@ -572,6 +586,42 @@ export default function AIAssist() {
                                         </ReactMarkdown>
                                     </div>
 
+                                    {/* Agentic Plan Review Card */}
+                                    {msg.role === "assistant" && aiPlan && i === aiAssistHistory.length - 1 && assistStep === "plan" && (
+                                        <div className="mt-6 p-6 rounded-2xl bg-blue-500/5 border border-blue-500/20 backdrop-blur-sm animate-in zoom-in-95 duration-300">
+                                            <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                <LayoutPanelLeft className="h-4 w-4" /> Proposed Solution Plan
+                                            </h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Architecture</p>
+                                                    <p className="text-xs text-slate-400">{aiPlan.architecture}</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Tech Stack</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {aiPlan.techStack?.map((t: string) => (
+                                                                <Badge key={t} variant="outline" className="text-[9px] border-blue-500/30 text-blue-300 px-1.5 py-0">{t}</Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Files</p>
+                                                        <p className="text-[10px] text-slate-400">{aiPlan.files?.length} modules planned</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    onClick={approveAndGenerate}
+                                                    disabled={isProcessing}
+                                                    className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-widest py-5 rounded-xl shadow-lg shadow-blue-500/20"
+                                                >
+                                                    {isProcessing ? "Starting Engine..." : "Approve & Generate Development"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {msg.role === "assistant" && msg.preview && (
                                         <Button
                                             variant="secondary"
@@ -644,82 +694,84 @@ export default function AIAssist() {
             </div>
 
             {/* --- Canvas Panel --- */}
-            {showCanvas && (
-                <div className="flex-1 h-full min-w-0 animate-in slide-in-from-right-12 duration-700 cubic-bezier(0,0,0.2,1)">
-                    <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-blue-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-                        <div className="px-6 py-5 border-b border-blue-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                                    {viewMode === "preview" ? <Monitor className="h-5 w-5 text-blue-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{previewData?.type || "Live"} Canvas</h3>
-                                    <div className="flex bg-blue-900/60 rounded-xl p-1 mt-2">
-                                        <button
-                                            onClick={() => setViewMode("preview")}
-                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "preview" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
-                                        >
-                                            Live Render
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode("code")}
-                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "code" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
-                                        >
-                                            Inspect Code
-                                        </button>
+            {
+                showCanvas && (
+                    <div className="flex-1 h-full min-w-0 animate-in slide-in-from-right-12 duration-700 cubic-bezier(0,0,0.2,1)">
+                        <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-blue-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
+                            <div className="px-6 py-5 border-b border-blue-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                                        {viewMode === "preview" ? <Monitor className="h-5 w-5 text-blue-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{previewData?.type || "Live"} Canvas</h3>
+                                        <div className="flex bg-blue-900/60 rounded-xl p-1 mt-2">
+                                            <button
+                                                onClick={() => setViewMode("preview")}
+                                                className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "preview" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
+                                            >
+                                                Live Render
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode("code")}
+                                                className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "code" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
+                                            >
+                                                Inspect Code
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-blue-200/70 hover:text-white hover:bg-blue-900 rounded-2xl"
-                                    onClick={() => navigator.clipboard.writeText(previewData?.data || "")}
-                                >
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-blue-200/70 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl"
-                                    onClick={() => setShowCanvas(false)}
-                                >
-                                    <X className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-hidden relative">
-                            {viewMode === "preview" && previewData ? (
-                                <LiveCanvas
-                                    data={previewData.data}
-                                    type={previewData.type}
-                                    isStreaming={!!previewData.isStreaming}
-                                />
-                            ) : (
-                                <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
-                                    <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
-                                        <code>{previewData?.data}</code>
-                                    </pre>
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-blue-200/70 hover:text-white hover:bg-blue-900 rounded-2xl"
+                                        onClick={() => navigator.clipboard.writeText(previewData?.data || "")}
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-blue-200/70 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl"
+                                        onClick={() => setShowCanvas(false)}
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </Button>
                                 </div>
-                            )}
-                        </div>
-
-                        <div className="px-6 py-3 border-t border-blue-900/40 bg-[#0b1414]/70 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className={cn("w-2 h-2 rounded-full", previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
-                                <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
-                                    {previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
-                                </span>
                             </div>
-                            <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">
-                                {previewData?.language?.toUpperCase()} UTF-8
-                            </Badge>
-                        </div>
-                    </Card>
-                </div>
-            )}
+
+                            <div className="flex-1 overflow-hidden relative">
+                                {viewMode === "preview" && previewData ? (
+                                    <LiveCanvas
+                                        data={previewData.data}
+                                        type={previewData.type}
+                                        isStreaming={!!previewData.isStreaming}
+                                    />
+                                ) : (
+                                    <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
+                                        <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
+                                            <code>{previewData?.data}</code>
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="px-6 py-3 border-t border-blue-900/40 bg-[#0b1414]/70 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className={cn("w-2 h-2 rounded-full", previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
+                                    <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
+                                        {previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
+                                    </span>
+                                </div>
+                                <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">
+                                    {previewData?.language?.toUpperCase()} UTF-8
+                                </Badge>
+                            </div>
+                        </Card>
+                    </div>
+                )
+            }
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap');
                 .ai-assist {
@@ -729,7 +781,7 @@ export default function AIAssist() {
                     color: inherit;
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
 

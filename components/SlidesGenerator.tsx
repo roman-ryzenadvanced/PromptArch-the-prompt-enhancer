@@ -623,6 +623,27 @@ export default function SlidesGenerator() {
         }
     };
 
+    const handleDownloadMarkdown = () => {
+        if (!slidesPresentation) return;
+
+        // Reveal.js format
+        const markdown = slidesPresentation.slides.map(s => {
+            // Strip HTML but keep structure
+            const cleanContent = s.content.replace(/<[^>]*>/g, '').trim();
+            return `## ${s.title}\n\n${cleanContent}`;
+        }).join('\n\n---\n\n');
+
+        const blob = new Blob([markdown], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${slidesPresentation.title.replace(/\s+/g, '_')}_slides.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     const handleDownloadHtml = () => {
         if (!slidesPresentation) return;
 
@@ -1205,8 +1226,11 @@ export default function SlidesGenerator() {
                                 <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-8 w-8">
                                     {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={handleDownloadHtml} className="h-8 w-8">
+                                <Button variant="ghost" size="icon" onClick={handleDownloadHtml} title="Download HTML Presentation" className="h-8 w-8">
                                     <Download className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={handleDownloadMarkdown} title="Export Reveal.js Markdown" className="h-8 w-8 text-blue-500">
+                                    <FileText className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8">
                                     {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
