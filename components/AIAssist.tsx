@@ -475,6 +475,11 @@ export default function AIAssist() {
         setIsProcessing(false);
     }, [activeTabId]);
 
+    // CRITICAL: Use local previewData during streaming, sync from tab otherwise
+    // This ensures live updates during streaming AND proper isolation when switching tabs
+    const currentPreviewData = isProcessing ? previewData : (activeTab?.previewData || previewData);
+    const currentShowCanvas = isProcessing ? showCanvas : (activeTab?.showCanvas === true || showCanvas);
+
     const [status, setStatus] = useState<string | null>(null);
 
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -684,7 +689,7 @@ export default function AIAssist() {
             {/* --- Chat Panel --- */}
             <div className={cn(
                 "flex flex-col h-full transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)",
-                (activeTab?.showCanvas === true && activeTab?.previewData) ? "w-full lg:w-2/5 lg:min-w-[400px]" : "w-full max-w-4xl mx-auto"
+                (currentShowCanvas && currentPreviewData) ? "w-full lg:w-2/5 lg:min-w-[400px]" : "w-full max-w-4xl mx-auto"
             )}>
                 <Card className="flex-1 flex flex-col border border-blue-100/60 dark:border-blue-950/60 shadow-[0_18px_50px_rgba(15,23,42,0.15)] bg-[#f8f5ef]/80 dark:bg-[#0b1414]/80 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
                     {/* Header */}
@@ -983,7 +988,7 @@ export default function AIAssist() {
 
             {/* --- Canvas Panel --- */}
             {
-                (activeTab?.showCanvas === true && activeTab?.previewData) && (
+                (currentShowCanvas && currentPreviewData) && (
                     <div className="flex-1 h-full min-w-0 animate-in slide-in-from-right-12 duration-700 cubic-bezier(0,0,0.2,1)">
                         <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-blue-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
                             <div className="px-6 py-5 border-b border-blue-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
@@ -992,7 +997,7 @@ export default function AIAssist() {
                                         {viewMode === "preview" ? <Monitor className="h-5 w-5 text-blue-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
                                     </div>
                                     <div>
-                                        <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{previewData?.type || "Live"} Canvas</h3>
+                                        <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{currentPreviewData?.type || "Live"} Canvas</h3>
                                         <div className="flex bg-blue-900/60 rounded-xl p-1 mt-2">
                                             <button
                                                 onClick={() => setViewMode("preview")}
@@ -1033,18 +1038,18 @@ export default function AIAssist() {
                             </div>
 
                             <div className="flex-1 overflow-hidden relative">
-                                {viewMode === "preview" && activeTab?.previewData ? (
+                                {viewMode === "preview" && currentPreviewData ? (
                                     <CanvasErrorBoundary>
                                         <LiveCanvas
-                                            data={activeTab.previewData.data || ""}
-                                            type={activeTab.previewData.type || "preview"}
-                                            isStreaming={!!activeTab.previewData.isStreaming}
+                                            data={currentPreviewData.data || ""}
+                                            type={currentPreviewData.type || "preview"}
+                                            isStreaming={!!currentPreviewData.isStreaming}
                                         />
                                     </CanvasErrorBoundary>
                                 ) : (
                                     <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
                                         <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
-                                            <code>{activeTab?.previewData?.data}</code>
+                                            <code>{currentPreviewData?.data}</code>
                                         </pre>
                                     </div>
                                 )}
@@ -1052,13 +1057,13 @@ export default function AIAssist() {
 
                             <div className="px-6 py-3 border-t border-blue-900/40 bg-[#0b1414]/70 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className={cn("w-2 h-2 rounded-full", activeTab?.previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
+                                    <div className={cn("w-2 h-2 rounded-full", currentPreviewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
                                     <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
-                                        {activeTab?.previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
+                                        {currentPreviewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
                                     </span>
                                 </div>
                                 <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">
-                                    {activeTab?.previewData?.language?.toUpperCase()} UTF-8
+                                    {currentPreviewData?.language?.toUpperCase()} UTF-8
                                 </Badge>
                             </div>
                         </Card>
