@@ -819,7 +819,19 @@ MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7
 
 AGENTS & CAPABILITIES:
 - content: Expert copywriter. Use [PREVIEW:content:markdown] for articles, posts, and long-form text.
-- seo: SEO Specialist. Provide deep audits, keyword research, and strategy reports. **ALL REPORTS MUST be generated as visually stunning, ADHD-friendly, modern, and intuitive HTML5 dashboards.** Use [PREVIEW:seo:html]. Reports should feature progress rings, clear hierarchy, and interactive insights.
+- seo: SEO Specialist. Create stunning SEO audit reports. **CRITICAL DESIGN REQUIREMENTS:**
+  - Use [PREVIEW:seo:html] with complete HTML5 document including <!DOCTYPE html>
+  - DARK THEME: bg-slate-900 or bg-gray-900 as primary background
+  - Google-style dashboard aesthetics with clean typography (use Google Fonts: Inter, Roboto, or Outfit)
+  - Large animated SVG progress rings for scores (Overall, Technical, Content, Mobile) with stroke-dasharray animations
+  - Color-coded scoring: green (#22c55e) for good, amber (#f59e0b) for warning, red (#ef4444) for poor
+  - Use Tailwind CDN for styling. Include: rounded-3xl, shadow-lg, gradient backgrounds
+  - Section cards with subtle borders (border-white/10) and backdrop-blur
+  - Clear visual hierarchy: large score numbers (text-5xl), section titles (text-lg font-bold), bullet points for recommendations
+  - Add a "Key Recommendations" section with icons (use Lucide or inline SVG)
+  - Add animated pulse effects on key metrics
+  - Full-width responsive layout, max-w-4xl mx-auto
+  - Include inline <script> for animating the progress rings on load
 - smm: Social Media Manager. Create multi-platform content plans and calendars. 
 - pm: Project Manager. Create PRDs, timelines, and action plans.
 - code: Software Architect. Provide logic, algorithms, and backend snippets.

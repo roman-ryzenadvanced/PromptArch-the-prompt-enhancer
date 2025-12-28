@@ -34,6 +34,37 @@ interface PreviewData {
  * A ultra-stable iframe wrapper that avoids hydration issues
  * and provides a WOW visual experience.
  */
+
+// Error Boundary for Canvas crashes
+class CanvasErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: string | null }> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error: error.message };
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center bg-[#0b1414] p-8 text-center rounded-b-2xl">
+                    <StopCircle className="h-10 w-10 text-red-500/40 mb-4" />
+                    <h4 className="text-xs font-black uppercase tracking-widest text-red-400 mb-2">Canvas Crashed</h4>
+                    <p className="text-[10px] font-mono text-slate-500 max-w-xs">{this.state.error}</p>
+                    <button
+                        onClick={() => this.setState({ hasError: false, error: null })}
+                        className="mt-4 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/30 rounded-xl hover:bg-blue-500/10 transition-colors"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 const BuildingArtifact = ({ type }: { type: string }) => {
     const [progress, setProgress] = useState(0);
     const steps = [
@@ -393,7 +424,7 @@ export default function AIAssist() {
     } = useStore();
     const t = translations[language].aiAssist;
 
-    const activeTab = aiAssistTabs.find(t => t.id === activeTabId) || aiAssistTabs[0];
+    const activeTab = aiAssistTabs?.find(t => t.id === activeTabId) || aiAssistTabs?.[0] || { id: 'default', title: 'New Chat', history: [], currentAgent: 'general' };
     const aiAssistHistory = activeTab?.history || [];
 
     const [input, setInput] = useState("");
@@ -404,10 +435,10 @@ export default function AIAssist() {
     // Sync local state when tab changes
     useEffect(() => {
         if (activeTab) {
-            setCurrentAgent(activeTab.currentAgent);
-            setPreviewData(activeTab.previewData);
+            setCurrentAgent(activeTab.currentAgent || "general");
+            setPreviewData(activeTab.previewData || null);
         }
-    }, [activeTabId]);
+    }, [activeTabId, activeTab]);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
     const [showCanvas, setShowCanvas] = useState(false);
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
@@ -716,7 +747,10 @@ export default function AIAssist() {
                             ].map(({ label, agent, icon }) => (
                                 <button
                                     key={agent}
-                                    onClick={() => setCurrentAgent(agent)}
+                                    onClick={() => {
+                                        setCurrentAgent(agent);
+                                        updateActiveTab({ currentAgent: agent });
+                                    }}
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-widest border transition-all",
                                         currentAgent === agent
@@ -962,11 +996,13 @@ export default function AIAssist() {
 
                             <div className="flex-1 overflow-hidden relative">
                                 {viewMode === "preview" && previewData ? (
-                                    <LiveCanvas
-                                        data={previewData.data}
-                                        type={previewData.type}
-                                        isStreaming={!!previewData.isStreaming}
-                                    />
+                                    <CanvasErrorBoundary>
+                                        <LiveCanvas
+                                            data={previewData.data || ""}
+                                            type={previewData.type || "preview"}
+                                            isStreaming={!!previewData.isStreaming}
+                                        />
+                                    </CanvasErrorBoundary>
                                 ) : (
                                     <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
                                         <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
