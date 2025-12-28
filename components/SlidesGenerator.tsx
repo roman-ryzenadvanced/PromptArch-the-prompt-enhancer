@@ -146,6 +146,7 @@ export default function SlidesGenerator() {
     const slideContainerRef = useRef<HTMLDivElement>(null);
     const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const slideFrameRef = useRef<HTMLIFrameElement>(null);
 
     const selectedModel = selectedModels[selectedProvider];
     const models = availableModels[selectedProvider] || modelAdapter.getAvailableModels(selectedProvider);
@@ -390,6 +391,31 @@ export default function SlidesGenerator() {
             console.error("Failed to parse slides:", e);
         }
         return null;
+    };
+
+    const buildSlideDoc = (html: string): string => {
+        const normalized = (html || "").trim();
+        if (!normalized) return "";
+        const isFullDoc = /^<!DOCTYPE/i.test(normalized) || /^<html/i.test(normalized);
+        if (isFullDoc) {
+            return normalized;
+        }
+        return `
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                  html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+                  body { background: transparent; }
+                </style>
+              </head>
+              <body>
+                ${normalized}
+              </body>
+            </html>
+        `;
     };
 
     const generateAnimatedHtml = (slide: any, index: number): string => {
@@ -1202,11 +1228,12 @@ export default function SlidesGenerator() {
                                 ref={slideContainerRef}
                                 className="relative aspect-video rounded-lg overflow-hidden border bg-slate-900 shadow-2xl"
                             >
-                                <div
-                                    className="absolute inset-0"
-                                    dangerouslySetInnerHTML={{
-                                        __html: slidesPresentation.slides[currentSlide]?.htmlContent || ""
-                                    }}
+                                <iframe
+                                    ref={slideFrameRef}
+                                    title="Slide Preview"
+                                    className="absolute inset-0 w-full h-full border-none"
+                                    sandbox="allow-scripts"
+                                    srcDoc={buildSlideDoc(slidesPresentation.slides[currentSlide]?.htmlContent || "")}
                                 />
 
                                 {/* Navigation Arrows */}
