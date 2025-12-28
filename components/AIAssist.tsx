@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import useStore from "@/lib/store";
 import { translations } from "@/lib/i18n/translations";
 import modelAdapter from "@/lib/services/adapter-instance";
+import { safeJsonFetch } from "@/lib/safeJsonFetch";
 
 // --- Types ---
 
@@ -346,15 +347,34 @@ export default function AIAssist() {
 
         try {
             // First, get the plan orchestrator prompt from our new API
-            const apiRes = await fetch("/api/ai-assist", {
+            type AiAssistApiResponse = {
+                prompt?: string;
+                step?: string;
+                requestId?: string;
+                success?: boolean;
+                error?: string;
+            };
+
+            const apiResult = await safeJsonFetch<AiAssistApiResponse>("/api/ai-assist", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     request: finalInput,
                     step: assistStep === "plan" ? "generate" : "plan",
                     plan: aiPlan
                 }),
             });
-            const { prompt } = await apiRes.json();
+
+            if (!apiResult.ok) {
+                console.error("AI Assist API failed:", apiResult.error);
+                throw new Error(apiResult.error.message);
+            }
+
+            if (apiResult.data.error) {
+                throw new Error(apiResult.data.error);
+            }
+
+            const prompt = apiResult.data.prompt ?? "";
 
             let accumulated = "";
             let lastParsedPreview: PreviewData | null = null;
