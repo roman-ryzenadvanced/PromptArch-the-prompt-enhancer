@@ -433,7 +433,7 @@ export default function AIAssist() {
     const [currentAgent, setCurrentAgent] = useState(activeTab?.currentAgent || "general");
     const [previewData, setPreviewData] = useState<PreviewData | null>(activeTab?.previewData || null);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
-    const [showCanvas, setShowCanvas] = useState(!!activeTab?.previewData);
+    const [showCanvas, setShowCanvas] = useState(activeTab?.showCanvas ?? !!activeTab?.previewData);
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
     const [abortController, setAbortController] = useState<AbortController | null>(null);
 
@@ -446,7 +446,7 @@ export default function AIAssist() {
         if (activeTab) {
             setCurrentAgent(activeTab.currentAgent || "general");
             setPreviewData(activeTab.previewData || null);
-            setShowCanvas(!!activeTab.previewData);
+            setShowCanvas(activeTab.showCanvas ?? !!activeTab.previewData);
             setViewMode("preview");
             setAssistStep("idle");
             setAiPlan(null);
@@ -603,7 +603,8 @@ export default function AIAssist() {
                         updateTabById(requestTabId, {
                             history: [...updatedHistory.slice(0, -1), lastMsg],
                             previewData: preview || undefined,
-                            currentAgent: agent
+                            currentAgent: agent,
+                            showCanvas: !!preview
                         });
                     },
                     signal: controller.signal
@@ -649,7 +650,8 @@ export default function AIAssist() {
         updateActiveTab({
             history: [],
             previewData: null,
-            currentAgent: "general"
+            currentAgent: "general",
+            showCanvas: false
         });
         setPreviewData(null);
         setShowCanvas(false);
@@ -1000,7 +1002,10 @@ export default function AIAssist() {
                                         variant="ghost"
                                         size="icon"
                                         className="h-10 w-10 text-blue-200/70 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl"
-                                        onClick={() => setShowCanvas(false)}
+                                        onClick={() => {
+                                            setShowCanvas(false);
+                                            updateActiveTab({ showCanvas: false });
+                                        }}
                                     >
                                         <X className="h-5 w-5" />
                                     </Button>

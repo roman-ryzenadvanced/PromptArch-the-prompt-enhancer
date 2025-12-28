@@ -6,7 +6,8 @@ interface AIAssistTab {
   title: string;
   history: AIAssistMessage[];
   currentAgent: string;
-  previewData?: any | null; // PreviewData type from AIAssist
+  previewData?: any | null;
+  showCanvas?: boolean;
 }
 
 interface AppState {
