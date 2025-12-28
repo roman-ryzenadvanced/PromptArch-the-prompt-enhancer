@@ -128,7 +128,9 @@ const useStore = create<AppState>((set) => ({
       id: newId,
       title: `Chat ${state.aiAssistTabs.length + 1}`,
       history: [],
-      currentAgent: agent
+      currentAgent: agent,
+      previewData: null,
+      showCanvas: false
     };
     return {
       aiAssistTabs: [...state.aiAssistTabs, newTab],

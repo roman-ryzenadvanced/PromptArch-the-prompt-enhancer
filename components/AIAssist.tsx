@@ -425,7 +425,14 @@ export default function AIAssist() {
     } = useStore();
     const t = translations[language].aiAssist;
 
-    const activeTab = aiAssistTabs?.find(t => t.id === activeTabId) || aiAssistTabs?.[0] || { id: 'default', title: 'New Chat', history: [], currentAgent: 'general' };
+    const activeTab = aiAssistTabs?.find(t => t.id === activeTabId) || aiAssistTabs?.[0] || {
+        id: 'default',
+        title: 'New Chat',
+        history: [],
+        currentAgent: 'general',
+        previewData: null,
+        showCanvas: false
+    };
     const aiAssistHistory = activeTab?.history || [];
 
     const [input, setInput] = useState("");
@@ -433,7 +440,7 @@ export default function AIAssist() {
     const [currentAgent, setCurrentAgent] = useState(activeTab?.currentAgent || "general");
     const [previewData, setPreviewData] = useState<PreviewData | null>(activeTab?.previewData || null);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
-    const [showCanvas, setShowCanvas] = useState(activeTab?.showCanvas ?? !!activeTab?.previewData);
+    const [showCanvas, setShowCanvas] = useState(activeTab?.showCanvas === true);
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
     const [abortController, setAbortController] = useState<AbortController | null>(null);
 
@@ -443,16 +450,18 @@ export default function AIAssist() {
 
     // Sync local state when tab changes - FULL ISOLATION
     useEffect(() => {
-        if (activeTab) {
-            setCurrentAgent(activeTab.currentAgent || "general");
-            setPreviewData(activeTab.previewData || null);
-            setShowCanvas(activeTab.showCanvas ?? !!activeTab.previewData);
-            setViewMode("preview");
-            setAssistStep("idle");
-            setAiPlan(null);
-            setInput("");
-            setIsProcessing(false);
-        }
+        // Explicitly reset ALL canvas-related state based on the tab's data
+        const tabPreview = activeTab?.previewData || null;
+        const tabShowCanvas = activeTab?.showCanvas === true; // Strict check
+
+        setCurrentAgent(activeTab?.currentAgent || "general");
+        setPreviewData(tabPreview);
+        setShowCanvas(tabShowCanvas);
+        setViewMode("preview");
+        setAssistStep("idle");
+        setAiPlan(null);
+        setInput("");
+        setIsProcessing(false);
     }, [activeTabId]);
 
     const [status, setStatus] = useState<string | null>(null);
