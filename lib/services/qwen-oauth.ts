@@ -1114,11 +1114,7 @@ Perform analysis based on provided instructions.`,
 
   getAvailableModels(): string[] {
     return [
-      "qwen2.5-coder-32b-instruct",
-      "qwen2.5-coder-7b-instruct",
-      "qwen-plus",
-      "qwen-turbo",
-      "qwen-max",
+      "coder-model",
     ];
   }
 }
