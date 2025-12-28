@@ -1140,6 +1140,7 @@ export default function SlidesGenerator() {
                                         onChange={(e) => setSlideCount(parseInt(e.target.value))}
                                         className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     >
+                                        <option value={0}>{t.sameAsSource}</option>
                                         {[5, 8, 10, 12, 15, 20, 25, 30].map((n) => (
                                             <option key={n} value={n}>{n} slides</option>
                                         ))}

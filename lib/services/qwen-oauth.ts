@@ -732,7 +732,7 @@ AUDIENCE STYLE: ${audienceStyle}
 ${organization ? `ORGANIZATION BRANDING: ${organization}` : ""}
 
 REQUIREMENTS:
-- Create EXACTLY ${slideCount} slides
+- ${slideCount > 0 ? `Create EXACTLY ${slideCount} slides` : "Maintain the exact number of slides/pages from the provided source presentation/document context. If no source file is provided, generate 10 slides by default."}
 - ALL content in ${language}
 - Each slide MUST have complete htmlContent with inline <style> tags
 - Use animation-delay for staggered reveal effects
