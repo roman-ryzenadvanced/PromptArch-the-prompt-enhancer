@@ -52,15 +52,26 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
             : data;
 
         // Check if the content is a full HTML document or a fragment
-        const isFullDocument = normalized.trim().startsWith("<!DOCTYPE") || normalized.trim().startsWith("<html");
+        const trimmed = normalized.trim();
+        const isFullDocument = /^<!DOCTYPE/i.test(trimmed) || /^<html/i.test(trimmed);
+        const hasHeadTag = /<head[\s>]/i.test(normalized);
 
         let doc: string;
         if (isFullDocument) {
             // If it's a full document, inject Tailwind CSS but keep the structure
-            doc = normalized.replace(/<head>/i, `<head>
-                <script src="https://cdn.tailwindcss.com"></script>
-                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
-            `);
+            if (hasHeadTag) {
+                doc = normalized.replace(/<head>/i, `<head>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+                `);
+            } else {
+                doc = normalized.replace(/<html[^>]*>/i, (match) => `${match}
+                    <head>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+                    </head>
+                `);
+            }
         } else {
             // Wrap fragments in a styled container
             doc = `
@@ -117,8 +128,8 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                 sandbox="allow-scripts"
             />
             {isStreaming && (
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500/20 overflow-hidden">
-                    <div className="h-full bg-emerald-500 animate-[loading_1.5s_infinite]" />
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500/20 overflow-hidden">
+                    <div className="h-full bg-blue-500 animate-[loading_1.5s_infinite]" />
                 </div>
             )}
             <style jsx>{`
@@ -205,9 +216,25 @@ function parseStreamingContent(text: string) {
     }
 
     if (preview) {
-        const isHtmlLike = ["web", "app", "design", "html", "ui"].includes(preview.type) || preview.language === "html";
+        const htmlSignal = preview.data.toLowerCase().includes("<!doctype") || preview.data.toLowerCase().includes("<html");
+        const isHtmlLike = ["web", "app", "design", "html", "ui"].includes(preview.type) || preview.language === "html" || htmlSignal;
+        if (htmlSignal && preview.type === "code") {
+            preview.type = "web";
+        }
         if (isHtmlLike) {
             preview.data = decodeHtml(stripFences(preview.data));
+        }
+    }
+
+    if (!preview) {
+        const htmlDoc = text.match(/<!doctype\s+html[\s\S]*$/i) || text.match(/<html[\s\S]*$/i);
+        if (htmlDoc) {
+            preview = {
+                type: "web",
+                language: "html",
+                data: decodeHtml(stripFences(htmlDoc[0])),
+                isStreaming: false
+            };
         }
     }
 
@@ -241,12 +268,14 @@ export default function AIAssist() {
     const [abortController, setAbortController] = useState<AbortController | null>(null);
 
     const scrollRef = useRef<HTMLDivElement>(null);
-    const canRenderPreview = previewData
-        ? ["web", "app", "design", "html", "ui"].includes(previewData.type)
-        || previewData.data.includes("<")
-        || previewData.language === "html"
-        || (previewData.data.includes("&lt;") && previewData.data.includes("&gt;"))
-        : false;
+    const isPreviewRenderable = (preview?: PreviewData | null) => {
+        if (!preview) return false;
+        return ["web", "app", "design", "html", "ui"].includes(preview.type)
+            || preview.language === "html"
+            || preview.data.includes("<")
+            || (preview.data.includes("&lt;") && preview.data.includes("&gt;"));
+    };
+    const canRenderPreview = isPreviewRenderable(previewData);
 
     // Auto-scroll logic
     useEffect(() => {
@@ -350,6 +379,35 @@ export default function AIAssist() {
             }
         } catch (error) {
             console.error("Assist error:", error);
+            try {
+                const fallback = await modelAdapter.generateAIAssist(
+                    { messages: newHistory, currentAgent }
+                );
+                if (fallback.success && fallback.data) {
+                    const { chatDisplay, preview, agent } = parseStreamingContent(fallback.data);
+                    if (preview) {
+                        setPreviewData(preview);
+                        setShowCanvas(true);
+                        setViewMode(isPreviewRenderable(preview) ? "preview" : "code");
+                    }
+                    setAIAssistHistory(prev => {
+                        const last = prev[prev.length - 1];
+                        const nextAgent = agent || currentAgent;
+                        if (last && last.role === "assistant") {
+                            return [...prev.slice(0, -1), {
+                                ...last,
+                                content: chatDisplay || fallback.data,
+                                agent: nextAgent,
+                                preview: preview ? { type: preview.type, data: preview.data, language: preview.language } : undefined
+                            } as AIAssistMessage];
+                        }
+                        return prev;
+                    });
+                    return;
+                }
+            } catch (fallbackError) {
+                console.error("Assist fallback error:", fallbackError);
+            }
             setAIAssistHistory(prev => {
                 const last = prev[prev.length - 1];
                 const message = error instanceof Error ? error.message : "AI Assist failed";
@@ -385,19 +443,19 @@ export default function AIAssist() {
                 "flex flex-col h-full transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)",
                 showCanvas ? "w-full lg:w-2/5 lg:min-w-[400px]" : "w-full max-w-4xl mx-auto"
             )}>
-                <Card className="flex-1 flex flex-col border border-emerald-100/60 dark:border-emerald-950/60 shadow-[0_18px_50px_rgba(15,23,42,0.15)] bg-[#f8f5ef]/80 dark:bg-[#0b1414]/80 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
+                <Card className="flex-1 flex flex-col border border-blue-100/60 dark:border-blue-950/60 shadow-[0_18px_50px_rgba(15,23,42,0.15)] bg-[#f8f5ef]/80 dark:bg-[#0b1414]/80 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
                     {/* Header */}
-                    <div className="px-6 py-5 border-b border-emerald-100/60 dark:border-emerald-950/40 flex items-center justify-between shrink-0 bg-white/60 dark:bg-[#0b1414]/60 backdrop-blur-md">
+                    <div className="px-6 py-5 border-b border-blue-100/60 dark:border-blue-950/40 flex items-center justify-between shrink-0 bg-white/60 dark:bg-[#0b1414]/60 backdrop-blur-md">
                         <div className="flex items-center gap-4">
                             <div className="relative">
-                                <div className="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-emerald-500/20">
+                                <div className="p-2.5 bg-gradient-to-tr from-blue-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
                                     <MessageSquare className="h-5 w-5" />
                                 </div>
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-white dark:border-[#0b1414] animate-pulse" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-slate-900 dark:text-emerald-50 tracking-tight">{t.title}</h2>
-                                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-700/70 dark:text-emerald-200/70">
+                                <h2 className="text-xl font-black text-slate-900 dark:text-blue-50 tracking-tight">{t.title}</h2>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-blue-700/70 dark:text-blue-200/70">
                                     Agent {currentAgent}
                                 </p>
                             </div>
@@ -407,7 +465,7 @@ export default function AIAssist() {
                             <select
                                 value={selectedModels[selectedProvider]}
                                 onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
-                                className="text-[11px] font-black h-9 px-3 rounded-xl border-emerald-100 dark:border-emerald-900 bg-white/80 dark:bg-[#0b1414]/80 focus:ring-2 focus:ring-emerald-400/40 transition-all outline-none"
+                                className="text-[11px] font-black h-9 px-3 rounded-xl border-blue-100 dark:border-blue-900 bg-white/80 dark:bg-[#0b1414]/80 focus:ring-2 focus:ring-blue-400/40 transition-all outline-none"
                             >
                                 {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
@@ -415,7 +473,7 @@ export default function AIAssist() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setShowCanvas((prev) => !prev)}
-                                className="h-9 w-9 text-emerald-700 hover:text-emerald-950 hover:bg-emerald-100 dark:text-emerald-200 dark:hover:text-white dark:hover:bg-emerald-900/40 rounded-xl transition-colors"
+                                className="h-9 w-9 text-blue-700 hover:text-blue-950 hover:bg-blue-100 dark:text-blue-200 dark:hover:text-white dark:hover:bg-blue-900/40 rounded-xl transition-colors"
                                 disabled={!previewData}
                             >
                                 <LayoutPanelLeft className="h-4 w-4" />
@@ -448,8 +506,8 @@ export default function AIAssist() {
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-widest border transition-all",
                                         currentAgent === agent
-                                            ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                                            : "bg-white/70 text-emerald-700 border-emerald-100 hover:border-emerald-300 dark:bg-[#0f1a1a] dark:text-emerald-200 dark:border-emerald-900"
+                                            ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/30"
+                                            : "bg-white/70 text-blue-700 border-blue-100 hover:border-blue-300 dark:bg-[#0f1a1a] dark:text-blue-200 dark:border-blue-900"
                                     )}
                                 >
                                     {icon}
@@ -458,15 +516,15 @@ export default function AIAssist() {
                             ))}
                         </div>
                     </div>
-                    <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-8 scrollbar-thin scrollbar-thumb-emerald-200/60 dark:scrollbar-thumb-emerald-900">
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-8 scrollbar-thin scrollbar-thumb-blue-200/60 dark:scrollbar-thumb-blue-900">
                         {aiAssistHistory.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center text-center py-20 animate-in zoom-in-95 duration-500">
-                                <div className="p-8 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full mb-8 relative">
-                                    <Ghost className="h-20 w-20 text-emerald-400/40 animate-bounce duration-[3s]" />
-                                    <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full" />
+                                <div className="p-8 bg-blue-500/5 dark:bg-blue-500/10 rounded-full mb-8 relative">
+                                    <Ghost className="h-20 w-20 text-blue-400/40 animate-bounce duration-[3s]" />
+                                    <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full" />
                                 </div>
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-emerald-50 mb-3 tracking-tighter">Studio-grade AI Assist</h3>
-                                <p className="max-w-xs text-sm font-medium text-slate-600 dark:text-emerald-100/70 leading-relaxed">
+                                <h3 className="text-3xl font-black text-slate-900 dark:text-blue-50 mb-3 tracking-tighter">Studio-grade AI Assist</h3>
+                                <p className="max-w-xs text-sm font-medium text-slate-600 dark:text-blue-100/70 leading-relaxed">
                                     Switch agents, stream answers, and light up the canvas with live artifacts.
                                 </p>
                                 <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -478,7 +536,7 @@ export default function AIAssist() {
                                         <Badge
                                             key={chip.label}
                                             variant="secondary"
-                                            className="px-4 py-2 rounded-full cursor-pointer hover:bg-emerald-600 hover:text-white transition-all text-[11px] font-black border-transparent shadow-sm"
+                                            className="px-4 py-2 rounded-full cursor-pointer hover:bg-blue-600 hover:text-white transition-all text-[11px] font-black border-transparent shadow-sm"
                                             onClick={() => {
                                                 setCurrentAgent(chip.agent);
                                                 setInput(chip.label);
@@ -499,8 +557,8 @@ export default function AIAssist() {
                                 <div className={cn(
                                     "max-w-[90%] p-5 rounded-3xl relative transition-all duration-300",
                                     msg.role === "user"
-                                        ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-tr-none shadow-[0_10px_24px_rgba(16,185,129,0.25)]"
-                                        : "bg-white dark:bg-[#0f1a1a]/80 border border-emerald-100/70 dark:border-emerald-900/50 text-slate-700 dark:text-emerald-50 rounded-tl-none shadow-sm backdrop-blur-xl"
+                                        ? "bg-gradient-to-br from-blue-600 to-teal-600 text-white rounded-tr-none shadow-[0_10px_24px_rgba(16,185,129,0.25)]"
+                                        : "bg-white dark:bg-[#0f1a1a]/80 border border-blue-100/70 dark:border-blue-900/50 text-slate-700 dark:text-blue-50 rounded-tl-none shadow-sm backdrop-blur-xl"
                                 )}>
                                     <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => navigator.clipboard.writeText(msg.content)} className="text-inherit opacity-40 hover:opacity-100">
@@ -518,11 +576,11 @@ export default function AIAssist() {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            className="mt-5 w-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200/60 dark:border-emerald-800 text-emerald-700 dark:text-emerald-200 font-black uppercase tracking-[0.1em] text-[10px] rounded-2xl h-11 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                            className="mt-5 w-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-200 font-black uppercase tracking-[0.1em] text-[10px] rounded-2xl h-11 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                             onClick={() => {
                                                 const nextPreview = { ...msg.preview!, isStreaming: false };
                                                 setPreviewData(nextPreview);
-                                                setViewMode("preview");
+                                                setViewMode(isPreviewRenderable(nextPreview) ? "preview" : "code");
                                                 setShowCanvas(true);
                                             }}
                                         >
@@ -540,15 +598,15 @@ export default function AIAssist() {
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-6 bg-white/70 dark:bg-[#0b1414]/60 border-t border-emerald-100/60 dark:border-emerald-950/40 shrink-0">
+                    <div className="p-6 bg-white/70 dark:bg-[#0b1414]/60 border-t border-blue-100/60 dark:border-blue-950/40 shrink-0">
                         <form onSubmit={handleSendMessage} className="relative group">
-                            <div className="absolute inset-0 bg-emerald-500/5 rounded-[1.5rem] blur-xl group-focus-within:bg-emerald-500/10 transition-all" />
+                            <div className="absolute inset-0 bg-blue-500/5 rounded-[1.5rem] blur-xl group-focus-within:bg-blue-500/10 transition-all" />
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder={t.placeholder}
                                 disabled={isProcessing}
-                                className="relative pr-24 py-7 rounded-[1.5rem] bg-white/90 dark:bg-[#0f1a1a]/70 border-emerald-200/80 dark:border-emerald-900/80 shadow-lg shadow-emerald-500/5 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium text-base h-16 outline-none"
+                                className="relative pr-24 py-7 rounded-[1.5rem] bg-white/90 dark:bg-[#0f1a1a]/70 border-blue-200/80 dark:border-blue-900/80 shadow-lg shadow-blue-500/5 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-base h-16 outline-none"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                 {isProcessing ? (
@@ -564,14 +622,14 @@ export default function AIAssist() {
                                     <Button
                                         type="submit"
                                         disabled={!input.trim()}
-                                        className="h-11 w-11 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-600/30 hover:scale-105 active:scale-95 transition-all p-0"
+                                        className="h-11 w-11 rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/30 hover:scale-105 active:scale-95 transition-all p-0"
                                     >
                                         <Send className="h-5 w-5" />
                                     </Button>
                                 )}
                             </div>
                         </form>
-                        <div className="flex items-center justify-between mt-4 text-[11px] font-semibold text-emerald-700/70 dark:text-emerald-100/70">
+                        <div className="flex items-center justify-between mt-4 text-[11px] font-semibold text-blue-700/70 dark:text-blue-100/70">
                             <span className="flex items-center gap-2">
                                 <Wand2 className="h-3.5 w-3.5" />
                                 Ask for a design, code, or research artifact.
@@ -588,24 +646,24 @@ export default function AIAssist() {
             {/* --- Canvas Panel --- */}
             {showCanvas && (
                 <div className="flex-1 h-full min-w-0 animate-in slide-in-from-right-12 duration-700 cubic-bezier(0,0,0.2,1)">
-                    <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-emerald-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-                        <div className="px-6 py-5 border-b border-emerald-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
+                    <Card className="h-full flex flex-col bg-[#081010] rounded-[2.5rem] overflow-hidden border border-blue-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
+                        <div className="px-6 py-5 border-b border-blue-900/60 bg-[#0b1414]/70 backdrop-blur-2xl flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
-                                <div className="p-2.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                                    {viewMode === "preview" ? <Monitor className="h-5 w-5 text-emerald-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
+                                <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                                    {viewMode === "preview" ? <Monitor className="h-5 w-5 text-blue-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-black text-emerald-50 uppercase tracking-[0.2em]">{previewData?.type || "Live"} Canvas</h3>
-                                    <div className="flex bg-emerald-900/60 rounded-xl p-1 mt-2">
+                                    <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{previewData?.type || "Live"} Canvas</h3>
+                                    <div className="flex bg-blue-900/60 rounded-xl p-1 mt-2">
                                         <button
                                             onClick={() => setViewMode("preview")}
-                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "preview" ? "bg-emerald-500 text-white shadow-lg" : "text-emerald-300/60 hover:text-emerald-100")}
+                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "preview" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
                                         >
                                             Live Render
                                         </button>
                                         <button
                                             onClick={() => setViewMode("code")}
-                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "code" ? "bg-emerald-500 text-white shadow-lg" : "text-emerald-300/60 hover:text-emerald-100")}
+                                            className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "code" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
                                         >
                                             Inspect Code
                                         </button>
@@ -616,7 +674,7 @@ export default function AIAssist() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-10 w-10 text-emerald-200/70 hover:text-white hover:bg-emerald-900 rounded-2xl"
+                                    className="h-10 w-10 text-blue-200/70 hover:text-white hover:bg-blue-900 rounded-2xl"
                                     onClick={() => navigator.clipboard.writeText(previewData?.data || "")}
                                 >
                                     <Copy className="h-4 w-4" />
@@ -624,7 +682,7 @@ export default function AIAssist() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-10 w-10 text-emerald-200/70 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl"
+                                    className="h-10 w-10 text-blue-200/70 hover:text-rose-400 hover:bg-rose-500/10 rounded-2xl"
                                     onClick={() => setShowCanvas(false)}
                                 >
                                     <X className="h-5 w-5" />
@@ -640,22 +698,22 @@ export default function AIAssist() {
                                     isStreaming={!!previewData.isStreaming}
                                 />
                             ) : (
-                                <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-emerald-900">
-                                    <pre className="text-emerald-300/90 leading-relaxed selection:bg-emerald-500/20 whitespace-pre-wrap">
+                                <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
+                                    <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
                                         <code>{previewData?.data}</code>
                                     </pre>
                                 </div>
                             )}
                         </div>
 
-                        <div className="px-6 py-3 border-t border-emerald-900/40 bg-[#0b1414]/70 flex items-center justify-between">
+                        <div className="px-6 py-3 border-t border-blue-900/40 bg-[#0b1414]/70 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className={cn("w-2 h-2 rounded-full", previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
-                                <span className="text-[10px] text-emerald-200/60 font-bold uppercase tracking-widest leading-none">
+                                <div className={cn("w-2 h-2 rounded-full", previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
+                                <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
                                     {previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
                                 </span>
                             </div>
-                            <Badge variant="outline" className="text-[9px] border-emerald-900 text-emerald-200/50 font-black">
+                            <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">
                                 {previewData?.language?.toUpperCase()} UTF-8
                             </Badge>
                         </div>
@@ -674,4 +732,5 @@ export default function AIAssist() {
         </div>
     );
 }
+
 

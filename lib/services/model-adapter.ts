@@ -295,21 +295,35 @@ export class ModelAdapter {
     const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
     const providers: ModelProvider[] = provider ? [provider] : fallback;
 
-    const activeProvider = providers.find((candidate) => {
+    let lastError: string | null = null;
+
+    for (const candidate of providers) {
       const service = this.getService(candidate);
-      return this.isProviderAuthenticated(candidate) && !!service?.generateAIAssistStream;
-    });
-    if (!activeProvider) {
-      return { success: false, error: "No authenticated providers available for streaming" };
+      if (!service?.generateAIAssistStream) {
+        continue;
+      }
+      if (!this.isProviderAuthenticated(candidate)) {
+        continue;
+      }
+
+      try {
+        const response = await service.generateAIAssistStream(options, model);
+        if (response.success) {
+          return response;
+        }
+        if (response.error) {
+          lastError = response.error;
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        lastError = errorMessage || lastError;
+      }
     }
 
-    const service = this.getService(activeProvider);
-
-    if (!service || !service.generateAIAssistStream) {
-      return { success: false, error: "Streaming not supported for this provider" };
-    }
-
-    return await service.generateAIAssistStream(options, model);
+    return {
+      success: false,
+      error: lastError || "No authenticated providers available for streaming",
+    };
   }
 
 
