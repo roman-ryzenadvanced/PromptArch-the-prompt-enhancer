@@ -144,12 +144,25 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
 
 LiveCanvas.displayName = "LiveCanvas";
 
+const ThinkingIndicator = () => (
+    <div className="flex items-center gap-1.5 px-4 py-3 bg-white dark:bg-[#0f1a1a]/80 border border-blue-100/70 dark:border-blue-900/50 rounded-2xl rounded-tl-none shadow-sm backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
+        </div>
+        <span className="text-[10px] font-black text-blue-700/60 dark:text-blue-200/60 uppercase tracking-widest ml-2">Neural Link Thinking...</span>
+    </div>
+);
+
 // --- Helper Functions ---
 
 function parseStreamingContent(text: string) {
     let agent = "general";
     let preview: PreviewData | null = null;
     let chatDisplay = text.trim();
+    let status: string | null = null;
+
     const decodeHtml = (value: string) => value
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
@@ -160,27 +173,6 @@ function parseStreamingContent(text: string) {
         const fenced = value.match(/```(?:html|css|javascript|tsx|jsx|md|markdown)?\s*([\s\S]*?)```/i);
         return fenced ? fenced[1].trim() : value.trim();
     };
-
-    const jsonCandidate = text.trim();
-    if (jsonCandidate.startsWith("{") && jsonCandidate.endsWith("}")) {
-        try {
-            const parsed = JSON.parse(jsonCandidate);
-            if (parsed?.agent) agent = parsed.agent;
-            if (parsed?.preview?.data) {
-                preview = {
-                    type: parsed.preview.type || "web",
-                    language: parsed.preview.language || "text",
-                    data: parsed.preview.data,
-                    isStreaming: !text.includes("[/PREVIEW]")
-                };
-            }
-            if (typeof parsed?.content === "string") {
-                chatDisplay = parsed.content.trim();
-            }
-        } catch {
-            // Ignore malformed JSON during stream
-        }
-    }
 
     const agentMatch = text.match(/\[AGENT:([\w-]+)\]/);
     if (agentMatch) agent = agentMatch[1];
@@ -193,14 +185,17 @@ function parseStreamingContent(text: string) {
             data: previewMatch[3].trim(),
             isStreaming: !text.includes("[/PREVIEW]")
         };
+        if (preview.isStreaming) {
+            status = `Generating ${preview.type} artifact...`;
+        }
     }
 
-    if (/\[AGENT:|\[PREVIEW:/.test(text)) {
-        chatDisplay = text
-            .replace(/\[AGENT:[\w-]+\]/g, "")
-            .replace(/\[PREVIEW:[\w-]+:?[\w-]+?\][\s\S]*?(?:\[\/PREVIEW\]|$)/g, "")
-            .trim();
-    }
+    // Hide tags and partial tags from display
+    chatDisplay = text
+        .replace(/\[AGENT:[\w-]+\]/g, "")
+        .replace(/\[PREVIEW:[\w-]+:?[\w-]+?\][\s\S]*?(?:\[\/PREVIEW\]|$)/g, "")
+        .replace(/\[(AGENT|PREVIEW)?(?::[\w-]*)?$/g, "") // Hide partial tags at the end
+        .trim();
 
     if (!preview) {
         const fenced = text.match(/```(html|css|javascript|tsx|jsx|md|markdown)\s*([\s\S]*?)```/i);
@@ -238,11 +233,11 @@ function parseStreamingContent(text: string) {
         }
     }
 
-    if (!chatDisplay && preview) {
+    if (!chatDisplay && preview && preview.isStreaming) {
         chatDisplay = `Rendering live artifact...`;
     }
 
-    return { chatDisplay, preview, agent };
+    return { chatDisplay, preview, agent, status };
 }
 
 // --- Main Component ---
@@ -270,6 +265,8 @@ export default function AIAssist() {
     // Agentic States
     const [assistStep, setAssistStep] = useState<"idle" | "plan" | "generating" | "preview">("idle");
     const [aiPlan, setAiPlan] = useState<any>(null);
+
+    const [status, setStatus] = useState<string | null>(null);
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const isPreviewRenderable = (preview?: PreviewData | null) => {
@@ -354,7 +351,9 @@ export default function AIAssist() {
                     currentAgent,
                     onChunk: (chunk) => {
                         accumulated += chunk;
-                        const { chatDisplay, preview, agent } = parseStreamingContent(accumulated);
+                        const { chatDisplay, preview, agent, status: streamStatus } = parseStreamingContent(accumulated);
+
+                        if (streamStatus) setStatus(streamStatus);
 
                         // If we're in planning mode and see JSON, try to parse the plan
                         if (assistStep === "plan" || assistStep === "idle") {
@@ -415,6 +414,7 @@ export default function AIAssist() {
         } finally {
             setIsProcessing(false);
             setAbortController(null);
+            setStatus(null);
         }
     };
 
@@ -627,6 +627,19 @@ export default function AIAssist() {
                                         </Button>
                                     )}
                                 </div>
+
+                                {msg.role === "assistant" && isProcessing && i === aiAssistHistory.length - 1 && status && (
+                                    <div className="flex items-center gap-3 px-4 py-2 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 rounded-2xl animate-in slide-in-from-left-2 duration-300">
+                                        <div className="relative h-2 w-2">
+                                            <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping" />
+                                            <div className="absolute inset-0 bg-blue-500 rounded-full" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.15em]">
+                                            {status}
+                                        </span>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-2 px-2">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
                                         {msg.role === "assistant" ? `Agent ${msg.agent || 'core'}` : 'Explorer'}
@@ -634,6 +647,12 @@ export default function AIAssist() {
                                 </div>
                             </div>
                         ))}
+
+                        {isProcessing && aiAssistHistory[aiAssistHistory.length - 1]?.role === "user" && (
+                            <div className="flex flex-col items-start gap-3 animate-in fade-in duration-300">
+                                <ThinkingIndicator />
+                            </div>
+                        )}
                     </div>
 
                     {/* Input Area */}
