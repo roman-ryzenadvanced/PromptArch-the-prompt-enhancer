@@ -157,8 +157,8 @@ const ThinkingIndicator = () => (
 
 // --- Helper Functions ---
 
-function parseStreamingContent(text: string) {
-    let agent = "general";
+function parseStreamingContent(text: string, currentAgent: string) {
+    let agent = currentAgent;
     let preview: PreviewData | null = null;
     let chatDisplay = text.trim();
     let status: string | null = null;
@@ -351,7 +351,7 @@ export default function AIAssist() {
                     currentAgent,
                     onChunk: (chunk) => {
                         accumulated += chunk;
-                        const { chatDisplay, preview, agent, status: streamStatus } = parseStreamingContent(accumulated);
+                        const { chatDisplay, preview, agent, status: streamStatus } = parseStreamingContent(accumulated, currentAgent);
 
                         if (streamStatus) setStatus(streamStatus);
 
