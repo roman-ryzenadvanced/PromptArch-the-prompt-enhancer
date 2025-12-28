@@ -297,7 +297,7 @@ export interface AIAssistMessage {
   content: string;
   agent?: string;
   preview?: {
-    type: "code" | "design" | "content" | "seo";
+    type: string;
     data: string;
     language?: string;
   };

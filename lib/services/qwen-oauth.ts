@@ -1006,6 +1006,107 @@ Perform analysis based on provided instructions.`,
     return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
   }
 
+  async generateAIAssistStream(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+      onChunk: (chunk: string) => void;
+      signal?: AbortSignal;
+    },
+    model?: string
+  ): Promise<APIResponse<void>> {
+    try {
+      // ... existing prompt logic ...
+      const systemPrompt = `You are "AI Assist". 
+      Your goal is to provide intelligent support with a "Canvas" experience.
+      
+      CANVAS MODE (CRITICAL):
+      When building or designing, you MUST use the [PREVIEW] tag.
+      Inside [PREVIEW], output ONLY the actual code (HTML/Tailwind etc).
+      The user wants to see it WORKING in the Canvas immediately.
+
+      STRICT OUTPUT FORMAT:
+      [AGENT:id] - Optional: content, seo, smm, pm, code, design, web, app.
+      [PREVIEW:type:language]
+      ACTUAL_FUNCTIONAL_CODE
+      [/PREVIEW]
+      Optional brief text.`;
+
+      const messages: ChatMessage[] = [
+        { role: "system", content: systemPrompt },
+        ...options.messages.map(m => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content
+        }))
+      ];
+
+      const endpoint = "/tools/promptarch/api/qwen/chat";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      const tokenInfo = this.getTokenInfo();
+      if (tokenInfo?.accessToken) {
+        headers["Authorization"] = `Bearer ${tokenInfo.accessToken}`;
+      } else if (this.apiKey) {
+        headers["Authorization"] = `Bearer ${this.apiKey}`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        signal: options.signal,
+        body: JSON.stringify({
+          model: model || this.getAvailableModels()[0],
+          messages,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Stream request failed");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || !trimmedLine.startsWith("data:")) continue;
+
+          const dataStr = trimmedLine.replace(/^data:\s*/, "");
+          if (dataStr === "[DONE]") break;
+
+          try {
+            const data = JSON.parse(dataStr);
+            if (data.choices?.[0]?.delta?.content) {
+              options.onChunk(data.choices[0].delta.content);
+            }
+          } catch (e) {
+            // Ignore parse errors for incomplete lines
+          }
+        }
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Stream failed" };
+    }
+  }
+
   async listModels(): Promise<APIResponse<string[]>> {
     const models = [
       "coder-model",

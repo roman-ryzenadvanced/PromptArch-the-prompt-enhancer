@@ -44,23 +44,27 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    const payload = await response.text();
     if (!response.ok) {
+      const payload = await response.text();
       return NextResponse.json(
         { error: payload || response.statusText || "Qwen chat failed" },
         { status: response.status }
       );
     }
 
-    try {
-      const data = JSON.parse(payload);
-      return NextResponse.json(data, { status: response.status });
-    } catch {
-      return NextResponse.json(
-        { error: payload || "Unexpected response format" },
-        { status: 502 }
-      );
+    // Handle streaming
+    if (stream) {
+      return new Response(response.body, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
     }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
       { error: "internal_server_error", message: error instanceof Error ? error.message : "Qwen chat failed" },

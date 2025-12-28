@@ -269,6 +269,35 @@ export class ModelAdapter {
     return this.callWithFallback((service) => service.generateAIAssist(options, model), providers);
   }
 
+  async generateAIAssistStream(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+      onChunk: (chunk: string) => void;
+      signal?: AbortSignal;
+    },
+    provider?: ModelProvider,
+    model?: string
+  ): Promise<APIResponse<void>> {
+    const fallback = this.buildFallbackProviders(this.preferredProvider, "qwen", "ollama", "zai");
+    const providers: ModelProvider[] = provider ? [provider] : fallback;
+
+    // For now we don't handle fallback for streaming strictly, just use first available
+    const activeProvider = providers[0];
+    let service: any;
+    switch (activeProvider) {
+      case "qwen": service = this.qwenService; break;
+      case "ollama": service = this.ollamaService; break;
+      case "zai": service = this.zaiService; break;
+    }
+
+    if (!service || !service.generateAIAssistStream) {
+      return { success: false, error: "Streaming not supported for this provider" };
+    }
+
+    return await service.generateAIAssistStream(options, model);
+  }
+
 
   async chatCompletion(
     messages: ChatMessage[],

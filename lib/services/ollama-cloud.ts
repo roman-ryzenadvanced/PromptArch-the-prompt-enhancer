@@ -730,6 +730,97 @@ Perform a DEEP 360° competitive intelligence analysis and generate 5-7 strategi
 
     return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
   }
+
+  async generateAIAssistStream(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+      onChunk: (chunk: string) => void;
+      signal?: AbortSignal;
+    },
+    model?: string
+  ): Promise<APIResponse<void>> {
+    try {
+      // ... existing prompt logic ...
+      const systemPrompt = `You are "AI Assist", the master orchestrator. 
+      Your goal is to provide intelligent conversational support and switch to specialized agents.
+      
+      CANVAS MODE (CRITICAL):
+      When the user asks to "build", "design", "create", or "write code", you MUST use the [PREVIEW] tag.
+      Inside [PREVIEW], output ONLY the actual functional code (HTML/Tailwind, Javascript, etc.).
+      Do NOT explain what the code does inside the bubble if you are generating a preview.
+      The user wants to see it WORKING in the Canvas immediately.
+
+      STRICT OUTPUT FORMAT:
+      [AGENT:id] - Optional: switch to content, seo, smm, pm, code, design, web, app.
+      [PREVIEW:type:language]
+      ACTUAL_FUNCTIONAL_CODE_OR_DATA
+      [/PREVIEW]
+      Optional conversational text (keep it brief).
+
+      Example for a mockup:
+      [AGENT:design]
+      [PREVIEW:design:html]
+      <div class="bg-blue-500 p-10">...</div>
+      [/PREVIEW]`;
+
+      const messages: ChatMessage[] = [
+        { role: "system", content: systemPrompt },
+        ...options.messages.map(m => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content
+        }))
+      ];
+
+      const response = await fetch(LOCAL_CHAT_URL, {
+        method: "POST",
+        headers: this.getHeaders({ "Content-Type": "application/json" }),
+        signal: options.signal,
+        body: JSON.stringify({
+          model: model || this.getAvailableModels()[0],
+          messages,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Stream request failed");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.message?.content) {
+              options.onChunk(data.message.content);
+            }
+          } catch (e) {
+            console.error("Error parsing stream line", e);
+          }
+        }
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Stream failed" };
+    }
+  }
 }
 
 export default OllamaCloudService;

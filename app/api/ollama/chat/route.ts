@@ -38,15 +38,27 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    const payload = await response.text();
     if (!response.ok) {
+      const payload = await response.text();
       return NextResponse.json(
         { error: "Ollama chat request failed", details: payload },
         { status: response.status }
       );
     }
 
-    return NextResponse.json(payload ? JSON.parse(payload) : {});
+    // If stream is requested, pipe the response body
+    if (body.stream) {
+      return new Response(response.body, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    const payload = await response.json();
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Ollama chat proxy failed", error);
     return NextResponse.json(

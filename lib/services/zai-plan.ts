@@ -799,6 +799,88 @@ MISSION: Perform a DEEP 360° competitive intelligence analysis and generate 5-7
 
     return await this.chatCompletion(chatMessages, model || this.getAvailableModels()[0]);
   }
+
+  async generateAIAssistStream(
+    options: {
+      messages: AIAssistMessage[];
+      currentAgent: string;
+      onChunk: (chunk: string) => void;
+      signal?: AbortSignal;
+    },
+    model?: string
+  ): Promise<APIResponse<void>> {
+    try {
+      if (!this.config.apiKey) {
+        throw new Error("API key is required.");
+      }
+
+      // ... existing prompt logic ...
+      const systemPrompt = `You are "AI Assist". 
+      Your goal is to provide a "Canvas" experience.
+
+      CANVAS MODE (CRITICAL):
+      When building or designing, you MUST use the [PREVIEW] tag.
+      Inside [PREVIEW], output ONLY the actual code (HTML/Tailwind etc).
+      The user wants to see it WORKING in the Canvas immediately.
+
+      STRICT OUTPUT FORMAT:
+      [AGENT:id] - Optional switch.
+      [PREVIEW:type:language]
+      ACTUAL_FUNCTIONAL_CODE
+      [/PREVIEW]
+      Optional brief text.`;
+
+      const messages: ChatMessage[] = [
+        { role: "system", content: systemPrompt },
+        ...options.messages.map(m => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content
+        }))
+      ];
+
+      const endpoint = this.config.codingEndpoint; // AI Assist often involves coding
+      const response = await fetch(`${endpoint}/chat/completions`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        signal: options.signal,
+        body: JSON.stringify({
+          model: model || this.getAvailableModels()[0],
+          messages,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Stream failed: ${response.statusText}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith("data:")) continue;
+          const dataStr = line.replace(/^data:\s*/, "");
+          if (dataStr === "[DONE]") break;
+          try {
+            const data = JSON.parse(dataStr);
+            const content = data.choices?.[0]?.delta?.content || data.output?.choices?.[0]?.delta?.content;
+            if (content) options.onChunk(content);
+          } catch (e) { }
+        }
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Stream failed" };
+    }
+  }
 }
 
 export default ZaiPlanService;
