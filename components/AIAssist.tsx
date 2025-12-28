@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, memo } from "react";
 import {
     MessageSquare, Send, Code2, Palette, Search,
     Trash2, Copy, Monitor, StopCircle, X, Zap, Ghost,
-    Wand2, LayoutPanelLeft, Play, Orbit
+    Wand2, LayoutPanelLeft, Play, Orbit, Plus
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -34,11 +34,62 @@ interface PreviewData {
  * A ultra-stable iframe wrapper that avoids hydration issues
  * and provides a WOW visual experience.
  */
-const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: string, isStreaming: boolean }) => {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+const BuildingArtifact = ({ type }: { type: string }) => {
+    const [progress, setProgress] = useState(0);
+    const steps = [
+        "Initializing neural links...",
+        "Scaffolding architecture...",
+        "Writing logic blocks...",
+        "Injecting dynamic modules...",
+        "Finalizing interactive layers..."
+    ];
+    const [currentStep, setCurrentStep] = useState(0);
 
     useEffect(() => {
-        if (!iframeRef.current || !data) return;
+        const interval = setInterval(() => {
+            setProgress(p => (p < 95 ? p + (100 - p) * 0.1 : p));
+            setCurrentStep(s => (s < steps.length - 1 ? s + 1 : s));
+        }, 2000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0b1414] text-white p-8 animate-in fade-in duration-500 rounded-b-2xl">
+            <div className="relative w-24 h-24 mb-10">
+                <div className="absolute inset-0 border-4 border-blue-500/10 rounded-full" />
+                <div className="absolute inset-0 border-4 border-blue-500 rounded-full animate-spin border-t-transparent" />
+                <Orbit className="absolute inset-0 m-auto h-12 w-12 text-blue-400 animate-pulse" />
+            </div>
+
+            <h3 className="text-2xl font-black uppercase tracking-[0.3em] mb-4 text-white drop-shadow-lg">
+                Building <span className="text-blue-500">{type}</span>
+            </h3>
+
+            <div className="w-full max-w-sm h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-10 backdrop-blur-sm border border-white/5">
+                <div className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
+            </div>
+
+            <div className="space-y-4 w-full max-w-xs">
+                {steps.map((step, idx) => (
+                    <div key={idx} className={`flex items-center gap-4 transition-all duration-500 ${idx <= currentStep ? 'opacity-100' : 'opacity-20'}`}>
+                        <div className={`h-2 w-2 rounded-full ${idx <= currentStep ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-700'}`} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                            {step}
+                        </span>
+                        {idx < currentStep && <Zap className="h-3.5 w-3.5 text-blue-400 animate-pulse ml-auto" />}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: string, isStreaming: boolean }) => {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [renderError, setRenderError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!iframeRef.current || !data || isStreaming) return;
+        setRenderError(null);
 
         // Decode HTML entities if present
         const isEncodedHtml = data.includes("&lt;") && data.includes("&gt;");
@@ -58,138 +109,160 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
         const isReactLike = normalized.includes("import React") || normalized.includes("useState") || normalized.includes("useEffect") || /<[A-Z][\s\S]*>/.test(normalized);
 
         let doc: string;
-        if (isFullDocument) {
-            // ... same as before but add React support if needed ...
-            const reactScripts = isReactLike ? `
-                <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-                <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            ` : "";
-
-            if (hasHeadTag) {
-                doc = normalized.replace(/<head>/i, `<head>
-                    ${reactScripts}
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
-                `);
-            } else {
-                doc = normalized.replace(/<html[^>]*>/i, (match) => `${match}
-                    <head>
-                        ${reactScripts}
-                        <script src="https://cdn.tailwindcss.com"></script>
-                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
-                    </head>
-                `);
-            }
-        } else if (isReactLike) {
-            // Specialized React Runner for fragments/components
-            const cleanedCode = normalized
-                .replace(/import\s+(?:React\s*,\s*)?{?([\s\S]*?)}?\s+from\s+['"]react['"];?/g, "const { $1 } = React;")
-                .replace(/import\s+React\s+from\s+['"]react['"];?/g, "/* React already global */")
-                .replace(/import\s+[\s\S]*?from\s+['"]lucide-react['"];?/g, "const { ...lucide } = window.lucide || {};")
-                .replace(/export\s+default\s+/g, "const MainComponent = ");
-
-            // Try to find the component name to render
-            const componentMatch = cleanedCode.match(/const\s+([A-Z]\w+)\s*=\s*\(\)\s*=>/);
-            const mainComponent = componentMatch ? componentMatch[1] : (cleanedCode.includes("MainComponent") ? "MainComponent" : null);
-
-            doc = `
-                <!DOCTYPE html>
-                <html class="dark">
-                  <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <script src="https://cdn.tailwindcss.com"></script>
+        try {
+            if (isFullDocument) {
+                // If it's a full document, inject Tailwind CSS but keep the structure
+                const reactScripts = isReactLike ? `
                     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
                     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
                     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-                    <script src="https://unpkg.com/lucide@latest"></script>
-                    <style>
-                       body { margin: 0; padding: 20px; font-family: sans-serif; background: #0b1414; color: white; }
-                       #root { min-height: 100vh; }
-                    </style>
-                  </head>
-                  <body>
-                    <div id="root"></div>
-                    <script type="text/babel">
-                        ${cleanedCode}
-                        
-                        ${mainComponent ? `
-                        const root = ReactDOM.createRoot(document.getElementById('root'));
-                        root.render(React.createElement(${mainComponent}));
-                        ` : `
-                        // No clear component found to mount, executing raw code
-                        `}
-                    </script>
-                  </body>
-                </html>
-            `;
-        } else {
-            // Wrap fragments in a styled container
-            doc = `
-                <!DOCTYPE html>
-                <html class="dark">
-                  <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <script>
-                      tailwind.config = {
-                        darkMode: 'class',
-                        theme: {
-                          extend: {
-                            colors: {
-                              primary: { 50: '#ecfdf3', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b', 950: '#022c22' }
+                ` : "";
+
+                if (hasHeadTag) {
+                    doc = normalized.replace(/<head>/i, `<head>
+                        ${reactScripts}
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+                    `);
+                } else {
+                    doc = normalized.replace(/<html[^>]*>/i, (match) => `${match}
+                        <head>
+                            ${reactScripts}
+                            <script src="https://cdn.tailwindcss.com"></script>
+                            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+                        </head>
+                    `);
+                }
+            } else if (isReactLike) {
+                // Specialized React Runner for fragments/components
+                const cleanedCode = normalized
+                    .replace(/import\s+(?:React\s*,\s*)?{?([\s\S]*?)}?\s+from\s+['"]react['"];?/g, "const { $1 } = React;")
+                    .replace(/import\s+React\s+from\s+['"]react['"];?/g, "/* React already global */")
+                    .replace(/import\s+[\s\S]*?from\s+['"]lucide-react['"];?/g, "const { ...lucide } = window.lucide || {};")
+                    .replace(/export\s+default\s+/g, "const MainComponent = ");
+
+                // Try to find the component name to render
+                const componentMatch = cleanedCode.match(/const\s+([A-Z]\w+)\s*=\s*\(\)\s*=>/);
+                const mainComponent = componentMatch ? componentMatch[1] : (cleanedCode.includes("MainComponent") ? "MainComponent" : null);
+
+                doc = `
+                    <!DOCTYPE html>
+                    <html class="dark">
+                      <head>
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+                        <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+                        <script src="https://unpkg.com/lucide@latest"></script>
+                        <style>
+                           body { margin: 0; padding: 20px; font-family: sans-serif; background: #0b1414; color: white; }
+                           #root { min-height: 100vh; }
+                        </style>
+                      </head>
+                      <body>
+                        <div id="root"></div>
+                        <script type="text/babel">
+                            ${cleanedCode}
+                            
+                            ${mainComponent ? `
+                            const root = ReactDOM.createRoot(document.getElementById('root'));
+                            root.render(React.createElement(${mainComponent}));
+                            ` : `
+                            // No clear component found to mount, executing raw code
+                            `}
+                        </script>
+                      </body>
+                    </html>
+                `;
+            } else {
+                // Wrap fragments in a styled container
+                doc = `
+                    <!DOCTYPE html>
+                    <html class="dark">
+                      <head>
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap">
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <script>
+                          tailwind.config = {
+                            darkMode: 'class',
+                            theme: {
+                              extend: {
+                                colors: {
+                                  primary: { 50: '#ecfdf3', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b', 950: '#022c22' }
+                                }
+                              }
                             }
                           }
-                        }
-                      }
-                    </script>
-                    <style>
-                      ::-webkit-scrollbar { width: 8px; }
-                      ::-webkit-scrollbar-track { background: transparent; }
-                      ::-webkit-scrollbar-thumb { background: #115e59; border-radius: 4px; }
-                      ::-webkit-scrollbar-thumb:hover { background: #0f766e; }
-                      body {
-                        margin: 0; 
-                        padding: 24px; 
-                        font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
-                        background: #f8fafc; 
-                        color: #1e293b;
-                        min-height: 100vh;
-                      }
-                    </style>
-                  </head>
-                  <body>
-                    ${normalized}
-                  </body>
-                </html>
-            `;
-        }
+                        </script>
+                        <style>
+                          ::-webkit-scrollbar { width: 8px; }
+                          ::-webkit-scrollbar-track { background: transparent; }
+                          ::-webkit-scrollbar-thumb { background: #115e59; border-radius: 4px; }
+                          ::-webkit-scrollbar-thumb:hover { background: #0f766e; }
+                          body {
+                            margin: 0; 
+                            padding: 24px; 
+                            font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+                            background: #f8fafc; 
+                            color: #1e293b;
+                            min-height: 100vh;
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        ${normalized}
+                      </body>
+                    </html>
+                `;
+            }
 
-        iframeRef.current.srcdoc = doc;
-    }, [data, type]);
+            if (iframeRef.current) {
+                iframeRef.current.srcdoc = doc;
+            }
+        } catch (e) {
+            console.error("Canvas Render Error:", e);
+            setRenderError(e instanceof Error ? e.message : "Internal rendering failure");
+        }
+    }, [data, type, isStreaming]);
 
     return (
-        <div className="w-full h-full relative group">
-            <iframe
-                ref={iframeRef}
-                title="Canvas Preview"
-                className="w-full h-full border-none rounded-b-2xl bg-[#0b1414] shadow-inner"
-                sandbox="allow-scripts"
-            />
+        <div className="w-full h-full relative group bg-[#0b1414] overflow-hidden rounded-b-2xl">
+            {isStreaming && <BuildingArtifact type={type} />}
+
+            {renderError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95 duration-300">
+                    <StopCircle className="h-10 w-10 text-red-500/40 mb-5" />
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400 mb-3">Runtime Execution Error</h4>
+                    <p className="text-[9px] font-mono text-slate-500 max-w-sm border border-red-500/10 bg-red-500/5 p-4 rounded-xl leading-relaxed">
+                        {renderError}
+                    </p>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-6 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white"
+                        onClick={() => window.location.reload()}
+                    >
+                        Try Refreshing Page
+                    </Button>
+                </div>
+            ) : (
+                <iframe
+                    ref={iframeRef}
+                    title="Canvas Preview"
+                    className={`w-full h-full border-none bg-[#0b1414] shadow-inner transition-all duration-1000 ${isStreaming ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}
+                    sandbox="allow-scripts"
+                />
+            )}
+
             {isStreaming && (
                 <div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500/20 overflow-hidden">
                     <div className="h-full bg-blue-500 animate-[loading_1.5s_infinite]" />
                 </div>
             )}
-            <style jsx>{`
-                @keyframes loading {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(200%); }
-                }
-            `}</style>
         </div>
     );
 });
@@ -308,18 +381,33 @@ function parseStreamingContent(text: string, currentAgent: string) {
 export default function AIAssist() {
     const {
         language,
-        aiAssistHistory,
-        setAIAssistHistory,
+        aiAssistTabs,
+        activeTabId,
+        setActiveTabId,
+        addAIAssistTab,
+        removeAIAssistTab,
+        updateActiveTab,
         selectedProvider,
         selectedModels,
         setSelectedModel
     } = useStore();
     const t = translations[language].aiAssist;
 
+    const activeTab = aiAssistTabs.find(t => t.id === activeTabId) || aiAssistTabs[0];
+    const aiAssistHistory = activeTab?.history || [];
+
     const [input, setInput] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
-    const [currentAgent, setCurrentAgent] = useState("general");
-    const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+    const [currentAgent, setCurrentAgent] = useState(activeTab?.currentAgent || "general");
+    const [previewData, setPreviewData] = useState<PreviewData | null>(activeTab?.previewData || null);
+
+    // Sync local state when tab changes
+    useEffect(() => {
+        if (activeTab) {
+            setCurrentAgent(activeTab.currentAgent);
+            setPreviewData(activeTab.previewData);
+        }
+    }, [activeTabId]);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
     const [showCanvas, setShowCanvas] = useState(false);
     const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
@@ -334,10 +422,22 @@ export default function AIAssist() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isPreviewRenderable = (preview?: PreviewData | null) => {
         if (!preview) return false;
-        return ["web", "app", "design", "html", "ui"].includes(preview.type)
-            || preview.language === "html"
-            || preview.data.includes("<")
-            || (preview.data.includes("&lt;") && preview.data.includes("&gt;"));
+
+        // Detect and block backend code from rendering in iframe
+        const lowerData = preview.data.toLowerCase();
+        const isBackend =
+            lowerData.includes("require('express')") ||
+            lowerData.includes("import express") ||
+            lowerData.includes("app.listen(") ||
+            lowerData.includes("mongoose.connect") ||
+            lowerData.includes("process.env.") ||
+            /module\.exports/i.test(preview.data);
+
+        // Client-side detection
+        const isUI = ["web", "app", "design", "html", "ui"].includes(preview.type);
+        const hasTags = /<[a-z][\s\S]*>/i.test(preview.data);
+
+        return (isUI || hasTags || preview.language === "html") && !isBackend;
     };
     const canRenderPreview = isPreviewRenderable(previewData);
 
@@ -389,7 +489,7 @@ export default function AIAssist() {
                 timestamp: new Date(),
             };
             const newHistory = [...aiAssistHistory, userMsg];
-            setAIAssistHistory(newHistory);
+            updateActiveTab({ history: newHistory });
             setInput("");
         }
 
@@ -402,13 +502,16 @@ export default function AIAssist() {
             agent: currentAgent,
             timestamp: new Date()
         };
-        setAIAssistHistory(prev => [...prev, assistantMsg]);
+
+        // Update history in active tab
+        const updatedHistory = [...aiAssistHistory, assistantMsg];
+        updateActiveTab({ history: updatedHistory });
 
         try {
             let accumulated = "";
             let lastParsedPreview: PreviewData | null = null;
 
-            // Format history to remove internal tags and provide clear context for surgical edits
+            // Format history for context
             const formattedHistory = aiAssistHistory.map(m => {
                 if (m.role === "assistant") {
                     const { chatDisplay, preview } = parseStreamingContent(m.content, m.agent || "general");
@@ -431,37 +534,32 @@ export default function AIAssist() {
 
                         if (streamStatus) setStatus(streamStatus);
 
-                        // If we're in planning mode and see JSON, try to parse the plan
-                        if (assistStep === "plan" || assistStep === "idle") {
-                            const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
-                            if (jsonMatch) {
-                                try {
-                                    const parsed = JSON.parse(jsonMatch[0]);
-                                    if (parsed.summary && parsed.files) setAiPlan(parsed);
-                                } catch (e) { }
-                            }
-                        }
-
                         if (preview && JSON.stringify(preview) !== JSON.stringify(lastParsedPreview)) {
                             setPreviewData(preview);
                             lastParsedPreview = preview;
                             setShowCanvas(true);
                             if (isPreviewRenderable(preview)) setViewMode("preview");
+
+                            // Save preview data to tab
+                            updateActiveTab({ previewData: preview });
                         }
 
-                        if (agent !== currentAgent) setCurrentAgent(agent);
+                        if (agent !== currentAgent) {
+                            setCurrentAgent(agent);
+                            updateActiveTab({ currentAgent: agent });
+                        }
 
-                        setAIAssistHistory(prev => {
-                            const last = prev[prev.length - 1];
-                            if (last && last.role === "assistant") {
-                                return [...prev.slice(0, -1), {
-                                    ...last,
-                                    content: accumulated, // Keep raw for AI context
-                                    agent,
-                                    preview: preview ? { type: preview.type, data: preview.data, language: preview.language } : undefined
-                                } as AIAssistMessage];
-                            }
-                            return prev;
+                        // Stream updates to current tab history
+                        const lastMsg = {
+                            role: "assistant" as const,
+                            content: accumulated,
+                            agent,
+                            preview: preview ? { type: preview.type, data: preview.data, language: preview.language } : undefined,
+                            timestamp: new Date()
+                        };
+
+                        updateActiveTab({
+                            history: [...updatedHistory.slice(0, -1), lastMsg]
                         });
                     },
                     signal: controller.signal
@@ -480,14 +578,9 @@ export default function AIAssist() {
 
         } catch (error) {
             console.error("Assist error:", error);
-            setAIAssistHistory(prev => {
-                const last = prev[prev.length - 1];
-                const message = error instanceof Error ? error.message : "AI Assist failed";
-                if (last && last.role === "assistant") {
-                    return [...prev.slice(0, -1), { ...last, content: message }];
-                }
-                return [...prev, { role: "assistant", content: message, timestamp: new Date() }];
-            });
+            const message = error instanceof Error ? error.message : "AI Assist failed";
+            const errorMsg: AIAssistMessage = { role: "assistant", content: message, timestamp: new Date() };
+            updateActiveTab({ history: [...aiAssistHistory, errorMsg] });
         } finally {
             setIsProcessing(false);
             setAbortController(null);
@@ -509,7 +602,11 @@ export default function AIAssist() {
     };
 
     const clearHistory = () => {
-        setAIAssistHistory([]);
+        updateActiveTab({
+            history: [],
+            previewData: null,
+            currentAgent: "general"
+        });
         setPreviewData(null);
         setShowCanvas(false);
         setAssistStep("idle");
@@ -569,7 +666,44 @@ export default function AIAssist() {
                         </div>
                     </div>
 
-                    {/* Messages */}
+                    {/* Tab Bar */}
+                    <div className="flex items-center gap-1 px-4 py-2 bg-slate-800/20 border-b border-white/5 backdrop-blur-md overflow-x-auto no-scrollbar">
+                        {aiAssistTabs.map(tab => (
+                            <div
+                                key={tab.id}
+                                onClick={() => setActiveTabId(tab.id)}
+                                className={cn(
+                                    "flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-300 whitespace-nowrap group",
+                                    activeTabId === tab.id
+                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                        : "hover:bg-white/5 text-slate-500 opacity-70 hover:opacity-100"
+                                )}
+                            >
+                                <MessageSquare className="h-3 w-3" />
+                                <span className="text-[10px] font-black uppercase tracking-wider">{tab.title}</span>
+                                {aiAssistTabs.length > 1 && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeAIAssistTab(tab.id);
+                                        }}
+                                        className="ml-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                                    >
+                                        <X className="h-2.5 w-2.5" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                        <button
+                            onClick={() => addAIAssistTab()}
+                            className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all ml-1"
+                            title="New Chat"
+                        >
+                            <Plus className="h-3 w-3" />
+                        </button>
+                    </div>
+
+                    {/* Agent Selector */}
                     <div className="px-6 pt-6">
                         <div className="flex flex-wrap gap-2 pb-4">
                             {[

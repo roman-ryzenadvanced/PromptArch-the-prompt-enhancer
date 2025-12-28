@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import type { ModelProvider, PromptEnhancement, PRD, ActionPlan, SlidesPresentation, GoogleAdsResult, MagicWandResult, MarketResearchResult, AppView, AIAssistMessage } from "@/types";
 
+interface AIAssistTab {
+  id: string;
+  title: string;
+  history: AIAssistMessage[];
+  currentAgent: string;
+  previewData?: any | null; // PreviewData type from AIAssist
+}
+
 interface AppState {
   currentPrompt: string;
   enhancedPrompt: string | null;
@@ -10,7 +18,11 @@ interface AppState {
   googleAdsResult: GoogleAdsResult | null;
   magicWandResult: MagicWandResult | null;
   marketResearchResult: MarketResearchResult | null;
-  aiAssistHistory: AIAssistMessage[];
+
+  // AI Assist Tabs
+  aiAssistTabs: AIAssistTab[];
+  activeTabId: string | null;
+
   language: "en" | "ru" | "he";
   selectedProvider: ModelProvider;
   selectedModels: Record<ModelProvider, string>;
@@ -37,7 +49,14 @@ interface AppState {
   setGoogleAdsResult: (result: GoogleAdsResult | null) => void;
   setMagicWandResult: (result: MagicWandResult | null) => void;
   setMarketResearchResult: (result: MarketResearchResult | null) => void;
-  setAIAssistHistory: (history: AIAssistMessage[] | ((prev: AIAssistMessage[]) => AIAssistMessage[])) => void;
+
+  // Tab Management
+  setAIAssistTabs: (tabs: AIAssistTab[]) => void;
+  setActiveTabId: (id: string | null) => void;
+  addAIAssistTab: (agent?: string) => void;
+  removeAIAssistTab: (id: string) => void;
+  updateActiveTab: (updates: Partial<AIAssistTab>) => void;
+
   setLanguage: (lang: "en" | "ru" | "he") => void;
   setSelectedProvider: (provider: ModelProvider) => void;
   setSelectedModel: (provider: ModelProvider, model: string) => void;
@@ -60,7 +79,15 @@ const useStore = create<AppState>((set) => ({
   googleAdsResult: null,
   magicWandResult: null,
   marketResearchResult: null,
-  aiAssistHistory: [],
+
+  aiAssistTabs: [{
+    id: "default",
+    title: "New Chat",
+    history: [],
+    currentAgent: "general"
+  }],
+  activeTabId: "default",
+
   language: "en",
   selectedProvider: "qwen",
   selectedModels: {
@@ -90,9 +117,39 @@ const useStore = create<AppState>((set) => ({
   setGoogleAdsResult: (result) => set({ googleAdsResult: result }),
   setMagicWandResult: (result) => set({ magicWandResult: result }),
   setMarketResearchResult: (result) => set({ marketResearchResult: result }),
-  setAIAssistHistory: (update) => set((state) => ({
-    aiAssistHistory: typeof update === 'function' ? update(state.aiAssistHistory) : update
+
+  setAIAssistTabs: (tabs) => set({ aiAssistTabs: tabs }),
+  setActiveTabId: (id) => set({ activeTabId: id }),
+  addAIAssistTab: (agent = "general") => set((state) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newTab = {
+      id: newId,
+      title: `Chat ${state.aiAssistTabs.length + 1}`,
+      history: [],
+      currentAgent: agent
+    };
+    return {
+      aiAssistTabs: [...state.aiAssistTabs, newTab],
+      activeTabId: newId
+    };
+  }),
+  removeAIAssistTab: (id) => set((state) => {
+    const newTabs = state.aiAssistTabs.filter(t => t.id !== id);
+    let nextActiveId = state.activeTabId;
+    if (state.activeTabId === id) {
+      nextActiveId = newTabs.length > 0 ? newTabs[newTabs.length - 1].id : null;
+    }
+    return {
+      aiAssistTabs: newTabs,
+      activeTabId: nextActiveId
+    };
+  }),
+  updateActiveTab: (updates) => set((state) => ({
+    aiAssistTabs: state.aiAssistTabs.map(t =>
+      t.id === state.activeTabId ? { ...t, ...updates } : t
+    )
   })),
+
   setLanguage: (lang) => set({ language: lang }),
   setSelectedProvider: (provider) => set({ selectedProvider: provider }),
   setSelectedModel: (provider, model) =>
@@ -132,7 +189,13 @@ const useStore = create<AppState>((set) => ({
       googleAdsResult: null,
       magicWandResult: null,
       marketResearchResult: null,
-      aiAssistHistory: [],
+      aiAssistTabs: [{
+        id: "default",
+        title: "New Chat",
+        history: [],
+        currentAgent: "general"
+      }],
+      activeTabId: "default",
       error: null,
     }),
 }));
