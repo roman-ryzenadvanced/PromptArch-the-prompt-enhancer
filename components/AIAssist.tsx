@@ -386,6 +386,17 @@ function parseStreamingContent(text: string, currentAgent: string) {
         if (isHtmlLike) {
             preview.data = decodeHtml(stripFences(preview.data));
         }
+
+        // CRITICAL: Strip any change log that leaked into preview data
+        // The change log should be in chat, not rendered in canvas
+        preview.data = preview.data
+            .replace(/\[\/[a-z]+:[a-z]+\]\s*\*?\*?Change\s*Log:?\*?\*?[\s\S]*$/i, '')
+            .replace(/\*?\*?Change\s*Log:?\*?\*?[\s\S]*$/i, function (match) {
+                // Only strip if it's at the end and looks like a change log section
+                if (match.length > 500) return match; // Probably part of the app, not a log
+                return '';
+            })
+            .trim();
     }
 
     if (!preview && !text.includes("[PREVIEW")) {
@@ -1022,18 +1033,18 @@ export default function AIAssist() {
                             </div>
 
                             <div className="flex-1 overflow-hidden relative">
-                                {viewMode === "preview" && previewData ? (
+                                {viewMode === "preview" && activeTab?.previewData ? (
                                     <CanvasErrorBoundary>
                                         <LiveCanvas
-                                            data={previewData.data || ""}
-                                            type={previewData.type || "preview"}
-                                            isStreaming={!!previewData.isStreaming}
+                                            data={activeTab.previewData.data || ""}
+                                            type={activeTab.previewData.type || "preview"}
+                                            isStreaming={!!activeTab.previewData.isStreaming}
                                         />
                                     </CanvasErrorBoundary>
                                 ) : (
                                     <div className="h-full bg-[#050505] p-8 font-mono text-sm overflow-auto scrollbar-thin scrollbar-thumb-blue-900">
                                         <pre className="text-blue-300/90 leading-relaxed selection:bg-blue-500/20 whitespace-pre-wrap">
-                                            <code>{previewData?.data}</code>
+                                            <code>{activeTab?.previewData?.data}</code>
                                         </pre>
                                     </div>
                                 )}
@@ -1041,13 +1052,13 @@ export default function AIAssist() {
 
                             <div className="px-6 py-3 border-t border-blue-900/40 bg-[#0b1414]/70 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className={cn("w-2 h-2 rounded-full", previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
+                                    <div className={cn("w-2 h-2 rounded-full", activeTab?.previewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
                                     <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
-                                        {previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
+                                        {activeTab?.previewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
                                     </span>
                                 </div>
                                 <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">
-                                    {previewData?.language?.toUpperCase()} UTF-8
+                                    {activeTab?.previewData?.language?.toUpperCase()} UTF-8
                                 </Badge>
                             </div>
                         </Card>
