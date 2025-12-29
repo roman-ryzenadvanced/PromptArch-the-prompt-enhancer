@@ -51,13 +51,13 @@ class CanvasErrorBoundary extends React.Component<{ children: React.ReactNode },
             return (
                 <div className="h-full flex flex-col items-center justify-center bg-[#0b1414] p-8 text-center rounded-b-2xl">
                     <StopCircle className="h-10 w-10 text-red-500/40 mb-4" />
-                    <h4 className="text-xs font-black uppercase tracking-widest text-red-400 mb-2">{t.canvasCrashed}</h4>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-red-400 mb-2">Canvas Crashed</h4>
                     <p className="text-[10px] font-mono text-slate-500 max-w-xs">{this.state.error}</p>
                     <button
                         onClick={() => this.setState({ hasError: false, error: null })}
                         className="mt-4 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/30 rounded-xl hover:bg-blue-500/10 transition-colors"
                     >
-                        {t.tryAgain}
+                        Try Again
                     </button>
                 </div>
             );
@@ -67,7 +67,13 @@ class CanvasErrorBoundary extends React.Component<{ children: React.ReactNode },
 }
 const BuildingArtifact = ({ type }: { type: string }) => {
     const [progress, setProgress] = useState(0);
-    const steps = t.thinkingSteps;
+    const steps = [
+        "Initializing neural links...",
+        "Scaffolding architecture...",
+        "Writing logic blocks...",
+        "Injecting dynamic modules...",
+        "Finalizing interactive layers..."
+    ];
     const [currentStep, setCurrentStep] = useState(0);
 
     useEffect(() => {
@@ -87,7 +93,7 @@ const BuildingArtifact = ({ type }: { type: string }) => {
             </div>
 
             <h3 className="text-2xl font-black uppercase tracking-[0.3em] mb-4 text-white drop-shadow-lg">
-                {t.building} <span className="text-blue-500">{type}</span>
+                Building <span className="text-blue-500">{type}</span>
             </h3>
 
             <div className="w-full max-w-sm h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-10 backdrop-blur-sm border border-white/5">
