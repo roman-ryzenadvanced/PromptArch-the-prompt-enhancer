@@ -218,7 +218,7 @@ export default function GoogleAdsGenerator() {
             }
         } catch (err) {
             console.error("[GoogleAdsGenerator] Generation error:", err);
-            setError(err instanceof Error ? err.message : t.error);
+            setError(err instanceof Error ? err.message : t.errorGenerate);
         } finally {
             setProcessing(false);
         }

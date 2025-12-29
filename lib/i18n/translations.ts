@@ -34,6 +34,7 @@ export const translations = {
             settings: "Settings",
             error: "Error",
             configApiKey: "Configure API key in Settings",
+            emptyState: "Generated content will appear here",
         },
         promptEnhancer: {
             title: "Prompt Enhancer",
@@ -55,6 +56,7 @@ export const translations = {
             generatedDesc: "Structured requirements document ready for development",
             emptyState: "Generated PRD will appear here",
             enterIdeaError: "Please enter an idea to generate PRD",
+            errorGenerate: "Failed to generate PRD",
             sections: {
                 overview: "Product Overview",
                 personas: "User Personas & Use Cases",
@@ -400,6 +402,7 @@ export const translations = {
             architecture: "Architecture",
             techStack: "Tech Stack",
             filesPlanned: (count: number) => `${count} modules planned`,
+            files: "Files",
             approveGenerate: "Approve & Generate Development",
             startingEngine: "Starting Engine...",
             activateArtifact: "Activate Artifact",
@@ -467,6 +470,7 @@ export const translations = {
             settings: "Настройки",
             error: "Ошибка",
             configApiKey: "Настройте API ключ в настройках",
+            emptyState: "Сгенерированный контент появится здесь",
         },
         promptEnhancer: {
             title: "Улучшение промптов",
@@ -488,6 +492,7 @@ export const translations = {
             generatedDesc: "Структурированный документ требований готов к разработке",
             emptyState: "Здесь появится созданный PRD",
             enterIdeaError: "Пожалуйста, введите идею для создания PRD",
+            errorGenerate: "Не удалось создать PRD",
             sections: {
                 overview: "Обзор продукта",
                 personas: "Персоны пользователей",
@@ -833,6 +838,7 @@ export const translations = {
             architecture: "Архитектура",
             techStack: "Стек технологий",
             filesPlanned: (count: number) => `Запланировано ${count} модулей`,
+            files: "Файлы",
             approveGenerate: "Одобрить и начать разработку",
             startingEngine: "Запуск двигателя...",
             activateArtifact: "Активировать артефакт",
@@ -900,6 +906,7 @@ export const translations = {
             settings: "הגדרות",
             error: "שגיאה",
             configApiKey: "הגדר מפתח API בהגדרות",
+            emptyState: "תוכן שהופק יופיע כאן",
         },
         promptEnhancer: {
             title: "משפר פרומפטים",
@@ -921,6 +928,7 @@ export const translations = {
             generatedDesc: "מסמך דרישות מובנה מוכן לפיתוח",
             emptyState: "PRD שחולל יופיע כאן",
             enterIdeaError: "אנא הזן רעיון לחולל PRD",
+            errorGenerate: "נכשל בחוללת PRD",
             sections: {
                 overview: "סקירת מוצר",
                 personas: "פרסונות משתמשים",
@@ -1266,6 +1274,7 @@ export const translations = {
             architecture: "ארכיטקטורה",
             techStack: "ערימת טכנולוגיות",
             filesPlanned: (count: number) => `תוכננו ${count} מודולים`,
+            files: "קבצים",
             approveGenerate: "אשר וחולל פיתוח",
             startingEngine: "מניע מנוע...",
             activateArtifact: "הפעל ארטיפקט",

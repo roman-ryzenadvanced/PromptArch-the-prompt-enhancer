@@ -267,7 +267,7 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
             {renderError ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95 duration-300">
                     <StopCircle className="h-10 w-10 text-red-500/40 mb-5" />
-                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400 mb-3">{t.runtimeError}</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400 mb-3">Runtime Execution Error</h4>
                     <p className="text-[9px] font-mono text-slate-500 max-w-sm border border-red-500/10 bg-red-500/5 p-4 rounded-xl leading-relaxed">
                         {renderError}
                     </p>
@@ -277,7 +277,7 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                         className="mt-6 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white"
                         onClick={() => window.location.reload()}
                     >
-                        {t.tryRefreshing}
+                        Try Refreshing Page
                     </Button>
                 </div>
             ) : (
@@ -307,7 +307,7 @@ const ThinkingIndicator = () => (
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
         </div>
-        <span className="text-[10px] font-black text-blue-700/60 dark:text-blue-200/60 uppercase tracking-widest ml-2">{t.neuralLinkThinking}</span>
+        <span className="text-[10px] font-black text-blue-700/60 dark:text-blue-200/60 uppercase tracking-widest ml-2">Neural Link Thinking...</span>
     </div>
 );
 
@@ -345,7 +345,7 @@ function parseStreamingContent(text: string, currentAgent: string) {
         };
         if (preview.isStreaming) {
             const isUpdate = text.toLowerCase().includes("update") || text.toLowerCase().includes("fix") || text.toLowerCase().includes("change");
-            status = isUpdate ? t.applyingEdits(preview.type) : t.generatingArtifact(preview.type);
+            status = isUpdate ? `Applying surgical edits to ${preview.type}...` : `Generating ${preview.type} artifact...`;
         }
     }
 
@@ -412,7 +412,7 @@ function parseStreamingContent(text: string, currentAgent: string) {
     }
 
     if (!chatDisplay && preview && preview.isStreaming) {
-        chatDisplay = t.renderingLive;
+        chatDisplay = "Rendering live artifact...";
     }
 
     return { chatDisplay, preview, agent, status };
