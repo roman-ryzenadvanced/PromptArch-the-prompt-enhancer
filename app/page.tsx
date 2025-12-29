@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import modelAdapter from "@/lib/services/adapter-instance";
 
 // Dynamic imports to prevent hydration mismatches
+// ensuring hydration match
 const PromptEnhancer = dynamic(() => import("@/components/PromptEnhancer"), { ssr: false });
 const PRDGenerator = dynamic(() => import("@/components/PRDGenerator"), { ssr: false });
 const ActionPlanGenerator = dynamic(() => import("@/components/ActionPlanGenerator"), { ssr: false });
