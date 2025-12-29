@@ -84,7 +84,7 @@ export default function SettingsPanel() {
     } catch (error) {
       console.error("Qwen OAuth failed", error);
       window.alert(
-        error instanceof Error ? error.message : t.qwenAuth + " failed"
+        error instanceof Error ? error.message : t.qwenAuthFailed
       );
     } finally {
       setIsAuthLoading(false);
@@ -104,7 +104,7 @@ export default function SettingsPanel() {
             {t.apiKeys}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {language === "ru" ? "Настройте ключи API для различных провайдеров ИИ" : language === "he" ? "הגדר מפתחות API עבור ספקי בינה מלאכותית שונים" : "Configure API keys for different AI providers"}
+            {t.apiKeysDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 lg:space-y-6 p-4 lg:p-6 pt-0 lg:pt-0">
@@ -155,7 +155,7 @@ export default function SettingsPanel() {
                 disabled={isAuthLoading}
               >
                 {isAuthLoading
-                  ? (language === "ru" ? "Вход..." : language === "he" ? "מתחבר..." : "Signing in...")
+                  ? t.signingIn
                   : qwenTokens
                     ? t.logoutQwen
                     : t.loginQwen}
@@ -297,7 +297,7 @@ export default function SettingsPanel() {
         <CardHeader className="p-4 lg:p-6 text-start">
           <CardTitle className="text-base lg:text-lg">{t.dataPrivacy}</CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {language === "ru" ? "Ваши настройки обработки данных" : language === "he" ? "העדפות הטיפול בנתונים שלך" : "Your data handling preferences"}
+            {t.dataPrivacyTitleDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">

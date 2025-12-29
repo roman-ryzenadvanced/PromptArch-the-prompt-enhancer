@@ -71,7 +71,7 @@ export default function ActionPlanGenerator() {
 
   const handleGenerate = async () => {
     if (!currentPrompt.trim()) {
-      setError("Please enter PRD or project requirements");
+      setError(t.enterPrdError);
       return;
     }
 
@@ -79,7 +79,7 @@ export default function ActionPlanGenerator() {
     const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
     if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-      setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+      setError(`${common.error}: ${common.configApiKey}`);
       return;
     }
 
@@ -112,11 +112,11 @@ export default function ActionPlanGenerator() {
         setActionPlan(newPlan);
       } else {
         console.error("[ActionPlanGenerator] Generation failed:", result.error);
-        setError(result.error || "Failed to generate action plan");
+        setError(result.error || t.errorGenerate);
       }
     } catch (err) {
       console.error("[ActionPlanGenerator] Generation error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t.errorGenerate);
     } finally {
       setProcessing(false);
     }
@@ -176,7 +176,7 @@ export default function ActionPlanGenerator() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs lg:text-sm font-medium">{language === "ru" ? "PRD / Требования" : language === "he" ? "PRD / דרישות" : "PRD / Requirements"}</label>
+            <label className="text-xs lg:text-sm font-medium">{t.inputLabel}</label>
             <Textarea
               placeholder={t.placeholder}
               value={currentPrompt}
@@ -206,7 +206,7 @@ export default function ActionPlanGenerator() {
             ) : (
               <>
                 <ListTodo className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                {language === "ru" ? "Создать план действий" : language === "he" ? "חולל תוכנית פעולה" : "Generate Action Plan"}
+                {t.generateButton}
               </>
             )}
           </Button>
@@ -231,7 +231,7 @@ export default function ActionPlanGenerator() {
             )}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {language === "ru" ? "Разбивка задач, фреймворки и рекомендации по архитектуре" : language === "he" ? "פירוט משימות, פרימוורקים והמלצות ארכיטקטורה" : "Task breakdown, frameworks, and architecture recommendations"}
+            {t.generatedDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
@@ -240,7 +240,7 @@ export default function ActionPlanGenerator() {
               <div className="rounded-md border bg-primary/5 p-3 lg:p-4 text-start">
                 <h4 className="mb-1.5 lg:mb-2 flex items-center gap-2 font-semibold text-xs lg:text-sm">
                   <Clock className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                  {language === "ru" ? "Дорожная карта реализации" : language === "he" ? "מפת דרכים ליישום" : "Implementation Roadmap"}
+                  {t.roadmap}
                 </h4>
                 <pre className="whitespace-pre-wrap text-xs lg:text-sm leading-relaxed">{actionPlan.rawContent}</pre>
               </div>
@@ -248,13 +248,12 @@ export default function ActionPlanGenerator() {
               <div className="rounded-md border bg-muted/30 p-3 lg:p-4 text-start">
                 <h4 className="mb-1.5 lg:mb-2 flex items-center gap-2 font-semibold text-xs lg:text-sm">
                   <AlertTriangle className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                  {language === "ru" ? "Быстрые заметки" : language === "he" ? "הערות מהירות" : "Quick Notes"}
+                  {t.quickNotes}
                 </h4>
                 <ul className="list-inside list-disc space-y-0.5 lg:space-y-1 text-[10px] lg:text-xs text-muted-foreground">
-                  <li>{language === "ru" ? "Проверьте все зависимости задач перед началом" : language === "he" ? "בדוק את כל התלות בין המשימות לפני שתתחיל" : "Review all task dependencies before starting"}</li>
-                  <li>{language === "ru" ? "Настройте рекомендуемую архитектуру фреймворка" : language === "he" ? "הגדר את ארכיטקטורת הפרימוורק המומלצת" : "Set up recommended framework architecture"}</li>
-                  <li>{language === "ru" ? "Следуйте лучшим практикам безопасности и производительности" : language === "he" ? "עקוב אחר שיטות עבודה מומלצות לאבטחה וביצועים" : "Follow best practices for security and performance"}</li>
-                  <li>{language === "ru" ? "Используйте указанную стратегию развертывания" : language === "he" ? "השתמש באסטרטגיית הפריסה המצוינת" : "Use specified deployment strategy"}</li>
+                  {t.notes.map((note: string, i: number) => (
+                    <li key={i}>{note}</li>
+                  ))}
                 </ul>
               </div>
             </div>

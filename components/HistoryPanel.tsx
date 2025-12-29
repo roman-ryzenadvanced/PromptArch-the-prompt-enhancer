@@ -16,8 +16,7 @@ export default function HistoryPanel() {
   };
 
   const handleClear = () => {
-    const message = language === "ru" ? "Вы уверены, что хотите очистить всю историю?" : language === "he" ? "האם אתה בטוח שברצונך למחוק את כל ההיסטוריה?" : "Are you sure you want to clear all history?";
-    if (confirm(message)) {
+    if (confirm(t.confirmClear)) {
       clearHistory();
     }
   };
@@ -30,7 +29,7 @@ export default function HistoryPanel() {
             <Clock className="mx-auto h-10 w-10 lg:h-12 lg:w-12 text-muted-foreground/50" />
             <p className="mt-3 lg:mt-4 text-sm lg:text-base text-muted-foreground font-medium">{t.empty}</p>
             <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm text-muted-foreground">
-              {language === "ru" ? "Начните использовать инструменты, чтобы увидеть историю здесь" : language === "he" ? "התחל להשתמש בכלים כדי לראות אותם כאן" : "Start using tools to see them here"}
+              {t.emptyDesc}
             </p>
           </div>
         </CardContent>
@@ -44,7 +43,7 @@ export default function HistoryPanel() {
         <div>
           <CardTitle className="text-base lg:text-lg">{t.title}</CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {history.length} {language === "ru" ? "элем." : language === "he" ? "פריטים" : "items"}
+            {history.length} {t.items}
           </CardDescription>
         </div>
         <Button variant="outline" size="icon" onClick={handleClear} className="h-8 w-8 lg:h-9 lg:w-9" title={t.clear}>

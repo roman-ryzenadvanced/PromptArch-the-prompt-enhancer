@@ -78,7 +78,7 @@ export default function PRDGenerator() {
 
   const handleGenerate = async () => {
     if (!currentPrompt.trim()) {
-      setError("Please enter an idea to generate PRD");
+      setError(t.enterIdeaError);
       return;
     }
 
@@ -86,7 +86,7 @@ export default function PRDGenerator() {
     const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
     if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-      setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+      setError(`${common.error}: ${common.configApiKey}`);
       return;
     }
 
@@ -117,11 +117,11 @@ export default function PRDGenerator() {
         setPRD(newPRD);
       } else {
         console.error("[PRDGenerator] Generation failed:", result.error);
-        setError(result.error || "Failed to generate PRD");
+        setError(result.error || t.errorGenerate);
       }
     } catch (err) {
       console.error("[PRDGenerator] Generation error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t.errorGenerate);
     } finally {
       setProcessing(false);
     }
@@ -136,12 +136,12 @@ export default function PRDGenerator() {
   };
 
   const sections = [
-    { id: "overview", title: language === "ru" ? "Обзор продукта" : language === "he" ? "סקירת מוצר" : "Product Overview" },
-    { id: "personas", title: language === "ru" ? "Персоны пользователей" : language === "he" ? "פרסונות משתמשים" : "User Personas & Use Cases" },
-    { id: "functional", title: language === "ru" ? "Функциональные требования" : language === "he" ? "דרישות פונקציונליות" : "Functional Requirements" },
-    { id: "nonfunctional", title: language === "ru" ? "Нефункциональные требования" : language === "he" ? "דרישות לא פונקציונליות" : "Non-functional Requirements" },
-    { id: "architecture", title: language === "ru" ? "Техническая архитектура" : language === "he" ? "ארכיטקטורה טכנית" : "Technical Architecture" },
-    { id: "metrics", title: language === "ru" ? "Успешность метрик" : language === "he" ? "מדדי הצלחה" : "Success Metrics" },
+    { id: "overview", title: t.sections.overview },
+    { id: "personas", title: t.sections.personas },
+    { id: "functional", title: t.sections.functional },
+    { id: "nonfunctional", title: t.sections.nonfunctional },
+    { id: "architecture", title: t.sections.architecture },
+    { id: "metrics", title: t.sections.metrics },
   ];
 
   return (
@@ -244,7 +244,7 @@ export default function PRDGenerator() {
             )}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {language === "ru" ? "Структурированный документ требований готов к разработке" : language === "he" ? "מסמך דרישות מובנה מוכן לפיתוח" : "Structured requirements document ready for development"}
+            {t.generatedDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
@@ -273,7 +273,7 @@ export default function PRDGenerator() {
             </div>
           ) : (
             <div className="flex h-[200px] lg:h-[300px] items-center justify-center text-center text-xs lg:text-sm text-muted-foreground">
-              {language === "ru" ? "Здесь появится созданный PRD" : language === "he" ? "PRD שחולל יופיע כאן" : "Generated PRD will appear here"}
+              {t.emptyState}
             </div>
           )}
         </CardContent>

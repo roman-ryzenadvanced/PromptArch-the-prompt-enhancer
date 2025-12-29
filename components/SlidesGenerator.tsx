@@ -482,7 +482,7 @@ export default function SlidesGenerator() {
             max-width: 90%;
             animation: fadeIn 1s ease-out 0.3s both;
           ">
-            ${slide.content || "Content goes here..."}
+            ${slide.content || t.slideContentPlaceholder}
           </div>
         </div>
 
@@ -519,7 +519,7 @@ export default function SlidesGenerator() {
 
     const handleGenerate = async () => {
         if (!topic.trim()) {
-            setError("Please enter a topic for your presentation");
+            setError(t.enterTopicError);
             return;
         }
 
@@ -527,7 +527,7 @@ export default function SlidesGenerator() {
         const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
         if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-            setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+            setError(`${common.error}: ${common.configApiKey}`);
             return;
         }
 
@@ -588,7 +588,7 @@ export default function SlidesGenerator() {
                         language: languageName,
                         slides: [{
                             id: "slide-1",
-                            title: "Generated Content",
+                            title: t.generatedContent,
                             content: result.data,
                             htmlContent: `
                 <div style="padding: 2rem; font-family: system-ui; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100%; color: #f8fafc;">
@@ -927,7 +927,7 @@ export default function SlidesGenerator() {
 
                     {/* Topic Input */}
                     <div className="space-y-2 text-start">
-                        <label className="text-xs lg:text-sm font-medium">{uiLanguage === "ru" ? "Тема презентации" : uiLanguage === "he" ? "נושא המצגת" : "Presentation Topic"}</label>
+                        <label className="text-xs lg:text-sm font-medium">{t.topic}</label>
                         <Textarea
                             placeholder={t.placeholder}
                             value={topic}
@@ -941,7 +941,7 @@ export default function SlidesGenerator() {
                         <label className="text-xs lg:text-sm font-medium flex items-center gap-1.5">
                             <Upload className="h-3.5 w-3.5 text-blue-500" />
                             {t.attachFiles}
-                            <span className="text-[10px] text-muted-foreground font-normal">({uiLanguage === "ru" ? "необязательно" : uiLanguage === "he" ? "אופציונלי" : "Optional"})</span>
+                            <span className="text-[10px] text-muted-foreground font-normal">({t.optional})</span>
                         </label>
                         <div
                             className={cn(
@@ -969,10 +969,10 @@ export default function SlidesGenerator() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-medium">
-                                        {isDragOver ? "Drop files here" : "Drag & drop or click to upload"}
+                                        {isDragOver ? t.dropFiles : t.uploadFiles}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                                        PowerPoint, PDFs, Docs, Images, Color Palettes
+                                        {t.fileTypes}
                                     </p>
                                 </div>
                             </div>
@@ -1006,7 +1006,7 @@ export default function SlidesGenerator() {
                                                 {formatFileSize(file.size)}
                                                 {file.colors && file.colors.length > 0 && (
                                                     <span className="ml-2">
-                                                        • {file.colors.length} colors extracted
+                                                        • {file.colors.length} {t.colorsExtracted}
                                                     </span>
                                                 )}
                                             </p>
@@ -1049,7 +1049,7 @@ export default function SlidesGenerator() {
                             >
                                 {LANGUAGES.map((lang) => (
                                     <option key={lang.code} value={lang.code}>
-                                        {lang.nativeName} ({lang.name})
+                                        {lang.nativeName} ({(t.languages as any)[lang.code] || lang.name})
                                     </option>
                                 ))}
                             </select>
@@ -1058,16 +1058,16 @@ export default function SlidesGenerator() {
                         <div className="space-y-2">
                             <label className="text-xs lg:text-sm font-medium flex items-center gap-1.5">
                                 <Palette className="h-3.5 w-3.5 text-purple-500" />
-                                Theme
+                                {t.theme}
                             </label>
                             <select
                                 value={theme}
                                 onChange={(e) => setTheme(e.target.value)}
                                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs lg:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                {THEMES.map((t) => (
-                                    <option key={t.id} value={t.id}>
-                                        {t.icon} {t.name}
+                                {THEMES.map((themeItem) => (
+                                    <option key={themeItem.id} value={themeItem.id}>
+                                        {themeItem.icon} {(t.themes as any)[themeItem.id.split('-')[0]] || themeItem.name}
                                     </option>
                                 ))}
                             </select>
@@ -1092,8 +1092,8 @@ export default function SlidesGenerator() {
                                             : "border-muted hover:border-violet-300"
                                     )}
                                 >
-                                    <p className="text-xs font-medium">{style.name}</p>
-                                    <p className="text-[10px] text-muted-foreground">{style.description}</p>
+                                    <p className="text-xs font-medium">{((t.animStyles as any)[style.id])?.name || style.name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{((t.animStyles as any)[style.id])?.desc || style.description}</p>
                                 </button>
                             ))}
                         </div>
@@ -1105,7 +1105,7 @@ export default function SlidesGenerator() {
                         className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <Settings className="h-3.5 w-3.5" />
-                        {showAdvanced ? (uiLanguage === "ru" ? "Скрыть" : uiLanguage === "he" ? "הסתר" : "Hide") : (uiLanguage === "ru" ? "Показать" : uiLanguage === "he" ? "הצג" : "Show")} {uiLanguage === "ru" ? "Раширенные настройки" : uiLanguage === "he" ? "אפשרויות מתקדמות" : "Advanced Options"}
+                        {showAdvanced ? t.hide : t.show} {t.advanced}
                     </button>
 
                     {/* Advanced Options */}
@@ -1124,7 +1124,7 @@ export default function SlidesGenerator() {
                                     >
                                         {AUDIENCES.map((a) => (
                                             <option key={a.id} value={a.id}>
-                                                {a.icon} {a.name}
+                                                {a.icon} {(t.audiences as any)[a.id] || a.name}
                                             </option>
                                         ))}
                                     </select>
@@ -1133,7 +1133,7 @@ export default function SlidesGenerator() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-medium flex items-center gap-1.5">
                                         <Hash className="h-3.5 w-3.5 text-orange-500" />
-                                        Number of Slides
+                                        {t.numSlides}
                                     </label>
                                     <select
                                         value={slideCount}
@@ -1142,7 +1142,7 @@ export default function SlidesGenerator() {
                                     >
                                         <option value={0}>{t.sameAsSource}</option>
                                         {[5, 8, 10, 12, 15, 20, 25, 30].map((n) => (
-                                            <option key={n} value={n}>{n} slides</option>
+                                            <option key={n} value={n}>{n} {t.slides}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -1151,11 +1151,11 @@ export default function SlidesGenerator() {
                             <div className="space-y-2">
                                 <label className="text-xs font-medium flex items-center gap-1.5">
                                     <Building2 className="h-3.5 w-3.5 text-cyan-500" />
-                                    Organization Name (Optional)
+                                    {t.organization} ({t.optional})
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="e.g., Acme Corporation"
+                                    placeholder={t.organizationPlaceholder}
                                     value={organization}
                                     onChange={(e) => setOrganization(e.target.value)}
                                     className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -1184,7 +1184,7 @@ export default function SlidesGenerator() {
                             {!apiKeys[selectedProvider] && (
                                 <div className="mt-1.5 lg:mt-2 flex items-center gap-2">
                                     <Settings className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                                    <span className="text-[10px] lg:text-xs">Configure API key in Settings</span>
+                                    <span className="text-[10px] lg:text-xs">{common.configApiKey}</span>
                                 </div>
                             )}
                         </div>
@@ -1217,7 +1217,7 @@ export default function SlidesGenerator() {
                     <CardTitle className="flex items-center justify-between text-base lg:text-lg">
                         <span className="flex items-center gap-2">
                             <CheckCircle2 className={cn("h-4 w-4 lg:h-5 lg:w-5", slidesPresentation ? "text-green-500" : "text-muted-foreground")} />
-                            {uiLanguage === "ru" ? "Предпросмотр слайдов" : uiLanguage === "he" ? "תצוגה מקדימה של השקופיות" : "Slide Preview"}
+                            {t.slidePreview}
                         </span>
                         {slidesPresentation && (
                             <div className="flex items-center gap-1">
@@ -1241,7 +1241,7 @@ export default function SlidesGenerator() {
                     </CardTitle>
                     {slidesPresentation && (
                         <CardDescription className="text-xs lg:text-sm">
-                            {slidesPresentation.title} • {slidesPresentation.slides.length} slides • {slidesPresentation.language}
+                            {slidesPresentation.title} • {slidesPresentation.slides.length} {t.slides} • {slidesPresentation.language}
                         </CardDescription>
                     )}
                 </CardHeader>
@@ -1321,7 +1321,7 @@ export default function SlidesGenerator() {
                                 </p>
                                 {slidesPresentation.slides[currentSlide]?.notes && (
                                     <p className="text-xs text-blue-500 mt-2 italic">
-                                        Notes: {slidesPresentation.slides[currentSlide]?.notes}
+                                        {t.notesLabel}: {slidesPresentation.slides[currentSlide]?.notes}
                                     </p>
                                 )}
                             </div>
@@ -1335,7 +1335,7 @@ export default function SlidesGenerator() {
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">{t.emptyState}</p>
                                     <p className="text-xs text-muted-foreground/70 mt-1">
-                                        {uiLanguage === "ru" ? "Введите тему и создайте анимированные слайды" : uiLanguage === "he" ? "הזן נושא וחולל שקופיות אקטיביות" : "Enter a topic and generate your animated slides"}
+                                        {t.enterTopic}
                                     </p>
                                 </div>
                             </div>

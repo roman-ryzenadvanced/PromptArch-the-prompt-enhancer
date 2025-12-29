@@ -71,7 +71,7 @@ export default function PromptEnhancer() {
 
   const handleEnhance = async () => {
     if (!currentPrompt.trim()) {
-      setError("Please enter a prompt to enhance");
+      setError(t.enterPromptError);
       return;
     }
 
@@ -79,7 +79,7 @@ export default function PromptEnhancer() {
     const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
     if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-      setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+      setError(`${common.error}: ${common.configApiKey}`);
       return;
     }
 
@@ -97,11 +97,11 @@ export default function PromptEnhancer() {
         setEnhancedPrompt(result.data);
       } else {
         console.error("[PromptEnhancer] Enhancement failed:", result.error);
-        setError(result.error || "Failed to enhance prompt");
+        setError(result.error || t.errorEnhance);
       }
     } catch (err) {
       console.error("[PromptEnhancer] Enhancement error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t.errorEnhance);
     } finally {
       setProcessing(false);
     }
@@ -207,7 +207,7 @@ export default function PromptEnhancer() {
             </Button>
             <Button variant="outline" onClick={handleClear} disabled={isProcessing} className="h-9 lg:h-10 text-xs lg:text-sm px-3">
               <RefreshCw className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
-              <span className="hidden sm:inline">{language === "ru" ? "Очистить" : language === "he" ? "נקה" : "Clear"}</span>
+              <span className="hidden sm:inline">{t.clear}</span>
             </Button>
           </div>
         </CardContent>
@@ -231,7 +231,7 @@ export default function PromptEnhancer() {
             )}
           </CardTitle>
           <CardDescription className="text-xs lg:text-sm">
-            {language === "ru" ? "Профессиональный промпт, готовый для кодинг-агентов" : language === "he" ? "פרומפט מקצועי מוכן לסוכני קידוד" : "Professional prompt ready for coding agents"}
+            {t.enhancedDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
@@ -241,7 +241,7 @@ export default function PromptEnhancer() {
             </div>
           ) : (
             <div className="flex h-[150px] lg:h-[200px] items-center justify-center text-center text-xs lg:text-sm text-muted-foreground italic">
-              {language === "ru" ? "Улучшенный промпт появится здесь" : language === "he" ? "פרומפט משופר יופיע כאן" : "Enhanced prompt will appear here"}
+              {t.emptyState}
             </div>
           )}
         </CardContent>

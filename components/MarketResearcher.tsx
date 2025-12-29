@@ -51,13 +51,13 @@ const MarketResearcher = () => {
 
     const validateUrls = () => {
         const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        if (!websiteUrl || !urlRegex.test(websiteUrl)) return "Invalid primary website URL";
+        if (!websiteUrl || !urlRegex.test(websiteUrl)) return t.invalidPrimaryUrl;
 
         const validCompetitors = competitorUrls.filter(url => url.trim().length > 0);
-        if (validCompetitors.length < 2) return "At least 2 competitor websites are required";
+        if (validCompetitors.length < 2) return t.minCompetitors;
 
         for (const url of validCompetitors) {
-            if (!urlRegex.test(url)) return `Invalid competitor URL: ${url}`;
+            if (!urlRegex.test(url)) return `${t.invalidCompetitorUrl}: ${url}`;
         }
 
         return null;
@@ -99,7 +99,7 @@ const MarketResearcher = () => {
         const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
         if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-            setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+            setError(`${common.configApiKey}`);
             return;
         }
 
@@ -130,19 +130,19 @@ const MarketResearcher = () => {
                         websiteUrl,
                         additionalUrls: filteredAddUrls,
                         competitors: filteredCompetitors,
-                        productMapping: [{ productName: productMapping || "Main Product", features: [] }],
+                        productMapping: [{ productName: productMapping || t.mainProduct, features: [] }],
                         generatedAt: new Date(),
                         rawContent: result.data
                     });
                 } catch (e) {
                     console.error("Failed to parse market research JSON:", e);
-                    setError("Failed to parse the AI response. Please try again.");
+                    setError(t.parseError);
                 }
             } else {
-                setError(result.error || "Research failed");
+                setError(result.error || t.researchFailed);
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "An unexpected error occurred");
+            setError(err instanceof Error ? err.message : t.unexpectedError);
         } finally {
             setIsProcessing(false);
         }
@@ -155,8 +155,8 @@ const MarketResearcher = () => {
                 <table className="w-full text-sm text-left">
                     <thead>
                         <tr className="border-b bg-slate-50/50">
-                            <th className="px-4 py-3 font-black text-slate-900 uppercase tracking-wider text-[10px]">Product</th>
-                            <th className="px-4 py-3 font-black text-indigo-600 uppercase tracking-wider text-[10px]">Your Price</th>
+                            <th className="px-4 py-3 font-black text-slate-900 uppercase tracking-wider text-[10px]">{t.product}</th>
+                            <th className="px-4 py-3 font-black text-indigo-600 uppercase tracking-wider text-[10px]">{t.yourPrice}</th>
                             {marketResearchResult.competitors.map((comp, i) => (
                                 <th key={i} className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider text-[10px]">{comp}</th>
                             ))}
@@ -172,7 +172,7 @@ const MarketResearcher = () => {
                                     return (
                                         <td key={comp} className="px-4 py-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="font-medium text-slate-600">{compPrice ? compPrice.price : "N/A"}</span>
+                                                <span className="font-medium text-slate-600">{compPrice ? compPrice.price : t.notAvailable}</span>
                                                 {compPrice?.url && (
                                                     <a
                                                         href={compPrice.url.startsWith('http') ? compPrice.url : `https://${compPrice.url}`}
@@ -181,7 +181,7 @@ const MarketResearcher = () => {
                                                         className="inline-flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-bold transition-colors group/link"
                                                     >
                                                         <ExternalLink className="h-2.5 w-2.5" />
-                                                        View Product
+                                                        {t.viewProduct}
                                                     </a>
                                                 )}
                                             </div>
@@ -203,8 +203,8 @@ const MarketResearcher = () => {
                 <table className="w-full text-sm text-left">
                     <thead>
                         <tr className="border-b bg-slate-50/50">
-                            <th className="px-4 py-3 font-black text-slate-900 uppercase tracking-wider text-[10px]">Feature</th>
-                            <th className="px-4 py-3 font-black text-indigo-600 uppercase tracking-wider text-[10px]">You</th>
+                            <th className="px-4 py-3 font-black text-slate-900 uppercase tracking-wider text-[10px]">{t.feature}</th>
+                            <th className="px-4 py-3 font-black text-indigo-600 uppercase tracking-wider text-[10px]">{t.you}</th>
                             {marketResearchResult.competitors.map((comp, i) => (
                                 <th key={i} className="px-4 py-3 font-black text-slate-500 uppercase tracking-wider text-[10px]">{comp}</th>
                             ))}
@@ -227,7 +227,7 @@ const MarketResearcher = () => {
                                                 typeof compStatus.status === 'boolean' ? (
                                                     compStatus.status ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-slate-300" />
                                                 ) : <span className="text-xs font-medium text-slate-600">{compStatus.status}</span>
-                                            ) : "N/A"}
+                                            ) : t.notAvailable}
                                         </td>
                                     );
                                 })}
@@ -258,7 +258,7 @@ const MarketResearcher = () => {
                     <Card className="border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden bg-white/80 backdrop-blur-md">
                         <CardHeader className="bg-slate-50/50 border-b p-5">
                             <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                <Globe className="h-4 w-4" /> Company Profile
+                                <Globe className="h-4 w-4" /> {t.companyProfile}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-6">
@@ -276,14 +276,14 @@ const MarketResearcher = () => {
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-600 flex justify-between items-center">
                                     {t.additionalUrls}
                                     <Button variant="ghost" size="sm" onClick={handleAddUrl} className="h-6 px-2 hover:bg-slate-100 text-[10px] font-black uppercase">
-                                        <Plus className="h-3 w-3 mr-1" /> Add URL
+                                        <Plus className="h-3 w-3 mr-1" /> {t.addUrl}
                                     </Button>
                                 </label>
                                 <div className="space-y-2">
                                     {additionalUrls.map((url, i) => (
                                         <div key={i} className="flex gap-2 group">
                                             <Input
-                                                placeholder="Sub-page URL (e.g., pricing, features)"
+                                                placeholder={t.urlPlaceholder}
                                                 value={url}
                                                 onChange={(e) => {
                                                     const newUrls = [...additionalUrls];
@@ -305,7 +305,7 @@ const MarketResearcher = () => {
                     <Card className="border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden bg-white/80 backdrop-blur-md">
                         <CardHeader className="bg-slate-50/50 border-b p-5">
                             <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                <ShieldAlert className="h-4 w-4" /> Competitive Intel
+                                <ShieldAlert className="h-4 w-4" /> {t.competitiveIntel}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-6">
@@ -313,7 +313,7 @@ const MarketResearcher = () => {
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-600 flex justify-between items-center">
                                     {t.competitors}
                                     <Button variant="ghost" size="sm" onClick={handleAddCompetitor} disabled={competitorUrls.length >= 10} className="h-6 px-2 hover:bg-slate-100 text-[10px] font-black uppercase">
-                                        <Plus className="h-3 w-3 mr-1" /> Add Competitor
+                                        <Plus className="h-3 w-3 mr-1" /> {t.addCompetitor}
                                     </Button>
                                 </label>
                                 <div className="space-y-2">
@@ -347,13 +347,13 @@ const MarketResearcher = () => {
                                     onChange={(e) => setProductMapping(e.target.value)}
                                     className="min-h-[80px] bg-slate-50/50 border-slate-200 focus:bg-white transition-all text-sm"
                                 />
-                                <p className="text-[10px] text-slate-400 font-medium italic">Describe which products/features to compare across all sites.</p>
+                                <p className="text-[10px] text-slate-400 font-medium italic">{t.mappingDesc}</p>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-600">Research Parameters</label>
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-600">{t.parameters}</label>
                                 <Textarea
-                                    placeholder="Any specific depth or focus? (e.g., 'Focus on enterprise features', 'Analyze pricing tiers')"
+                                    placeholder={t.parametersPlaceholder}
                                     value={specialInstructions}
                                     onChange={(e) => setSpecialInstructions(e.target.value)}
                                     className="min-h-[80px] bg-slate-50/50 border-slate-200 focus:bg-white transition-all text-sm"
@@ -365,7 +365,7 @@ const MarketResearcher = () => {
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
                                             <span className="text-indigo-600 flex items-center gap-1.5">
-                                                <Loader2 className="h-3 w-3 animate-spin" /> {language === "ru" ? "Идет анализ" : language === "he" ? "מנתח..." : "Analysis in progress"}
+                                                <Loader2 className="h-3 w-3 animate-spin" /> {t.analysisInProgress}
                                             </span>
                                             <span className="text-slate-400">{Math.round(progress)}%</span>
                                         </div>
@@ -382,7 +382,7 @@ const MarketResearcher = () => {
                                             <Rocket className="h-4 w-4 text-indigo-400 group-hover:block hidden" />
                                         </div>
                                         <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2 flex items-center gap-1.5">
-                                            <span className="h-1 w-1 bg-indigo-400 rounded-full animate-pulse" /> AI Thoughts & Actions
+                                            <span className="h-1 w-1 bg-indigo-400 rounded-full animate-pulse" /> {t.aiThoughts}
                                         </h4>
                                         <p className="text-xs font-bold leading-relaxed italic animate-in fade-in slide-in-from-left-2 duration-700">
                                             "{t.thoughts?.[thoughtIndex] || t.researching}"
@@ -427,9 +427,9 @@ const MarketResearcher = () => {
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-32 -mt-32" />
                                 <div className="relative z-10 flex justify-between items-start">
                                     <div>
-                                        <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300 font-black uppercase tracking-widest text-[10px]">Market Intel Report</Badge>
+                                        <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300 font-black uppercase tracking-widest text-[10px]">{t.marketIntelReport}</Badge>
                                         <CardTitle className="text-2xl font-black tracking-tight">{marketResearchResult.websiteUrl}</CardTitle>
-                                        <CardDescription className="text-indigo-200 font-medium">Generated on {marketResearchResult.generatedAt.toLocaleDateString()}</CardDescription>
+                                        <CardDescription className="text-indigo-200 font-medium">{t.generatedOn} {marketResearchResult.generatedAt.toLocaleDateString()}</CardDescription>
                                     </div>
                                     <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
                                         <BarChart3 className="h-6 w-6 text-indigo-300" />
@@ -439,10 +439,10 @@ const MarketResearcher = () => {
                             <CardContent className="p-0">
                                 <Tabs defaultValue="summary" className="w-full">
                                     <TabsList className="w-full h-14 bg-slate-50 border-b rounded-none px-6 justify-start gap-4">
-                                        <TabsTrigger value="summary" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">Summary</TabsTrigger>
-                                        <TabsTrigger value="pricing" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">Price Matrix</TabsTrigger>
-                                        <TabsTrigger value="features" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">Feature Table</TabsTrigger>
-                                        <TabsTrigger value="positioning" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">Positioning</TabsTrigger>
+                                        <TabsTrigger value="summary" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">{t.summary}</TabsTrigger>
+                                        <TabsTrigger value="pricing" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">{t.pricing}</TabsTrigger>
+                                        <TabsTrigger value="features" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">{t.features}</TabsTrigger>
+                                        <TabsTrigger value="positioning" className="data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none h-full font-black uppercase tracking-widest text-[10px] px-0">{t.positioning}</TabsTrigger>
                                     </TabsList>
 
                                     <div className="p-6">
@@ -450,7 +450,7 @@ const MarketResearcher = () => {
                                             <div className="space-y-6">
                                                 <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100">
                                                     <h3 className="text-sm font-black text-indigo-900 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                        <TrendingUp className="h-4 w-4" /> Executive Summary
+                                                        <TrendingUp className="h-4 w-4" /> {t.executiveSummary}
                                                     </h3>
                                                     <p className="text-sm text-indigo-900/80 leading-relaxed font-medium">
                                                         {marketResearchResult.executiveSummary}
@@ -460,7 +460,7 @@ const MarketResearcher = () => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="p-5 rounded-2xl border bg-emerald-50/30 border-emerald-100">
                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">
-                                                            <CheckCircle2 className="h-4 w-4" /> Strategic Advantages
+                                                            <CheckCircle2 className="h-4 w-4" /> {t.strategicAdvantages}
                                                         </h4>
                                                         <ul className="space-y-2">
                                                             {marketResearchResult.competitiveAnalysis.advantages.map((adv, i) => (
@@ -472,7 +472,7 @@ const MarketResearcher = () => {
                                                     </div>
                                                     <div className="p-5 rounded-2xl border bg-rose-50/30 border-rose-100">
                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-rose-600 mb-3 flex items-center gap-2">
-                                                            <AlertCircle className="h-4 w-4" /> Identified Gaps
+                                                            <AlertCircle className="h-4 w-4" /> {t.identifiedGaps}
                                                         </h4>
                                                         <ul className="space-y-2">
                                                             {marketResearchResult.competitiveAnalysis.disadvantages.map((dis, i) => (
@@ -486,7 +486,7 @@ const MarketResearcher = () => {
 
                                                 <div className="p-5 rounded-2xl border bg-amber-50/30 border-amber-100">
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">
-                                                        <Lightbulb className="h-4 w-4" /> Key Recommendations
+                                                        <Lightbulb className="h-4 w-4" /> {t.recommendations}
                                                     </h4>
                                                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         {marketResearchResult.recommendations.map((rec, i) => (
@@ -503,8 +503,8 @@ const MarketResearcher = () => {
                                         <TabsContent value="pricing" className="m-0 focus-visible:ring-0">
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Price Comparison Matrix</h3>
-                                                    <Badge className="bg-slate-900 text-[10px] font-black uppercase">Live Market Data</Badge>
+                                                    <h3 className="text-lg font-black text-slate-900 tracking-tight">{t.priceMatrix}</h3>
+                                                    <Badge className="bg-slate-900 text-[10px] font-black uppercase">{t.liveMarketData}</Badge>
                                                 </div>
                                                 <div className="rounded-xl border border-slate-200 overflow-hidden">
                                                     {renderPriceMatrix()}
@@ -515,8 +515,8 @@ const MarketResearcher = () => {
                                         <TabsContent value="features" className="m-0 focus-visible:ring-0">
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Feature Benchmarking</h3>
-                                                    <Badge className="bg-indigo-600 text-[10px] font-black uppercase">Functional Audit</Badge>
+                                                    <h3 className="text-lg font-black text-slate-900 tracking-tight">{t.featureBenchmarking}</h3>
+                                                    <Badge className="bg-indigo-600 text-[10px] font-black uppercase">{t.functionalAudit}</Badge>
                                                 </div>
                                                 <div className="rounded-xl border border-slate-200 overflow-hidden">
                                                     {renderFeatureTable()}
@@ -529,7 +529,7 @@ const MarketResearcher = () => {
                                                 <div className="space-y-4">
                                                     <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-xl">
                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3 flex items-center gap-2">
-                                                            <Target className="h-4 w-4" /> Market Landscape
+                                                            <Target className="h-4 w-4" /> {t.marketLandscape}
                                                         </h4>
                                                         <p className="text-xs font-medium leading-relaxed opacity-90">
                                                             {marketResearchResult.marketPositioning.landscape}
@@ -539,7 +539,7 @@ const MarketResearcher = () => {
                                                 <div className="space-y-4">
                                                     <div className="p-5 rounded-2xl bg-indigo-600 text-white shadow-xl">
                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-3 flex items-center gap-2">
-                                                            <Rocket className="h-4 w-4" /> Segmentation Strategy
+                                                            <Rocket className="h-4 w-4" /> {t.segmentationStrategy}
                                                         </h4>
                                                         <p className="text-xs font-medium leading-relaxed font-bold">
                                                             {marketResearchResult.marketPositioning.segmentation}
@@ -547,7 +547,7 @@ const MarketResearcher = () => {
                                                     </div>
                                                 </div>
                                                 <div className="md:col-span-2 p-5 rounded-2xl border bg-slate-50 italic">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Research Methodology</h4>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{t.methodology}</h4>
                                                     <p className="text-[10px] font-medium text-slate-400">
                                                         {marketResearchResult.methodology}
                                                     </p>
@@ -563,7 +563,7 @@ const MarketResearcher = () => {
                             <div className="h-20 w-20 rounded-3xl bg-white border border-slate-100 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                                 <BarChart3 className="h-10 w-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                             </div>
-                            <h3 className="text-xl font-black text-slate-400 tracking-tight group-hover:text-slate-600 transition-colors">Awaiting Analysis Parameters</h3>
+                            <h3 className="text-xl font-black text-slate-400 tracking-tight group-hover:text-slate-600 transition-colors">{t.awaitingParameters}</h3>
                             <p className="text-sm text-slate-400 font-medium max-w-[280px] mt-2 group-hover:text-slate-500 transition-colors">
                                 {t.emptyState}
                             </p>

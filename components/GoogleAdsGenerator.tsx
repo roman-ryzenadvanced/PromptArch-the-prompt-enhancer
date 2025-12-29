@@ -56,37 +56,7 @@ export default function GoogleAdsGenerator() {
     const models = availableModels[selectedProvider] || modelAdapter.getAvailableModels(selectedProvider);
 
     // Fun progress messages
-    const progressMessages = language === "ru" ? [
-        "🔍 Изучаю ваш сайт...",
-        "🧠 Анализирую конкурентов...",
-        "💡 Генерирую гениальные идеи...",
-        "📊 Исследую рыночные тренды...",
-        "🎯 Определяю целевую аудиторию...",
-        "✨ Создаю магию рекламы...",
-        "🚀 Почти готово, потерпите...",
-        "📝 Пишу убедительные тексты...",
-        "🔥 Оптимизирую для конверсий..."
-    ] : language === "he" ? [
-        "🔍 בודק את האתר שלך...",
-        "🧠 מנתח מתחרים...",
-        "💡 מייצר רעיונות גאוניים...",
-        "📊 חוקר מגמות שוק...",
-        "🎯 מזהה קהל יעד...",
-        "✨ יוצר קסם פרסום...",
-        "🚀 כמעט שם, רק רגע...",
-        "📝 כותב טקסטים משכנעים...",
-        "🔥 מייעל להמרות..."
-    ] : [
-        "🔍 Studying your website...",
-        "🧠 Analyzing competitors...",
-        "💡 Generating brilliant ideas...",
-        "📊 Researching market trends...",
-        "🎯 Identifying target audience...",
-        "✨ Creating advertising magic...",
-        "🚀 Almost there, hang tight...",
-        "📝 Writing persuasive copy...",
-        "🔥 Optimizing for conversions..."
-    ];
+    const progressMessages = t.progressMessages;
 
     const toggleSection = (section: string) => {
         setExpandedSections((prev) =>
@@ -159,12 +129,12 @@ export default function GoogleAdsGenerator() {
 
     const handleGenerate = async () => {
         if (!websiteUrl.trim()) {
-            setError("Please enter a website URL");
+            setError(t.errorWebsite);
             return;
         }
         const filteredProducts = products.filter(p => p.name.trim() !== "");
         if (filteredProducts.length === 0) {
-            setError(language === "ru" ? "Добавьте хотя бы один продукт или услугу" : language === "he" ? "הוסף לפחות מוצר או שירות אחד" : "Please add at least one product or service");
+            setError(t.errorProducts);
             return;
         }
 
@@ -172,7 +142,7 @@ export default function GoogleAdsGenerator() {
         const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
         if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-            setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+            setError(`${common.error}: ${common.configApiKey}`);
             return;
         }
 
@@ -240,15 +210,15 @@ export default function GoogleAdsGenerator() {
                     setExpandedSections(["keywords"]);
                 } catch (e) {
                     console.error("Failed to parse ads data:", e);
-                    setError("Failed to parse the generated ads content. Please try again.");
+                    setError(t.errorParse || "Failed to parse the generated ads content. Please try again.");
                 }
             } else {
                 console.error("[GoogleAdsGenerator] Generation failed:", result.error);
-                setError(result.error || "Failed to generate Google Ads campaign");
+                setError(result.error || t.errorGenerate);
             }
         } catch (err) {
             console.error("[GoogleAdsGenerator] Generation error:", err);
-            setError(err instanceof Error ? err.message : "An error occurred");
+            setError(err instanceof Error ? err.message : t.error);
         } finally {
             setProcessing(false);
         }
@@ -256,12 +226,12 @@ export default function GoogleAdsGenerator() {
 
     const handleMagicWand = async () => {
         if (!websiteUrl.trim()) {
-            setError("Please enter a website URL");
+            setError(t.errorWebsite);
             return;
         }
         const firstProduct = products.find(p => p.name.trim() !== "");
         if (!firstProduct) {
-            setError(language === "ru" ? "Добавьте хотя бы один продукт" : language === "he" ? "הוסף לפחות מוצר אחד" : "Please add at least one product to promote");
+            setError(t.errorProducts);
             return;
         }
 
@@ -269,7 +239,7 @@ export default function GoogleAdsGenerator() {
         const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
         if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-            setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+            setError(`${common.error}: ${common.configApiKey}`);
             return;
         }
 
@@ -316,10 +286,10 @@ export default function GoogleAdsGenerator() {
                 });
                 setExpandedSections(["market", "strategies"]);
             } else {
-                setError(result.error || "Magic Wand failed to research the market");
+                setError(result.error || t.errorMagicWand);
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "An error occurred during Magic Wand research");
+            setError(err instanceof Error ? err.message : t.errorMagicWandGeneral);
         } finally {
             setIsMagicThinking(false);
         }
@@ -335,10 +305,10 @@ export default function GoogleAdsGenerator() {
     };
 
     const sections = [
-        { id: "keywords", title: language === "ru" ? "Исследование ключевых слов" : language === "he" ? "מחקר מילות מפתח" : "Keywords Research" },
-        { id: "adcopies", title: language === "ru" ? "Варианты объявлений" : language === "he" ? "גרסאות עותקי מודעות" : "Ad Copy Variations" },
-        { id: "campaigns", title: language === "ru" ? "Структура кампании" : language === "he" ? "מבנה קמפיין" : "Campaign Structure" },
-        { id: "implementation", title: language === "ru" ? "Руководство по внедрению" : language === "he" ? "מדריך יישום" : "Implementation Guide" },
+        { id: "keywords", title: t.keywordsResearch },
+        { id: "adcopies", title: t.adCopyVariations },
+        { id: "campaigns", title: t.campaignStructure },
+        { id: "implementation", title: t.implementationGuide },
     ];
 
     const renderSectionContent = (sectionId: string) => {
@@ -351,7 +321,7 @@ export default function GoogleAdsGenerator() {
                         {googleAdsResult.keywords?.primary?.length > 0 && (
                             <div className="p-4 rounded-xl bg-indigo-50/30 border border-indigo-100/50 shadow-sm">
                                 <h4 className="text-[10px] font-black tracking-widest text-indigo-600 uppercase mb-3 flex items-center gap-2">
-                                    <Target className="h-3 w-3" /> Primary High-Intent Keywords
+                                    <Target className="h-3 w-3" /> {t.labels.primaryKeywords}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {googleAdsResult.keywords.primary.map((k, i) => (
@@ -370,7 +340,7 @@ export default function GoogleAdsGenerator() {
                         {googleAdsResult.keywords?.longTail?.length > 0 && (
                             <div className="p-4 rounded-xl bg-emerald-50/30 border border-emerald-100/50 shadow-sm">
                                 <h4 className="text-[10px] font-black tracking-widest text-emerald-600 uppercase mb-3 flex items-center gap-2">
-                                    <TrendingUp className="h-3 w-3" /> Long-Tail Opportunities
+                                    <TrendingUp className="h-3 w-3" /> {t.labels.longTail}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {googleAdsResult.keywords.longTail.map((k, i) => (
@@ -384,7 +354,7 @@ export default function GoogleAdsGenerator() {
                         {googleAdsResult.keywords?.negative?.length > 0 && (
                             <div className="p-4 rounded-xl bg-rose-50/30 border border-rose-100/50 shadow-sm">
                                 <h4 className="text-[10px] font-black tracking-widest text-rose-600 uppercase mb-3 flex items-center gap-2">
-                                    <ShieldAlert className="h-3 w-3" /> Negative Keywords (Exclude)
+                                    <ShieldAlert className="h-3 w-3" /> {t.labels.negative}
                                 </h4>
                                 <div className="flex flex-wrap gap-1.5">
                                     {googleAdsResult.keywords.negative.map((k, i) => (
@@ -404,7 +374,7 @@ export default function GoogleAdsGenerator() {
                             <div key={i} className="relative group p-5 rounded-2xl border bg-white shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                                 <div className="absolute top-0 left-0 h-full w-1.5 bg-indigo-500 rounded-l-2xl" />
                                 <div className="flex justify-between items-center mb-4">
-                                    <div className="text-[10px] font-black uppercase tracking-tighter text-indigo-500">Google Search Preview • Ad Variation {i + 1}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-tighter text-indigo-500">{t.labels.preview} • {t.labels.variation} {i + 1}</div>
                                     <div className="flex gap-1">
                                         <span className="h-2 w-2 rounded-full bg-slate-100 shadow-inner" />
                                         <span className="h-2 w-2 rounded-full bg-slate-100 shadow-inner" />
@@ -439,20 +409,20 @@ export default function GoogleAdsGenerator() {
                                 </div>
                                 <div className="flex justify-between items-start mb-6">
                                     <div>
-                                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{camp.type} Strategy</div>
+                                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{camp.type} {t.labels.strategy}</div>
                                         <h4 className="text-lg font-black tracking-tight">{camp.name}</h4>
                                     </div>
                                     {camp.budget && (
                                         <div className="text-right p-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10">
                                             <div className="text-base lg:text-lg font-black text-indigo-400">${camp.budget.monthly}</div>
-                                            <div className="text-[9px] font-black text-white/40 uppercase tracking-tighter">Budget / Month</div>
+                                            <div className="text-[9px] font-black text-white/40 uppercase tracking-tighter">{t.adGuide.budgetMonth}</div>
                                         </div>
                                     )}
                                 </div>
                                 {camp.adGroups?.length > 0 && (
                                     <div className="space-y-3">
                                         <div className="text-[10px] uppercase font-black text-white/30 tracking-widest flex items-center gap-2">
-                                            <div className="h-px flex-1 bg-white/10" /> Target Ad Groups <div className="h-px flex-1 bg-white/10" />
+                                            <div className="h-px flex-1 bg-white/10" /> {t.adGuide.targetGroups} <div className="h-px flex-1 bg-white/10" />
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             {camp.adGroups.map((g, j) => (
@@ -474,7 +444,7 @@ export default function GoogleAdsGenerator() {
                             <div className="p-5 rounded-2xl border bg-indigo-50/20">
                                 <h4 className="text-[10px] font-black tracking-widest text-indigo-600 uppercase mb-4 flex items-center gap-2">
                                     <div className="h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-[10px]">1</div>
-                                    Step-by-Step Configuration
+                                    {t.labels.config}
                                 </h4>
                                 <ol className="space-y-3">
                                     {googleAdsResult.implementation.setupSteps.map((step, i) => (
@@ -492,7 +462,7 @@ export default function GoogleAdsGenerator() {
                             <div className="p-5 rounded-2xl border bg-emerald-50/20">
                                 <h4 className="text-[10px] font-black tracking-widest text-emerald-600 uppercase mb-4 flex items-center gap-2">
                                     <div className="h-6 w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-[10px]">2</div>
-                                    Quality Score Optimization
+                                    {t.labels.quality}
                                 </h4>
                                 <ul className="space-y-3">
                                     {googleAdsResult.implementation.qualityScoreTips.map((tip, i) => (
@@ -524,7 +494,7 @@ export default function GoogleAdsGenerator() {
                                     <BarChart3 className="h-12 w-12" />
                                 </div>
                                 <div className="text-[10px] uppercase font-black text-indigo-600/70 mb-1.5 flex items-center gap-1.5 tracking-wider">
-                                    <BarChart3 className="h-3 w-3" /> Industry Size
+                                    <BarChart3 className="h-3 w-3" /> {t.metrics.industrySize}
                                 </div>
                                 <div className="text-base lg:text-lg font-black text-slate-800 tracking-tight leading-none">{magicWandResult.marketAnalysis.industrySize}</div>
                             </div>
@@ -533,7 +503,7 @@ export default function GoogleAdsGenerator() {
                                     <TrendingUp className="h-12 w-12" />
                                 </div>
                                 <div className="text-[10px] uppercase font-black text-emerald-600/70 mb-1.5 flex items-center gap-1.5 tracking-wider">
-                                    <TrendingUp className="h-3 w-3" /> Growth Rate
+                                    <TrendingUp className="h-3 w-3" /> {t.metrics.growthRate}
                                 </div>
                                 <div className="text-base lg:text-lg font-black text-slate-800 tracking-tight leading-none">{magicWandResult.marketAnalysis.growthRate}</div>
                             </div>
@@ -541,7 +511,7 @@ export default function GoogleAdsGenerator() {
                         <div className="space-y-5">
                             <div className="p-4 rounded-xl border bg-slate-50/30">
                                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-indigo-500" /> Market Leaders
+                                    <Users className="h-4 w-4 text-indigo-500" /> {t.metrics.marketLeaders}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {magicWandResult.marketAnalysis.topCompetitors.map((c, i) => (
@@ -553,7 +523,7 @@ export default function GoogleAdsGenerator() {
                             </div>
                             <div className="p-4 rounded-xl border bg-slate-50/30">
                                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <Rocket className="h-4 w-4 text-purple-500" /> Emerging Trends
+                                    <Rocket className="h-4 w-4 text-purple-500" /> {t.metrics.emergingTrends}
                                 </h4>
                                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {magicWandResult.marketAnalysis.marketTrends.map((t, i) => (
@@ -581,7 +551,7 @@ export default function GoogleAdsGenerator() {
                                         </div>
                                         <div>
                                             <h4 className="font-black text-slate-900 tracking-tight leading-none">{comp.competitor}</h4>
-                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Competitor Intel</span>
+                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{t.metrics.competitorIntel}</span>
                                         </div>
                                     </div>
                                     <ShieldAlert className="h-5 w-5 text-amber-500 group-hover:rotate-12 transition-transform" />
@@ -589,7 +559,7 @@ export default function GoogleAdsGenerator() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1.5 mb-2">
-                                            <span className="h-1 w-4 bg-emerald-500 rounded-full" /> Strengths
+                                            <span className="h-1 w-4 bg-emerald-500 rounded-full" /> {t.metrics.strengths}
                                         </div>
                                         <ul className="space-y-2">
                                             {comp.strengths.map((s, j) => (
@@ -604,7 +574,7 @@ export default function GoogleAdsGenerator() {
                                     </div>
                                     <div className="space-y-2">
                                         <div className="text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center gap-1.5 mb-2">
-                                            <span className="h-1 w-4 bg-rose-500 rounded-full" /> Weaknesses
+                                            <span className="h-1 w-4 bg-rose-500 rounded-full" /> {t.metrics.weaknesses}
                                         </div>
                                         <ul className="space-y-2">
                                             {comp.weaknesses.map((w, j) => (
@@ -620,9 +590,9 @@ export default function GoogleAdsGenerator() {
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-slate-100">
                                     <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/50">
-                                        <div className="h-7 w-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0 font-black text-[10px]">SPY</div>
+                                        <div className="h-7 w-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0 font-black text-[10px]">{t.spy}</div>
                                         <p className="text-[11px] font-medium text-slate-600 italic leading-relaxed">
-                                            <span className="font-black text-indigo-600 not-italic mr-1.5 uppercase leading-none">Intelligence:</span>
+                                            <span className="font-black text-indigo-600 not-italic mr-1.5 uppercase leading-none">{t.metrics.intelligence}:</span>
                                             "{comp.adStrategy}"
                                         </p>
                                     </div>
@@ -648,22 +618,22 @@ export default function GoogleAdsGenerator() {
                                             strat.riskLevel === 'low' ? "bg-emerald-100 text-emerald-700" :
                                                 strat.riskLevel === 'medium' ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
                                         )}>
-                                            {strat.riskLevel} risk
+                                            {t.metrics.risk(strat.riskLevel)}
                                         </span>
-                                        <span className="text-[10px] text-slate-400 mt-1 font-bold italic">{strat.timeToResults} to results</span>
+                                        <span className="text-[10px] text-slate-400 mt-1 font-bold italic">{strat.timeToResults}</span>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                                        <span className="text-indigo-500 font-black uppercase text-[9px] block mb-0.5">The "Why":</span>
+                                        <span className="text-indigo-500 font-black uppercase text-[9px] block mb-0.5">THE "WHY":</span>
                                         {strat.rationale}
                                     </p>
 
                                     <div className="p-3 bg-slate-50 rounded-xl border border-dashed text-xs space-y-2">
                                         <div className="flex items-center gap-2">
                                             <Target className="h-3.5 w-3.5 text-indigo-500" />
-                                            <span className="font-bold text-slate-700">Edge: {strat.competitiveAdvantage}</span>
+                                            <span className="font-bold text-slate-700">EDGE: {strat.competitiveAdvantage}</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
                                             {strat.keyMessages.map((msg, j) => (
@@ -676,10 +646,10 @@ export default function GoogleAdsGenerator() {
                                     {strat.adCopyGuide && (
                                         <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg space-y-4 border border-slate-700">
                                             <div className="flex items-center justify-between">
-                                                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Google Ads Setup Guide</div>
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{t.adGuide.title}</div>
                                                 <div className="flex gap-1">
                                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                    <span className="text-[9px] text-emerald-400 font-bold uppercase">Ready to Paste</span>
+                                                    <span className="text-[9px] text-emerald-400 font-bold uppercase">{t.adGuide.ready}</span>
                                                 </div>
                                             </div>
 
@@ -687,7 +657,7 @@ export default function GoogleAdsGenerator() {
                                                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
                                                     <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
                                                         <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">1</span>
-                                                        Paste into Headlines (max 30 symbols)
+                                                        {t.adGuide.headlines}
                                                     </div>
                                                     <div className="space-y-1">
                                                         {strat.adCopyGuide.headlines.map((h, j) => (
@@ -702,7 +672,7 @@ export default function GoogleAdsGenerator() {
                                                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
                                                     <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
                                                         <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">2</span>
-                                                        Paste into Descriptions (max 90 symbols)
+                                                        {t.adGuide.descriptions}
                                                     </div>
                                                     <div className="space-y-2">
                                                         {strat.adCopyGuide.descriptions.map((d, j) => (
@@ -717,7 +687,7 @@ export default function GoogleAdsGenerator() {
                                                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
                                                     <div className="text-[9px] font-black text-slate-400 uppercase flex items-center gap-2">
                                                         <span className="h-4 w-4 rounded bg-indigo-500 text-white flex items-center justify-center font-black">3</span>
-                                                        Paste into Keywords Section
+                                                        {t.adGuide.keywords}
                                                     </div>
                                                     <div className="flex flex-wrap gap-1">
                                                         {strat.adCopyGuide.keywords.map((k, j) => (
@@ -730,7 +700,7 @@ export default function GoogleAdsGenerator() {
 
                                                 <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                                                     <div className="text-[9px] font-black text-indigo-300 uppercase mb-1 flex items-center gap-1.5">
-                                                        <Rocket className="h-3 w-3" /> Quick Implementation Tip
+                                                        <Rocket className="h-3 w-3" /> {t.adGuide.tip}
                                                     </div>
                                                     <p className="text-[10px] text-slate-300 font-medium leading-relaxed italic">
                                                         "{strat.adCopyGuide.setupGuide}"
@@ -742,7 +712,7 @@ export default function GoogleAdsGenerator() {
 
                                     <div className="grid grid-cols-2 gap-4 items-center">
                                         <div className="space-y-1">
-                                            <div className="text-[9px] font-black text-slate-400 uppercase">Channel Mix</div>
+                                            <div className="text-[9px] font-black text-slate-400 uppercase">{t.adGuide.channelMix}</div>
                                             <div className="flex flex-wrap gap-1">
                                                 {strat.recommendedChannels.map((c, j) => (
                                                     <span key={j} className="text-[9px] font-bold text-slate-600">{c}</span>
@@ -750,7 +720,7 @@ export default function GoogleAdsGenerator() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-[9px] font-black text-slate-400 uppercase text-right">Expected ROI</div>
+                                            <div className="text-[9px] font-black text-slate-400 uppercase text-right">{t.metrics.roi}</div>
                                             <div className="text-lg font-black text-emerald-600 tracking-tighter">{strat.expectedROI}</div>
                                         </div>
                                     </div>
@@ -813,7 +783,7 @@ export default function GoogleAdsGenerator() {
                     <div className="space-y-2">
                         <label className="text-xs lg:text-sm font-medium">{t.websiteUrl}</label>
                         <Input
-                            placeholder="e.g., www.your-business.com"
+                            placeholder={t.websitePlaceholder}
                             value={websiteUrl}
                             onChange={(e) => setWebsiteUrl(e.target.value)}
                             className="text-sm"
@@ -827,7 +797,7 @@ export default function GoogleAdsGenerator() {
                                 <div key={index} className="space-y-1.5 p-2.5 rounded-lg border bg-muted/20">
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder={`${language === "ru" ? "Название продукта" : language === "he" ? "שם המוצר" : "Product name"} ${index + 1}`}
+                                            placeholder={`${t.productName} ${index + 1}`}
                                             value={product.name}
                                             onChange={(e) => updateProduct(index, "name", e.target.value)}
                                             className="text-sm"
@@ -844,7 +814,7 @@ export default function GoogleAdsGenerator() {
                                         )}
                                     </div>
                                     <Input
-                                        placeholder={language === "ru" ? "URL страницы продукта (необязательно)" : language === "he" ? "כתובת URL של עמוד המוצר (אופציונלי)" : "Product page URL (optional)"}
+                                        placeholder={t.productUrlPlaceholder}
                                         value={product.url}
                                         onChange={(e) => updateProduct(index, "url", e.target.value)}
                                         className="text-xs text-muted-foreground"
@@ -853,7 +823,7 @@ export default function GoogleAdsGenerator() {
                             ))}
                             <Button variant="outline" size="sm" onClick={addProduct} className="w-full text-xs">
                                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                {language === "ru" ? "Добавить продукт" : language === "he" ? "הוסף מוצר" : "Add Product"}
+                                {t.addProduct}
                             </Button>
                         </div>
                     </div>
@@ -893,7 +863,7 @@ export default function GoogleAdsGenerator() {
                     <div className="space-y-2">
                         <label className="text-xs lg:text-sm font-medium">{t.targetAudience}</label>
                         <Textarea
-                            placeholder="e.g., Small business owners in USA looking for productivity tools"
+                            placeholder={t.audiencePlaceholder}
                             value={targetAudience}
                             onChange={(e) => setTargetAudience(e.target.value)}
                             className="min-h-[80px] lg:min-h-[100px] resize-y text-sm"
@@ -1015,8 +985,8 @@ export default function GoogleAdsGenerator() {
                     </CardTitle>
                     <CardDescription className="text-xs lg:text-sm">
                         {magicWandResult
-                            ? (language === "ru" ? "Глубокое исследование конкурентов и темы кампаний" : language === "he" ? "מחקר תחרותי מעמיק ונושאי קמפיין" : "Deep competitive research and campaign themes")
-                            : (language === "ru" ? "Ключевые слова, объявления и структура кампании" : language === "he" ? "מילות מפתח, עותקי מודעות ומבנה קמפיין מוכנים" : "Keywords, ad copy, and campaign structure ready")
+                            ? t.strategicDirections
+                            : t.generatedCampaign
                         }
                     </CardDescription>
                 </CardHeader>
@@ -1056,7 +1026,7 @@ export default function GoogleAdsGenerator() {
                         </div>
                     ) : (
                         <div className="flex h-[200px] lg:h-[300px] items-center justify-center text-center text-xs lg:text-sm text-muted-foreground">
-                            {language === "ru" ? "Здесь появится созданная кампания" : language === "he" ? "קמפיין שחולל יופיע כאן" : "Generated campaign will appear here"}
+                            {common.emptyState}
                         </div>
                     )}
                 </CardContent>

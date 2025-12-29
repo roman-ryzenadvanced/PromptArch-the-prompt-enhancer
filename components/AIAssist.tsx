@@ -51,13 +51,13 @@ class CanvasErrorBoundary extends React.Component<{ children: React.ReactNode },
             return (
                 <div className="h-full flex flex-col items-center justify-center bg-[#0b1414] p-8 text-center rounded-b-2xl">
                     <StopCircle className="h-10 w-10 text-red-500/40 mb-4" />
-                    <h4 className="text-xs font-black uppercase tracking-widest text-red-400 mb-2">Canvas Crashed</h4>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-red-400 mb-2">{t.canvasCrashed}</h4>
                     <p className="text-[10px] font-mono text-slate-500 max-w-xs">{this.state.error}</p>
                     <button
                         onClick={() => this.setState({ hasError: false, error: null })}
                         className="mt-4 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/30 rounded-xl hover:bg-blue-500/10 transition-colors"
                     >
-                        Try Again
+                        {t.tryAgain}
                     </button>
                 </div>
             );
@@ -67,13 +67,7 @@ class CanvasErrorBoundary extends React.Component<{ children: React.ReactNode },
 }
 const BuildingArtifact = ({ type }: { type: string }) => {
     const [progress, setProgress] = useState(0);
-    const steps = [
-        "Initializing neural links...",
-        "Scaffolding architecture...",
-        "Writing logic blocks...",
-        "Injecting dynamic modules...",
-        "Finalizing interactive layers..."
-    ];
+    const steps = t.thinkingSteps;
     const [currentStep, setCurrentStep] = useState(0);
 
     useEffect(() => {
@@ -93,7 +87,7 @@ const BuildingArtifact = ({ type }: { type: string }) => {
             </div>
 
             <h3 className="text-2xl font-black uppercase tracking-[0.3em] mb-4 text-white drop-shadow-lg">
-                Building <span className="text-blue-500">{type}</span>
+                {t.building} <span className="text-blue-500">{type}</span>
             </h3>
 
             <div className="w-full max-w-sm h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-10 backdrop-blur-sm border border-white/5">
@@ -267,7 +261,7 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
             {renderError ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95 duration-300">
                     <StopCircle className="h-10 w-10 text-red-500/40 mb-5" />
-                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400 mb-3">Runtime Execution Error</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-400 mb-3">{t.runtimeError}</h4>
                     <p className="text-[9px] font-mono text-slate-500 max-w-sm border border-red-500/10 bg-red-500/5 p-4 rounded-xl leading-relaxed">
                         {renderError}
                     </p>
@@ -277,7 +271,7 @@ const LiveCanvas = memo(({ data, type, isStreaming }: { data: string, type: stri
                         className="mt-6 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white"
                         onClick={() => window.location.reload()}
                     >
-                        Try Refreshing Page
+                        {t.tryRefreshing}
                     </Button>
                 </div>
             ) : (
@@ -307,7 +301,7 @@ const ThinkingIndicator = () => (
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
         </div>
-        <span className="text-[10px] font-black text-blue-700/60 dark:text-blue-200/60 uppercase tracking-widest ml-2">Neural Link Thinking...</span>
+        <span className="text-[10px] font-black text-blue-700/60 dark:text-blue-200/60 uppercase tracking-widest ml-2">{t.neuralLinkThinking}</span>
     </div>
 );
 
@@ -345,7 +339,7 @@ function parseStreamingContent(text: string, currentAgent: string) {
         };
         if (preview.isStreaming) {
             const isUpdate = text.toLowerCase().includes("update") || text.toLowerCase().includes("fix") || text.toLowerCase().includes("change");
-            status = isUpdate ? `Applying surgical edits to ${preview.type}...` : `Generating ${preview.type} artifact...`;
+            status = isUpdate ? t.applyingEdits(preview.type) : t.generatingArtifact(preview.type);
         }
     }
 
@@ -412,7 +406,7 @@ function parseStreamingContent(text: string, currentAgent: string) {
     }
 
     if (!chatDisplay && preview && preview.isStreaming) {
-        chatDisplay = `Rendering live artifact...`;
+        chatDisplay = t.renderingLive;
     }
 
     return { chatDisplay, preview, agent, status };
@@ -436,9 +430,9 @@ export default function AIAssist() {
     } = useStore();
     const t = translations[language].aiAssist;
 
-    const activeTab = aiAssistTabs?.find(t => t.id === activeTabId) || aiAssistTabs?.[0] || {
+    const activeTab = aiAssistTabs?.find(tab => tab.id === activeTabId) || aiAssistTabs?.[0] || {
         id: 'default',
-        title: 'New Chat',
+        title: t.newChat,
         history: [],
         currentAgent: 'general',
         previewData: null,
@@ -704,7 +698,7 @@ export default function AIAssist() {
                             <div>
                                 <h2 className="text-xl font-black text-slate-900 dark:text-blue-50 tracking-tight">{t.title}</h2>
                                 <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-blue-700/70 dark:text-blue-200/70">
-                                    Agent {currentAgent}
+                                    {t.agentLabel} {t.agents[currentAgent as keyof typeof t.agents] || currentAgent}
                                 </p>
                             </div>
                         </div>
@@ -751,7 +745,13 @@ export default function AIAssist() {
                                 )}
                             >
                                 <MessageSquare className="h-3 w-3" />
-                                <span className="text-[10px] font-black uppercase tracking-wider">{tab.title}</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                    {tab.title === "New Chat"
+                                        ? t.chatTitle
+                                        : tab.title.startsWith("Chat ")
+                                            ? `${t.chatPrefix} ${tab.title.split(" ")[1]}`
+                                            : tab.title}
+                                </span>
                                 {aiAssistTabs.length > 1 && (
                                     <button
                                         onClick={(e) => {
@@ -768,7 +768,7 @@ export default function AIAssist() {
                         <button
                             onClick={() => addAIAssistTab()}
                             className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all ml-1"
-                            title="New Chat"
+                            title={t.newChat}
                         >
                             <Plus className="h-3 w-3" />
                         </button>
@@ -778,12 +778,12 @@ export default function AIAssist() {
                     <div className="px-6 pt-6">
                         <div className="flex flex-wrap gap-2 pb-4">
                             {[
-                                { label: "General", agent: "general", icon: <Orbit className="h-3.5 w-3.5" /> },
-                                { label: "Code", agent: "code", icon: <Code2 className="h-3.5 w-3.5" /> },
-                                { label: "Design", agent: "design", icon: <Palette className="h-3.5 w-3.5" /> },
-                                { label: "SEO", agent: "seo", icon: <Search className="h-3.5 w-3.5" /> },
-                                { label: "Web", agent: "web", icon: <LayoutPanelLeft className="h-3.5 w-3.5" /> },
-                                { label: "App", agent: "app", icon: <Play className="h-3.5 w-3.5" /> },
+                                { label: t.agents.general, agent: "general", icon: <Orbit className="h-3.5 w-3.5" /> },
+                                { label: t.agents.code, agent: "code", icon: <Code2 className="h-3.5 w-3.5" /> },
+                                { label: t.agents.design, agent: "design", icon: <Palette className="h-3.5 w-3.5" /> },
+                                { label: t.agents.seo, agent: "seo", icon: <Search className="h-3.5 w-3.5" /> },
+                                { label: t.agents.web, agent: "web", icon: <LayoutPanelLeft className="h-3.5 w-3.5" /> },
+                                { label: t.agents.app, agent: "app", icon: <Play className="h-3.5 w-3.5" /> },
                             ].map(({ label, agent, icon }) => (
                                 <button
                                     key={agent}
@@ -811,16 +811,12 @@ export default function AIAssist() {
                                     <Ghost className="h-20 w-20 text-blue-400/40 animate-bounce duration-[3s]" />
                                     <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full" />
                                 </div>
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-blue-50 mb-3 tracking-tighter">Studio-grade AI Assist</h3>
+                                <h3 className="text-3xl font-black text-slate-900 dark:text-blue-50 mb-3 tracking-tighter">{t.studioTitle}</h3>
                                 <p className="max-w-xs text-sm font-medium text-slate-600 dark:text-blue-100/70 leading-relaxed">
-                                    Switch agents, stream answers, and light up the canvas with live artifacts.
+                                    {t.studioDesc}
                                 </p>
                                 <div className="mt-10 flex flex-wrap justify-center gap-3">
-                                    {[
-                                        { label: "Build a landing UI", agent: "web" },
-                                        { label: "SEO diagnostic", agent: "seo" },
-                                        { label: "Mobile onboarding", agent: "app" },
-                                    ].map((chip) => (
+                                    {t.suggestions.map((chip: any) => (
                                         <Badge
                                             key={chip.label}
                                             variant="secondary"
@@ -864,25 +860,25 @@ export default function AIAssist() {
                                     {msg.role === "assistant" && aiPlan && i === aiAssistHistory.length - 1 && assistStep === "plan" && (
                                         <div className="mt-6 p-6 rounded-2xl bg-blue-500/5 border border-blue-500/20 backdrop-blur-sm animate-in zoom-in-95 duration-300">
                                             <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                <LayoutPanelLeft className="h-4 w-4" /> Proposed Solution Plan
+                                                <LayoutPanelLeft className="h-4 w-4" /> {t.proposedPlan}
                                             </h3>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Architecture</p>
+                                                    <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">{t.architecture}</p>
                                                     <p className="text-xs text-slate-400">{aiPlan.architecture}</p>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Tech Stack</p>
+                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">{t.techStack}</p>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {aiPlan.techStack?.map((t: string) => (
-                                                                <Badge key={t} variant="outline" className="text-[9px] border-blue-500/30 text-blue-300 px-1.5 py-0">{t}</Badge>
+                                                            {aiPlan.techStack?.map((t_stack: string) => (
+                                                                <Badge key={t_stack} variant="outline" className="text-[9px] border-blue-500/30 text-blue-300 px-1.5 py-0">{t_stack}</Badge>
                                                             ))}
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">Files</p>
-                                                        <p className="text-[10px] text-slate-400">{aiPlan.files?.length} modules planned</p>
+                                                        <p className="text-[11px] font-bold text-slate-500 uppercase mb-1">{t.files}</p>
+                                                        <p className="text-[10px] text-slate-400">{t.filesPlanned(aiPlan.files?.length || 0)}</p>
                                                     </div>
                                                 </div>
                                                 <Button
@@ -890,7 +886,7 @@ export default function AIAssist() {
                                                     disabled={isProcessing}
                                                     className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-widest py-5 rounded-xl shadow-lg shadow-blue-500/20"
                                                 >
-                                                    {isProcessing ? "Starting Engine..." : "Approve & Generate Development"}
+                                                    {isProcessing ? t.startingEngine : t.approveGenerate}
                                                 </Button>
                                             </div>
                                         </div>
@@ -908,7 +904,7 @@ export default function AIAssist() {
                                                 setShowCanvas(true);
                                             }}
                                         >
-                                            <Zap className="h-3.5 w-3.5 mr-2" /> Activate Artifact
+                                            <Zap className="h-3.5 w-3.5 mr-2" /> {t.activateArtifact}
                                         </Button>
                                     )}
                                 </div>
@@ -927,7 +923,7 @@ export default function AIAssist() {
 
                                 <div className="flex items-center gap-2 px-2">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                                        {msg.role === "assistant" ? `Agent ${msg.agent || 'core'}` : 'Explorer'}
+                                        {msg.role === "assistant" ? `${t.agentLabel} ${t.agents[msg.agent as keyof typeof t.agents] || msg.agent || t.coreAgent}` : t.userLabel}
                                     </span>
                                 </div>
                             </div>
@@ -975,11 +971,11 @@ export default function AIAssist() {
                         <div className="flex items-center justify-between mt-4 text-[11px] font-semibold text-blue-700/70 dark:text-blue-100/70">
                             <span className="flex items-center gap-2">
                                 <Wand2 className="h-3.5 w-3.5" />
-                                Ask for a design, code, or research artifact.
+                                {t.askArtifact}
                             </span>
                             <span className="flex items-center gap-2">
                                 <LayoutPanelLeft className="h-3.5 w-3.5" />
-                                Canvas {previewData ? "ready" : "idle"}
+                                {t.canvasLabel} {previewData ? t.canvasReady : t.canvasIdle}
                             </span>
                         </div>
                     </div>
@@ -997,19 +993,19 @@ export default function AIAssist() {
                                         {viewMode === "preview" ? <Monitor className="h-5 w-5 text-blue-400" /> : <Code2 className="h-5 w-5 text-amber-300" />}
                                     </div>
                                     <div>
-                                        <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{currentPreviewData?.type || "Live"} Canvas</h3>
+                                        <h3 className="text-xs font-black text-blue-50 uppercase tracking-[0.2em]">{t.canvasTitle(currentPreviewData?.type || t.live)}</h3>
                                         <div className="flex bg-blue-900/60 rounded-xl p-1 mt-2">
                                             <button
                                                 onClick={() => setViewMode("preview")}
                                                 className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "preview" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
                                             >
-                                                Live Render
+                                                {t.liveRender}
                                             </button>
                                             <button
                                                 onClick={() => setViewMode("code")}
                                                 className={cn("px-4 py-1.5 text-[10px] uppercase font-black rounded-lg transition-all", viewMode === "code" ? "bg-blue-500 text-white shadow-lg" : "text-blue-300/60 hover:text-blue-100")}
                                             >
-                                                Inspect Code
+                                                {t.inspectCode}
                                             </button>
                                         </div>
                                     </div>
@@ -1059,7 +1055,7 @@ export default function AIAssist() {
                                 <div className="flex items-center gap-2">
                                     <div className={cn("w-2 h-2 rounded-full", currentPreviewData?.isStreaming ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
                                     <span className="text-[10px] text-blue-200/60 font-bold uppercase tracking-widest leading-none">
-                                        {currentPreviewData?.isStreaming ? "Neural Link Active" : "Sync Complete"}
+                                        {currentPreviewData?.isStreaming ? t.neuralLinkActive : t.syncComplete}
                                     </span>
                                 </div>
                                 <Badge variant="outline" className="text-[9px] border-blue-900 text-blue-200/50 font-black">

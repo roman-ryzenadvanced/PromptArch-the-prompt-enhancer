@@ -71,7 +71,7 @@ export default function UXDesignerPrompt() {
 
   const handleGenerate = async () => {
     if (!currentPrompt.trim()) {
-      setError("Please enter an app description");
+      setError(t.enterDescriptionError);
       return;
     }
 
@@ -79,7 +79,7 @@ export default function UXDesignerPrompt() {
     const isQwenOAuth = selectedProvider === "qwen" && modelAdapter.hasQwenAuth();
 
     if (!isQwenOAuth && (!apiKey || !apiKey.trim())) {
-      setError(`Please configure your ${selectedProvider.toUpperCase()} API key in Settings`);
+      setError(`${common.error}: ${common.configApiKey}`);
       return;
     }
 
@@ -99,11 +99,11 @@ export default function UXDesignerPrompt() {
         setEnhancedPrompt(result.data);
       } else {
         console.error("[UXDesignerPrompt] Generation failed:", result.error);
-        setError(result.error || "Failed to generate UX designer prompt");
+        setError(result.error || t.errorGenerate);
       }
     } catch (err) {
       console.error("[UXDesignerPrompt] Generation error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t.errorGenerate);
     } finally {
       setProcessing(false);
     }
@@ -207,12 +207,12 @@ export default function UXDesignerPrompt() {
               ) : (
                 <>
                   <Palette className="mr-1.5 lg:mr-2 h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                  {language === "ru" ? "Создать UX Промпт" : language === "he" ? "חולל פרומפט UX" : "Generate UX Prompt"}
+                  {t.generateButton}
                 </>
               )}
             </Button>
             <Button variant="outline" onClick={handleClear} disabled={isProcessing} className="h-9 lg:h-10 text-xs lg:text-sm px-3">
-              <span className="hidden sm:inline">{language === "ru" ? "Очистить" : language === "he" ? "נקה" : "Clear"}</span>
+              <span className="hidden sm:inline">{translations[language].promptEnhancer.clear}</span>
               <span className="sm:hidden">×</span>
             </Button>
           </div>
@@ -225,7 +225,7 @@ export default function UXDesignerPrompt() {
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 text-green-500" />
               <span className="hidden sm:inline">{t.resultTitle}</span>
-              <span className="sm:hidden">{language === "ru" ? "UX Промпт" : language === "he" ? "פרומפט UX" : "UX Prompt"}</span>
+              <span className="sm:hidden">{t.uxPromptMobile}</span>
             </span>
             {generatedPrompt && (
               <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8 lg:h-9 lg:w-9">

@@ -43,22 +43,22 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
       <div className="border-b p-4 lg:p-6">
         <a href="https://www.rommark.dev" className="mb-4 flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
           <Menu className="h-3 w-3" />
-          <span>{language === "en" ? "Back to rommark.dev" : language === "ru" ? "Вернуться на rommark.dev" : "חזרה ל-rommark.dev"}</span>
+          <span>{t.backToRommark}</span>
         </a>
         <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="block">
           <h1 className="flex items-center gap-2 text-lg lg:text-xl font-bold hover:opacity-80 transition-opacity">
             <div className="flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg bg-[#4285F4] text-primary-foreground text-sm lg:text-base">
               PA
             </div>
-            PromptArch
+            {t.title}
           </h1>
         </a>
         <a href="https://github.com/roman-ryzenadvanced/PromptArch-the-prompt-enhancer" target="_blank" rel="noopener noreferrer" className="mt-2 lg:mt-3 flex items-center gap-1.5 rounded-md px-2 lg:px-3 py-1 lg:py-1.5 text-xs text-primary hover:bg-primary/10 transition-colors">
           <Github className="h-3 w-3 lg:h-3.5 lg:w-3.5" />
-          <span>View on GitHub</span>
+          <span>{t.viewOnGithub}</span>
         </a>
         <p className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-muted-foreground">
-          Forked from <a href="https://github.com/ClavixDev/Clavix" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Clavix</a>
+          {t.forkedFrom} <a href="https://github.com/ClavixDev/Clavix" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Clavix</a>
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
         <div className="mt-4 p-2 lg:p-3 border-t border-border/50">
           <div className="flex items-center gap-2 mb-2 text-[10px] lg:text-xs font-semibold text-muted-foreground uppercase">
-            <Languages className="h-3 w-3" /> {language === "en" ? "Language" : language === "ru" ? "Язык" : "שפה"}
+            <Languages className="h-3 w-3" /> {t.language}
           </div>
           <div className="flex flex-wrap gap-1">
             {(["en", "ru", "he"] as const).map((lang) => (
@@ -105,11 +105,11 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
       <div className="border-t p-3 lg:p-4 hidden lg:block">
         <div className="rounded-md bg-muted/50 p-2 lg:p-3 text-[10px] lg:text-xs text-muted-foreground">
-          <p className="font-medium text-foreground">Quick Tips</p>
+          <p className="font-medium text-foreground">{t.quickTips}</p>
           <ul className="mt-1.5 lg:mt-2 space-y-0.5 lg:space-y-1">
-            <li>• Use different providers for best results</li>
-            <li>• Copy enhanced prompts to your AI agent</li>
-            <li>• PRDs generate better action plans</li>
+            <li>• {t.tip1}</li>
+            <li>• {t.tip2}</li>
+            <li>• {t.tip3}</li>
           </ul>
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
             PA
           </div>
-          <span className="font-bold text-lg">PromptArch</span>
+          <span className="font-bold text-lg">{t.title}</span>
         </a>
         <Button
           variant="ghost"
