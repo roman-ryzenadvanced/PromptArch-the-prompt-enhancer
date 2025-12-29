@@ -3,17 +3,20 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import type { View } from "@/components/Sidebar";
-import PromptEnhancer from "@/components/PromptEnhancer";
-import PRDGenerator from "@/components/PRDGenerator";
-import ActionPlanGenerator from "@/components/ActionPlanGenerator";
-import UXDesignerPrompt from "@/components/UXDesignerPrompt";
-import SlidesGenerator from "@/components/SlidesGenerator";
-import GoogleAdsGenerator from "@/components/GoogleAdsGenerator";
-import MarketResearcher from "@/components/MarketResearcher";
-import AIAssist from "@/components/AIAssist";
-import HistoryPanel from "@/components/HistoryPanel";
-import SettingsPanel from "@/components/SettingsPanel";
+import dynamic from 'next/dynamic';
 import modelAdapter from "@/lib/services/adapter-instance";
+
+// Dynamic imports to prevent hydration mismatches
+const PromptEnhancer = dynamic(() => import("@/components/PromptEnhancer"), { ssr: false });
+const PRDGenerator = dynamic(() => import("@/components/PRDGenerator"), { ssr: false });
+const ActionPlanGenerator = dynamic(() => import("@/components/ActionPlanGenerator"), { ssr: false });
+const UXDesignerPrompt = dynamic(() => import("@/components/UXDesignerPrompt"), { ssr: false });
+const SlidesGenerator = dynamic(() => import("@/components/SlidesGenerator"), { ssr: false });
+const GoogleAdsGenerator = dynamic(() => import("@/components/GoogleAdsGenerator"), { ssr: false });
+const MarketResearcher = dynamic(() => import("@/components/MarketResearcher"), { ssr: false });
+const AIAssist = dynamic(() => import("@/components/AIAssist"), { ssr: false });
+const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
+const SettingsPanel = dynamic(() => import("@/components/SettingsPanel"), { ssr: false });
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<View>("enhance");
