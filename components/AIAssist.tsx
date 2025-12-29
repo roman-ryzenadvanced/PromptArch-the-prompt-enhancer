@@ -705,31 +705,52 @@ export default function AIAssist() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={selectedModels[selectedProvider]}
-                                onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
-                                className="text-[11px] font-black h-9 px-3 rounded-xl border-blue-100 dark:border-blue-900 bg-white/80 dark:bg-[#0b1414]/80 focus:ring-2 focus:ring-blue-400/40 transition-all outline-none"
-                            >
-                                {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowCanvas((prev) => !prev)}
-                                className="h-9 w-9 text-blue-700 hover:text-blue-950 hover:bg-blue-100 dark:text-blue-200 dark:hover:text-white dark:hover:bg-blue-900/40 rounded-xl transition-colors"
-                                disabled={!previewData}
-                            >
-                                <LayoutPanelLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={clearHistory}
-                                className="h-9 w-9 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                        <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-1.5 p-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100/50 dark:border-blue-900/50">
+                                {(["qwen", "ollama", "zai"] as const).map((provider) => (
+                                    <button
+                                        key={provider}
+                                        onClick={() => setSelectedProvider(provider)}
+                                        className={cn(
+                                            "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
+                                            selectedProvider === provider
+                                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                                : "text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:text-blue-200/40 dark:hover:text-blue-200"
+                                        )}
+                                    >
+                                        {(provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI")}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400/70">{common.model}:</span>
+                                <select
+                                    value={selectedModels[selectedProvider]}
+                                    onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
+                                    className="text-[10px] font-bold h-8 px-2 rounded-lg border border-blue-100 dark:border-blue-900 bg-white/80 dark:bg-[#0b1414]/80 focus:ring-2 focus:ring-blue-400/30 transition-all outline-none min-w-[120px]"
+                                >
+                                    {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                                <div className="flex items-center gap-1 ml-1 border-l border-blue-100 dark:border-blue-900 pl-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setShowCanvas((prev) => !prev)}
+                                        className="h-8 w-8 text-blue-700 hover:text-blue-950 hover:bg-blue-100 dark:text-blue-200 dark:hover:text-white dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                                        disabled={!previewData}
+                                    >
+                                        <LayoutPanelLeft className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={clearHistory}
+                                        className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -776,45 +797,6 @@ export default function AIAssist() {
                         </button>
                     </div>
 
-                    {/* Model & Provider Selector */}
-                    <div className="px-6 pt-6 pb-2 space-y-4 border-b border-blue-100/20 dark:border-blue-900/20">
-                        <div className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{common.aiProvider}</label>
-                                <div className="flex gap-1.5">
-                                    {(["qwen", "ollama", "zai"] as const).map((provider) => (
-                                        <button
-                                            key={provider}
-                                            onClick={() => setSelectedProvider(provider)}
-                                            className={cn(
-                                                "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
-                                                selectedProvider === provider
-                                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                                    : "bg-white/50 text-slate-500 border-blue-100/50 hover:border-blue-300 dark:bg-[#0f1a1a] dark:text-blue-200/50 dark:border-blue-900"
-                                            )}
-                                        >
-                                            {provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI"}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">{common.model}</label>
-                                <select
-                                    value={selectedModels[selectedProvider]}
-                                    onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
-                                    className="flex-1 bg-white/70 dark:bg-[#0f1a1a] border border-blue-100 dark:border-blue-900 rounded-xl px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
-                                >
-                                    {availableModels.map((model) => (
-                                        <option key={model} value={model}>
-                                            {model}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Agent Selector */}
                     <div className="px-6 pt-6">
