@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, memo } from "react";
 import {
     MessageSquare, Send, Code2, Palette, Search,
     Trash2, Copy, Monitor, StopCircle, X, Zap, Ghost,
-    Wand2, LayoutPanelLeft, Play, Orbit, Plus
+    Wand2, LayoutPanelLeft, Play, Orbit, Plus, Key
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -390,7 +390,17 @@ function parseStreamingContent(text: string, currentAgent: string) {
         // CRITICAL: Strip any change log that leaked into preview data
         // The change log should be in chat, not rendered in canvas
         preview.data = preview.data
+            // Strip closing tags followed by change logs
             .replace(/\[\/[a-z]+:[a-z]+\]\s*\*?\*?Change\s*Log:?\*?\*?[\s\S]*$/i, '')
+            // Strip change log sections at end (various formats)
+            .replace(/\n\s*\*?\*?\s*Change\s*Log\s*:?\s*\*?\*?\s*\n[\s\S]*$/i, '')
+            .replace(/\n\s*##+\s*Change\s*Log[\s\S]*$/i, '')
+            .replace(/\n\s*---+\s*\n\s*\*?\*?Change\s*Log[\s\S]*$/i, '')
+            // Strip "Changes Made:" or similar sections
+            .replace(/\n\s*\*?\*?\s*Changes\s*(Made|Applied|Implemented)\s*:?\s*\*?\*?\s*\n[\s\S]*$/i, '')
+            // Strip update/modification logs
+            .replace(/\n\s*\*?\*?\s*Updates?\s*:?\s*\*?\*?\s*\n\s*[-*]\s+[\s\S]*$/i, '')
+            // Final catch - any markdown list at the very end that looks like changes
             .replace(/\*?\*?Change\s*Log:?\*?\*?[\s\S]*$/i, function (match) {
                 // Only strip if it's at the end and looks like a change log section
                 if (match.length > 500) return match; // Probably part of the app, not a log
@@ -460,6 +470,11 @@ export default function AIAssist() {
     // Agentic States
     const [assistStep, setAssistStep] = useState<"idle" | "plan" | "generating" | "preview">("idle");
     const [aiPlan, setAiPlan] = useState<any>(null);
+    const [isAuthenticatingQwen, setIsAuthenticatingQwen] = useState(false);
+    const [qwenAuthError, setQwenAuthError] = useState<string | null>(null);
+
+    // Check if Qwen is authenticated
+    const isQwenAuthed = modelAdapter.hasQwenAuth();
 
     // Sync local state when tab changes - FULL ISOLATION
     useEffect(() => {
@@ -686,6 +701,20 @@ export default function AIAssist() {
         setAiPlan(null);
     };
 
+    const handleQwenAuth = async () => {
+        setIsAuthenticatingQwen(true);
+        setQwenAuthError(null);
+        try {
+            await modelAdapter.startQwenOAuth();
+            // Force re-render to update auth state
+            window.location.reload();
+        } catch (err) {
+            setQwenAuthError(err instanceof Error ? err.message : "Failed to authenticate with Qwen");
+        } finally {
+            setIsAuthenticatingQwen(false);
+        }
+    };
+
     return (
         <div className="ai-assist h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-4 lg:gap-8 overflow-hidden animate-in fade-in duration-700">
             {/* --- Chat Panel --- */}
@@ -835,6 +864,31 @@ export default function AIAssist() {
                         </div>
                     </div>
                     <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-8 scrollbar-thin scrollbar-thumb-blue-200/60 dark:scrollbar-thumb-blue-900">
+                        {/* Qwen Auth Banner */}
+                        {selectedProvider === "qwen" && !isQwenAuthed && (
+                            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 mb-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 bg-amber-500/20 rounded-xl">
+                                        <Key className="h-5 w-5 text-amber-500" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-black text-amber-600 dark:text-amber-400">Qwen Authentication Required</h4>
+                                        <p className="text-xs text-amber-700/70 dark:text-amber-300/70 mt-0.5">Sign in with Qwen to use AI Assist with this provider</p>
+                                        {qwenAuthError && (
+                                            <p className="text-xs text-red-500 mt-1">{qwenAuthError}</p>
+                                        )}
+                                    </div>
+                                    <Button
+                                        onClick={handleQwenAuth}
+                                        disabled={isAuthenticatingQwen}
+                                        className="bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase tracking-wider px-4 py-2 rounded-xl shadow-lg shadow-amber-500/20"
+                                    >
+                                        {isAuthenticatingQwen ? "Authenticating..." : "Sign in with Qwen"}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
                         {aiAssistHistory.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center text-center py-20 animate-in zoom-in-95 duration-500">
                                 <div className="p-8 bg-blue-500/5 dark:bg-blue-500/10 rounded-full mb-8 relative">
