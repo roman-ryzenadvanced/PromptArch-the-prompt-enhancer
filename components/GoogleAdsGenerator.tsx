@@ -51,6 +51,8 @@ export default function GoogleAdsGenerator() {
 
     const [isMagicThinking, setIsMagicThinking] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
+    const [isEnhancingAudience, setIsEnhancingAudience] = useState(false);
+    const [isEnhancingIndustry, setIsEnhancingIndustry] = useState(false);
     const [progressMessage, setProgressMessage] = useState("");
     const [progressIndex, setProgressIndex] = useState(0);
 
@@ -320,6 +322,36 @@ export default function GoogleAdsGenerator() {
             setError(err instanceof Error ? err.message : "Instruction enhancement failed");
         } finally {
             setIsEnhancing(false);
+        }
+    };
+
+    const handleEnhanceAudience = async () => {
+        if (!targetAudience.trim()) return;
+        setIsEnhancingAudience(true);
+        setError(null);
+        try {
+            const result = await modelAdapter.enhancePrompt(targetAudience, selectedProvider, selectedModel);
+            if (result.success && result.data) setTargetAudience(result.data);
+            else setError(result.error || "Failed to enhance audience");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Audience enhancement failed");
+        } finally {
+            setIsEnhancingAudience(false);
+        }
+    };
+
+    const handleEnhanceIndustry = async () => {
+        if (!industry.trim()) return;
+        setIsEnhancingIndustry(true);
+        setError(null);
+        try {
+            const result = await modelAdapter.enhancePrompt(industry, selectedProvider, selectedModel);
+            if (result.success && result.data) setIndustry(result.data);
+            else setError(result.error || "Failed to enhance industry");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Industry enhancement failed");
+        } finally {
+            setIsEnhancingIndustry(false);
         }
     };
 
@@ -1023,7 +1055,23 @@ export default function GoogleAdsGenerator() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs lg:text-sm font-medium">{t.industry}</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs lg:text-sm font-medium">{t.industry}</label>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-1.5 text-[9px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 transition-all"
+                                    onClick={handleEnhanceIndustry}
+                                    disabled={isEnhancingIndustry || !industry.trim()}
+                                >
+                                    {isEnhancingIndustry ? (
+                                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                    ) : (
+                                        <Wand2 className="h-2.5 w-2.5" />
+                                    )}
+                                    Enhance
+                                </Button>
+                            </div>
                             <Input
                                 placeholder="e.g., SaaS"
                                 value={industry}
@@ -1034,7 +1082,23 @@ export default function GoogleAdsGenerator() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs lg:text-sm font-medium">{t.targetAudience}</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs lg:text-sm font-medium">{t.targetAudience}</label>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 px-1.5 text-[9px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 transition-all"
+                                onClick={handleEnhanceAudience}
+                                disabled={isEnhancingAudience || !targetAudience.trim()}
+                            >
+                                {isEnhancingAudience ? (
+                                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                ) : (
+                                    <Wand2 className="h-2.5 w-2.5" />
+                                )}
+                                AI Audience enhancer
+                            </Button>
+                        </div>
                         <Textarea
                             placeholder={t.audiencePlaceholder}
                             value={targetAudience}
