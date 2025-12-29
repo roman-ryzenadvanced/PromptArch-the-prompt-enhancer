@@ -426,9 +426,11 @@ export default function AIAssist() {
         updateTabById,
         selectedProvider,
         selectedModels,
-        setSelectedModel
+        setSelectedModel,
+        setSelectedProvider
     } = useStore();
     const t = translations[language].aiAssist;
+    const common = translations[language].common;
 
     const activeTab = aiAssistTabs?.find(tab => tab.id === activeTabId) || aiAssistTabs?.[0] || {
         id: 'default',
@@ -772,6 +774,46 @@ export default function AIAssist() {
                         >
                             <Plus className="h-3 w-3" />
                         </button>
+                    </div>
+
+                    {/* Model & Provider Selector */}
+                    <div className="px-6 pt-6 pb-2 space-y-4 border-b border-blue-100/20 dark:border-blue-900/20">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{common.aiProvider}</label>
+                                <div className="flex gap-1.5">
+                                    {(["qwen", "ollama", "zai"] as const).map((provider) => (
+                                        <button
+                                            key={provider}
+                                            onClick={() => setSelectedProvider(provider)}
+                                            className={cn(
+                                                "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
+                                                selectedProvider === provider
+                                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                                    : "bg-white/50 text-slate-500 border-blue-100/50 hover:border-blue-300 dark:bg-[#0f1a1a] dark:text-blue-200/50 dark:border-blue-900"
+                                            )}
+                                        >
+                                            {provider === "qwen" ? "Qwen" : provider === "ollama" ? "Ollama" : "Z.AI"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">{common.model}</label>
+                                <select
+                                    value={selectedModels[selectedProvider]}
+                                    onChange={(e) => setSelectedModel(selectedProvider, e.target.value)}
+                                    className="flex-1 bg-white/70 dark:bg-[#0f1a1a] border border-blue-100 dark:border-blue-900 rounded-xl px-3 py-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
+                                >
+                                    {availableModels.map((model) => (
+                                        <option key={model} value={model}>
+                                            {model}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Agent Selector */}
