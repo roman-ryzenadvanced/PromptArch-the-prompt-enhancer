@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   basePath: '/tools/promptarch',
+  assetPrefix: '/tools/promptarch',
   trailingSlash: true,
 };
 
