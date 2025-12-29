@@ -10,6 +10,7 @@ import modelAdapter from "@/lib/services/adapter-instance";
 import { Megaphone, Copy, Loader2, CheckCircle2, Settings, Plus, X, ChevronDown, ChevronUp, Wand2, Target, TrendingUp, ShieldAlert, BarChart3, Users, Rocket, Download, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GoogleAdsResult } from "@/types";
+import { downloadFile, generateGoogleAdsCSV, generateGoogleAdsHTML } from "@/lib/export-utils";
 import { translations } from "@/lib/i18n/translations";
 
 export default function GoogleAdsGenerator() {
@@ -306,94 +307,16 @@ export default function GoogleAdsGenerator() {
 
     const exportCSV = () => {
         if (!googleAdsResult && !magicWandResult) return;
-
-        let rows: string[][] = [];
-
-        if (googleAdsResult) {
-            // Keywords
-            rows.push(["KEYWORDS RESEARCH"]);
-            rows.push(["Type", "Keyword", "CPC"]);
-            const addKw = (type: string, list?: any[]) => {
-                if (list) list.forEach(k => rows.push([type, k.keyword, k.cpc || 'N/A']));
-            };
-            addKw("Primary", googleAdsResult.keywords?.primary);
-            addKw("Long-tail", googleAdsResult.keywords?.longTail);
-            addKw("Negative", googleAdsResult.keywords?.negative);
-            rows.push([]);
-
-            // Ad Copies
-            rows.push(["AD COPIES"]);
-            rows.push(["Headlines", "Descriptions", "CTA"]);
-            googleAdsResult.adCopies?.forEach(ad => {
-                rows.push([
-                    ad.headlines?.join(' | ') || '',
-                    ad.descriptions?.join(' | ') || '',
-                    ad.callToAction || ''
-                ]);
-            });
-            rows.push([]);
-
-            // Campaigns
-            rows.push(["CAMPAIGN STRUCTURE"]);
-            rows.push(["Name", "Type", "Budget", "Locations", "Schedule"]);
-            googleAdsResult.campaigns?.forEach(c => {
-                rows.push([
-                    c.name,
-                    c.type,
-                    `${c.budget?.daily || 0} ${c.budget?.currency}`,
-                    c.targeting?.locations?.join('; ') || 'All',
-                    c.targeting?.schedule?.join('; ') || 'All'
-                ]);
-            });
-            rows.push([]);
-
-            // Implementation
-            rows.push(["IMPLEMENTATION GUIDE"]);
-            const impl = googleAdsResult.implementation;
-            if (impl) {
-                rows.push(["Setup Steps", impl.setupSteps?.join('; ') || '']);
-                rows.push(["Quality Score Tips", impl.qualityScoreTips?.join('; ') || '']);
-                rows.push(["Optimization Tips", impl.optimizationTips?.join('; ') || '']);
-            }
-            rows.push([]);
-
-            // Predictions
-            if (googleAdsResult.predictions) {
-                rows.push(["PERFORMANCE PREDICTIONS"]);
-                const p = googleAdsResult.predictions;
-                rows.push(["Metric", "Estimate"]);
-                rows.push(["Clicks", p.estimatedClicks || "N/A"]);
-                rows.push(["Impressions", p.estimatedImpressions || "N/A"]);
-                rows.push(["CTR", p.estimatedCtr || "N/A"]);
-                rows.push(["Conversions", p.estimatedConversions || "N/A"]);
-                rows.push([]);
-            }
-        }
-
-        if (magicWandResult) {
-            rows.push(["MARKET ANALYSIS"]);
-            const ma = magicWandResult.marketAnalysis;
-            rows.push(["Growth Rate", ma?.growthRate || 'N/A']);
-            rows.push(["Top Competitors", ma?.topCompetitors?.join('; ') || 'N/A']);
-            rows.push(["Market Trends", ma?.marketTrends?.join('; ') || 'N/A']);
-        }
-
-        const csvContent = "data:text/csv;charset=utf-8," +
-            rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(",")).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `google-ads-report-${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const csvContent = generateGoogleAdsCSV(googleAdsResult || undefined, magicWandResult || undefined);
+        downloadFile(`google-ads-report-${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv;charset=utf-8;');
     };
 
     const exportHTML = () => {
         if (!googleAdsResult && !magicWandResult) return;
 
-        alert("Please use 'Export CSV' for the full detailed report. HTML export is disabled."); return; /*
+        const htmlContent = generateGoogleAdsHTML(googleAdsResult || undefined, magicWandResult || undefined);
+        downloadFile(`google-ads-report-${new Date().toISOString().split('T')[0]}.html`, htmlContent, 'text/html');
+        return; /*
         parts.push(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Google Ads Strategy Report</title>`);
         parts.push(`<style>
             :root { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --accent: #6366f1; }
