@@ -50,6 +50,7 @@ export default function GoogleAdsGenerator() {
     const [expandedSections, setExpandedSections] = useState<string[]>(["keywords"]);
 
     const [isMagicThinking, setIsMagicThinking] = useState(false);
+    const [isEnhancing, setIsEnhancing] = useState(false);
     const [progressMessage, setProgressMessage] = useState("");
     const [progressIndex, setProgressIndex] = useState(0);
 
@@ -293,6 +294,32 @@ export default function GoogleAdsGenerator() {
             setError(err instanceof Error ? err.message : t.errorMagicWandGeneral);
         } finally {
             setIsMagicThinking(false);
+        }
+    };
+
+    const handleEnhanceInstructions = async () => {
+        if (!specialInstructions.trim()) return;
+
+        setIsEnhancing(true);
+        setError(null);
+
+        try {
+            const result = await modelAdapter.enhancePrompt(
+                specialInstructions,
+                selectedProvider,
+                selectedModel
+            );
+
+            if (result.success && result.data) {
+                setSpecialInstructions(result.data);
+            } else {
+                setError(result.error || "Failed to enhance instructions");
+            }
+        } catch (err) {
+            console.error("[GoogleAdsGenerator] Enhancement error:", err);
+            setError(err instanceof Error ? err.message : "Instruction enhancement failed");
+        } finally {
+            setIsEnhancing(false);
         }
     };
 
@@ -1017,7 +1044,23 @@ export default function GoogleAdsGenerator() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs lg:text-sm font-medium">{t.specialInstructions}</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs lg:text-sm font-medium">{t.specialInstructions}</label>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1.5 transition-all"
+                                onClick={handleEnhanceInstructions}
+                                disabled={isEnhancing || !specialInstructions.trim()}
+                            >
+                                {isEnhancing ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                    <Wand2 className="h-3 w-3" />
+                                )}
+                                AI Instructions enhancer
+                            </Button>
+                        </div>
                         <Textarea
                             placeholder={t.specialInstructionsPlaceholder}
                             value={specialInstructions}
