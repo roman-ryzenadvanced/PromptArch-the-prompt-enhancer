@@ -307,36 +307,80 @@ export default function GoogleAdsGenerator() {
     const exportCSV = () => {
         if (!googleAdsResult && !magicWandResult) return;
 
-        let csvContent = "data:text/csv;charset=utf-8,";
+        let rows: string[][] = [];
 
         if (googleAdsResult) {
-            // Keywords section
-            csvContent += "KEYWORDS RESEARCH\n";
-            csvContent += "Type,Keyword,CPC\n";
-            googleAdsResult.keywords?.primary?.forEach(k => {
-                csvContent += `Primary,"${k.keyword}","${k.cpc || 'N/A'}"\n`;
-            });
-            googleAdsResult.keywords?.longTail?.forEach(k => {
-                csvContent += `Long-tail,"${k.keyword}","${k.cpc || 'N/A'}"\n`;
-            });
-            googleAdsResult.keywords?.negative?.forEach(k => {
-                csvContent += `Negative,"${k.keyword}",""\n`;
-            });
+            // Keywords
+            rows.push(["KEYWORDS RESEARCH"]);
+            rows.push(["Type", "Keyword", "CPC"]);
+            const addKw = (type: string, list?: any[]) => {
+                if (list) list.forEach(k => rows.push([type, k.keyword, k.cpc || 'N/A']));
+            };
+            addKw("Primary", googleAdsResult.keywords?.primary);
+            addKw("Long-tail", googleAdsResult.keywords?.longTail);
+            addKw("Negative", googleAdsResult.keywords?.negative);
+            rows.push([]);
 
-            // Ad Copies section
-            csvContent += "\nAD COPIES\n";
-            csvContent += "Headlines,Descriptions,CTA\n";
+            // Ad Copies
+            rows.push(["AD COPIES"]);
+            rows.push(["Headlines", "Descriptions", "CTA"]);
             googleAdsResult.adCopies?.forEach(ad => {
-                csvContent += `"${ad.headlines?.join(' | ') || ''}","${ad.descriptions?.join(' | ') || ''}","${ad.callToAction || ''}"\n`;
+                rows.push([
+                    ad.headlines?.join(' | ') || '',
+                    ad.descriptions?.join(' | ') || '',
+                    ad.callToAction || ''
+                ]);
             });
+            rows.push([]);
+
+            // Campaigns
+            rows.push(["CAMPAIGN STRUCTURE"]);
+            rows.push(["Name", "Type", "Budget", "Locations", "Schedule"]);
+            googleAdsResult.campaigns?.forEach(c => {
+                rows.push([
+                    c.name,
+                    c.type,
+                    `${c.budget?.daily || 0} ${c.budget?.currency}`,
+                    c.targeting?.locations?.join('; ') || 'All',
+                    c.targeting?.schedule?.join('; ') || 'All'
+                ]);
+            });
+            rows.push([]);
+
+            // Implementation
+            rows.push(["IMPLEMENTATION GUIDE"]);
+            const impl = googleAdsResult.implementation;
+            if (impl) {
+                rows.push(["Setup Steps", impl.setupSteps?.join('; ') || '']);
+                rows.push(["Quality Score Tips", impl.qualityScoreTips?.join('; ') || '']);
+                rows.push(["Optimization Tips", impl.optimizationTips?.join('; ') || '']);
+            }
+            rows.push([]);
+
+            // Predictions
+            if (googleAdsResult.predictions) {
+                rows.push(["PERFORMANCE PREDICTIONS"]);
+                const p = googleAdsResult.predictions;
+                rows.push(["Metric", "Estimate"]);
+                rows.push(["Clicks", p.estimatedClicks || "N/A"]);
+                rows.push(["Impressions", p.estimatedImpressions || "N/A"]);
+                rows.push(["CTR", p.estimatedCtr || "N/A"]);
+                rows.push(["Conversions", p.estimatedConversions || "N/A"]);
+                rows.push([]);
+            }
         }
 
         if (magicWandResult) {
-            csvContent += "\nMARKET ANALYSIS\n";
-            csvContent += `Growth Rate,"${magicWandResult.marketAnalysis?.growthRate || 'N/A'}"\n`;
-            csvContent += `Top Competitors,"${magicWandResult.marketAnalysis?.topCompetitors?.join(', ') || 'N/A'}"\n`;
-            csvContent += `Market Trends,"${magicWandResult.marketAnalysis?.marketTrends?.join(', ') || 'N/A'}"\n`;
+            rows.push(["MARKET ANALYSIS"]);
+            const ma = magicWandResult.marketAnalysis;
+            rows.push(["Growth Rate", ma?.growthRate || 'N/A']);
+            rows.push(["Top Competitors", ma?.topCompetitors?.join('; ') || 'N/A']);
+            rows.push(["Market Trends", ma?.marketTrends?.join('; ') || 'N/A']);
         }
+
+        // CSV String Construction with proper escaping
+        const csvContent = "data:text/csv;charset=utf-8," +
+            rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(",")).join("\n");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -350,85 +394,123 @@ export default function GoogleAdsGenerator() {
     const exportHTML = () => {
         if (!googleAdsResult && !magicWandResult) return;
 
-        let htmlContent = `<!DOCTYPE html>
+        let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Ads Report - ${new Date().toLocaleDateString()}</title>
+    <title>Google Ads Strategy Report</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); color: #e2e8f0; padding: 40px; min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        .subtitle { color: #94a3b8; margin-bottom: 40px; }
-        .section { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1); }
-        .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin-bottom: 16px; }
-        .tag { display: inline-block; background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 6px 12px; border-radius: 8px; font-size: 0.875rem; margin: 4px 4px 4px 0; }
-        .tag-cpc { background: rgba(34,197,94,0.2); color: #86efac; margin-left: 8px; font-size: 0.75rem; }
-        .ad-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); }
-        .ad-headline { font-size: 1.25rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
-        .ad-desc { color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
-        .ad-cta { display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        .stat { text-align: center; }
-        .stat-value { font-size: 2rem; font-weight: 800; color: #22c55e; }
-        .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
-        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); color: #64748b; font-size: 0.875rem; }
+        :root { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --accent: #6366f1; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 40px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { font-size: 2.5rem; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+        .section { background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1); }
+        h2 { font-size: 1.25rem; color: #818cf8; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
+        h3 { font-size: 1rem; color: #94a3b8; margin: 1rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tag { display: inline-block; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3); color: #c3dafe; padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; margin: 0 6px 6px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .card { background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat { font-size: 1.5rem; font-weight: 700; color: #4ade80; }
+        ul { padding-left: 20px; color: #cbd5e1; }
+        li { margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; }
+        .footer { text-align: center; color: #64748b; margin-top: 4rem; font-size: 0.85rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Google Ads Report</h1>
-        <p class="subtitle">Generated on ${new Date().toLocaleString()}</p>`;
+        <h1>Google Ads Strategy Report</h1>
+        <p style="color:#94a3b8; margin-bottom: 2rem">Generated by PromptArch on ${new Date().toLocaleDateString()}</p>`;
 
         if (googleAdsResult) {
             // Keywords
-            if (googleAdsResult.keywords?.primary?.length) {
-                htmlContent += `
-        <div class="section">
-            <div class="section-title">🎯 Primary Keywords</div>
-            ${googleAdsResult.keywords.primary.map(k => `<span class="tag">${k.keyword}${k.cpc ? `<span class="tag-cpc">${k.cpc}</span>` : ''}</span>`).join('')}
-        </div>`;
-            }
+            html += `<div class="section"><h2>🎯 Keyword Research</h2>`;
+            const renderKw = (title: string, list?: any[]) => {
+                if (!list?.length) return '';
+                return `<h3>${title}</h3><div style="margin-bottom:1rem">
+                    ${list.map(k => `<span class="tag">${k.keyword} <span style="opacity:0.6; font-size:0.8em">(${k.cpc || 'N/A'})</span></span>`).join('')}
+                </div>`;
+            };
+            html += renderKw("Primary Keywords", googleAdsResult.keywords?.primary);
+            html += renderKw("Long-tail Opportunities", googleAdsResult.keywords?.longTail);
+            html += renderKw("Negative Keywords", googleAdsResult.keywords?.negative);
+            html += `</div>`;
 
             // Ad Copies
             if (googleAdsResult.adCopies?.length) {
-                htmlContent += `
-        <div class="section">
-            <div class="section-title">📝 Ad Variations</div>
-            ${googleAdsResult.adCopies.map(ad => `
-            <div class="ad-card">
-                <div class="ad-headline">${ad.headlines?.[0] || ''}</div>
-                <p class="ad-desc">${ad.descriptions?.[0] || ''}</p>
-                ${ad.callToAction ? `<span class="ad-cta">${ad.callToAction}</span>` : ''}
-            </div>`).join('')}
-        </div>`;
+                html += `<div class="section"><h2>✍️ Ad Copy Variations</h2><div class="grid">`;
+                googleAdsResult.adCopies.forEach((ad, i) => {
+                    html += `<div class="card">
+                        <div style="color:#818cf8; font-size:0.8rem; margin-bottom:0.5rem">Variation ${i + 1}</div>
+                        ${ad.headlines.map(h => `<div style="font-weight:600; color:#f1f5f9">${h}</div>`).join('')}
+                        <div style="margin: 12px 0; color:#cbd5e1; font-size:0.9rem">${ad.descriptions.join('<br>')}</div>
+                        ${ad.callToAction ? `<div style="display:inline-block; background:#4f46e5; color:white; font-size:0.8rem; padding:4px 12px; border-radius:4px">${ad.callToAction}</div>` : ''}
+                    </div>`;
+                });
+                html += `</div></div>`;
             }
+
+            // Campaigns
+            if (googleAdsResult.campaigns?.length) {
+                html += `<div class="section"><h2>🏗️ Campaign Structure</h2>
+                    <div class="grid">
+                        ${googleAdsResult.campaigns.map(c => `
+                            <div class="card">
+                                <h3 style="color:#f8fafc; margin-top:0">${c.name}</h3>
+                                <p style="font-size:0.9rem; color:#94a3b8">${c.type.toUpperCase()} • ${c.budget.daily} ${c.budget.currency}/day</p>
+                                <div style="margin-top:1rem; font-size:0.9rem">
+                                    <strong>Locations:</strong> ${c.targeting.locations?.join(', ') || 'Global'}<br>
+                                    <strong>Ad Groups:</strong> ${c.adGroups.length}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            // Implementation & Predictions
+            html += `<div class="section"><h2>🚀 Implementation & Forecast</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Setup Steps</h3>
+                        <ul>${googleAdsResult.implementation.setupSteps.map(s => `<li>${s}</li>`).join('')}</ul>
+                    </div>
+                    ${googleAdsResult.predictions ? `
+                    <div class="card" style="background:rgba(16,185,129,0.1)">
+                        <h3 style="color:#34d399; margin-top:0">Monthly Estimations</h3>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                            <div><div class="stat">${googleAdsResult.predictions.estimatedClicks || '-'}</div><div style="font-size:0.8rem; opacity:0.7">Clicks</div></div>
+                            <div><div class="stat">${googleAdsResult.predictions.estimatedCtr || '-'}</div><div style="font-size:0.8rem; opacity:0.7">CTR</div></div>
+                            <div><div class="stat">${googleAdsResult.predictions.estimatedConversions || '-'}</div><div style="font-size:0.8rem; opacity:0.7">Convs</div></div>
+                        </div>
+                    </div>` : ''}
+                </div>
+            </div>`;
         }
 
         if (magicWandResult) {
-            const ma = magicWandResult.marketAnalysis;
-            htmlContent += `
-        <div class="section">
-            <div class="section-title">📈 Market Intelligence</div>
-            <div class="grid">
-                <div class="stat"><div class="stat-value">${ma?.growthRate || 'N/A'}</div><div class="stat-label">Market Growth</div></div>
-            </div>
-            ${ma?.topCompetitors?.length ? `<p style="margin-top: 16px; color: #94a3b8;"><strong>Top Competitors:</strong> ${ma.topCompetitors.join(', ')}</p>` : ''}
-            ${ma?.marketTrends?.length ? `<p style="margin-top: 8px; color: #94a3b8;"><strong>Market Trends:</strong> ${ma.marketTrends.join(', ')}</p>` : ''}
-        </div>`;
+            html += `<div class="section"><h2>🧠 Market Intelligence</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Strategy Rationale</h3>
+                        <p style="font-size:0.9rem; color:#cbd5e1">${magicWandResult.rationale}</p>
+                    </div>
+                    <div>
+                        <h3>Market Data</h3>
+                        <p><strong>Growth Rate:</strong> ${magicWandResult.marketAnalysis?.growthRate || 'N/A'}</p>
+                        <h3>Top Competitors</h3>
+                        <ul>${magicWandResult.marketAnalysis?.topCompetitors?.map(c => `<li>${c}</li>`).join('') || '<li>None identified</li>'}</ul>
+                    </div>
+                </div>
+            </div>`;
         }
 
-        htmlContent += `
-        <div class="footer">
-            Generated by PromptArch Google Ads Strategist
-        </div>
-    </div>
-</body>
-</html>`;
+        html += `<div class="footer">PromptArch • AI-Powered Marketing Tools</div></div></body></html>`;
 
-        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
