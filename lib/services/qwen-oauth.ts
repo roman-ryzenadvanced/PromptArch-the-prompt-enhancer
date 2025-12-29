@@ -790,6 +790,11 @@ Generate SPECTACULAR slides with CSS3 animations, SVG charts, modern gradients, 
     const systemMessage: ChatMessage = {
       role: "system",
       content: `You are an EXPERT Google Ads strategist. Create HIGH-CONVERTING campaigns with comprehensive keyword research, compelling ad copy, and optimized campaign structures.
+      
+CRITICAL ACCURACY PROTOCOL:
+1. STRICT ADHERENCE TO FACTS: Use ONLY locations, contact info, and services explicitly mentioned in the provided Website URL or Products list.
+2. DO NOT HALLUCINATE LOCATIONS: If no specific location is provided, default to "National" or "Global" based on the URL TLD (e.g. .co.uk -> UK). DO NOT invent cities or streets.
+3. COMPREHENSIVE OUTPUT: You MUST generate full lists (15+ keywords, 3+ ad variations). Do not truncate.
 
 OUTPUT FORMAT - Return ONLY valid JSON with this structure:
 \`\`\`json
@@ -834,7 +839,9 @@ Requirements:
 - 10-15 primary keywords, 15-20 long-tail, 5-10 negative
 - Headlines max 30 chars, descriptions max 90 chars
 - 3-5 ad variations per campaign
-- Include budget and targeting recommendations`,
+- 3-5 ad variations per campaign
+- Include budget and targeting recommendations
+- ENSURE ALL LISTS ARE POPULATED. No empty arrays.`,
     };
 
     const userMessage: ChatMessage = {
@@ -851,7 +858,8 @@ ${campaignDuration ? `DURATION: ${campaignDuration}` : ""}
 ${competitors.length > 0 ? `COMPETITORS: ${competitors.join(", ")}` : ""}
 ${specialInstructions ? `SPECIAL INSTRUCTIONS: ${specialInstructions}` : ""}
 
-Generate complete Google Ads package with keywords, ad copy, campaigns, and implementation guidance.`,
+Generate complete Google Ads package with keywords, ad copy, campaigns, and implementation guidance.
+STRICTLY FOLLOW LOCALIZATION: Use only locations relevant to the provided website. Do not invent office locations.`,
     };
 
     return this.chatCompletion([systemMessage, userMessage], model || "coder-model");
